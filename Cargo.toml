@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "structured-rewards",
+    "ffxiv-crafting",
+]
