@@ -493,10 +493,12 @@ fn test_minimal_solver() {
         }
     }
 
+    // Use `fold` instead of `all` so we see all the examples that are wrong instead of just
+    // the first one
     let correct = results
         .into_iter()
         .flat_map(|(s, inner)| inner.into_iter().map(move |(a, q)| (s, a, q)))
-        .map(|(s, a, q)| {
+        .fold(true, |acc, (s, a, q)| {
             let outcome = if s.curr_square == (1, 0) && a == GridAction::North {
                 (q.0 - (0.2 * 15.)).abs() < 0.04
             } else if s.curr_square == (0, 0) // Terminal
@@ -510,11 +512,8 @@ fn test_minimal_solver() {
             if !outcome {
                 println!("Wrong! State: {:?}, Action: {:?}, Q-val: {:?}", s, a, q);
             }
-            outcome
-        })
-        .collect::<Vec<_>>() // So we can see all errors and not just the first
-        .into_iter()
-        .all(|v| v);
+            acc && outcome
+        });
 
     assert!(correct);
 }
@@ -560,10 +559,12 @@ fn test_discounted_solver() {
         }
     }
 
+    // Use `fold` instead of `all` so we see all the examples that are wrong instead of just
+    // the first one
     let correct = results
         .into_iter()
         .flat_map(|(s, inner)| inner.into_iter().map(move |(a, q)| (s, a, q)))
-        .map(|(s, a, q)| {
+        .fold(true, |acc, (s, a, q)| {
             let appropriate_q = if s.curr_square == (X as usize, Y as usize) {
                 0.0
             } else if let Some(next) = a.next_coords(&s.curr_square, 15) {
@@ -574,7 +575,7 @@ fn test_discounted_solver() {
                 0.0
             };
 
-            if (appropriate_q - q.0).abs() > 0.01 {
+            acc && if (appropriate_q - q.0).abs() > 0.01 {
                 println!(
                     "Wrong! State: {:?}, Action: {:?}, Q-val: {:?}, Expected: {}",
                     s, a, q, appropriate_q
@@ -583,10 +584,7 @@ fn test_discounted_solver() {
             } else {
                 true
             }
-        })
-        .collect::<Vec<_>>() // So we can see all errors and not just the first
-        .into_iter()
-        .all(|v| v);
+        });
 
     assert!(correct);
 }
