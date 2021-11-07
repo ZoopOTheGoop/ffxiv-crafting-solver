@@ -153,7 +153,7 @@ impl Iterator for AvailableActions {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct GridWorld<const N: usize> {
-    grid: [[(i64, RandomTransition); N]; N],
+    grid: [[(i64, RandomTransition, bool); N]; N],
 }
 
 impl<const N: usize> Default for GridWorld<N> {
@@ -161,20 +161,21 @@ impl<const N: usize> Default for GridWorld<N> {
         let mut me = GridWorld {
             grid: [[Default::default(); N]; N],
         };
-        me[(0, 0)] = (15, RandomTransition::None);
+        me[(0, 0)] = (15, RandomTransition::None, true);
         me[(0, 1)] = (
             0,
             RandomTransition::RealAction {
                 action: GridAction::West,
                 prob: 0.2,
             },
+            false,
         );
         me
     }
 }
 
 impl<const N: usize> Index<(usize, usize)> for GridWorld<N> {
-    type Output = (i64, RandomTransition);
+    type Output = (i64, RandomTransition, bool);
 
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         &self.grid[index.1][index.0]
@@ -233,23 +234,23 @@ where
 
     fn successors(&self, action: Self::Action) -> Self::SuccRewardIter {
         let curr = self.grid.borrow()[self.curr_square];
-        match (curr.0, curr.1, action.next_coords(&self.curr_square, N)) {
-            (0, chance @ RandomTransition::RealAction { prob, .. }, Some(succ)) => {
+        match (curr.1, curr.2, action.next_coords(&self.curr_square, N)) {
+            (chance @ RandomTransition::RealAction { prob, .. }, false, Some(succ)) => {
                 let first = self.succ_reward(succ, 1.0 - prob);
                 let second =
                     self.succ_reward(chance.false_move(&self.curr_square, N).unwrap(), prob);
                 GridSuccessors::twice(first, second)
             }
-            (0, RandomTransition::None, Some(succ)) => {
+            (RandomTransition::None, false, Some(succ)) => {
                 GridSuccessors::once(self.succ_reward(succ, 1.0))
             }
-            _ => GridSuccessors::empty(),
+            (_, true, _) | (_, false, None) => GridSuccessors::empty(),
         }
     }
 
     #[inline]
     fn actions(&self) -> Self::ActionIter {
-        if self.grid[self.curr_square].0 == 0 {
+        if !self.grid[self.curr_square].2 {
             GridAction::available_actions(self.curr_square, N)
         } else {
             AvailableActions::Empty
@@ -526,9 +527,9 @@ fn test_discounted_solver() {
     const REWARD: i64 = 15;
 
     let mut grid = GridWorld::<15>::default();
-    grid[(0, 0)] = (0, RandomTransition::None);
-    grid[(0, 1)] = (0, RandomTransition::None);
-    grid[(X as usize, Y as usize)] = (REWARD, RandomTransition::None);
+    grid[(0, 0)] = (0, RandomTransition::None, false);
+    grid[(0, 1)] = (0, RandomTransition::None, false);
+    grid[(X as usize, Y as usize)] = (REWARD, RandomTransition::None, true);
     let start_state = GridState {
         grid: &grid,
         curr_square: (14, 14),
