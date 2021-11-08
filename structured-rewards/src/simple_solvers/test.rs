@@ -1,15 +1,13 @@
-#![cfg(test)]
-
 use std::{
     borrow::Borrow,
     marker::PhantomData,
     ops::{Index, IndexMut},
 };
 
-use super::*;
-
 use derivative::Derivative;
 use strum::{EnumIter, IntoEnumIterator};
+
+use super::*;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct NoDiscountReward(f64, i64);
