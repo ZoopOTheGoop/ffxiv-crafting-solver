@@ -125,7 +125,7 @@ where
 }
 
 pub trait Bellman<Rhs = Self, Output = Self, Final = Self> {
-    fn update(&self, other: &Rhs) -> Output;
+    fn update(&self, other: &Rhs) -> Final;
 
     fn partial_update(&self, other: &Rhs) -> Output;
 
