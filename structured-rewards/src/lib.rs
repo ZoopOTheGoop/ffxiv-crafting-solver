@@ -10,6 +10,8 @@
 //!
 //! In the future this should link to a more thorough overview of the concept.
 
+#![warn(missing_docs)]
+
 pub mod sem;
 
 pub mod rewards;
@@ -156,10 +158,21 @@ impl<T> TotalQ for T where T: QVal + PartialQ<Self> {}
 /// outlined in the paragraph above, [`PartialQ`] and [`TransitionReward`] will be automatically
 /// implemented.
 pub trait Bellman<Rhs = Self, Output = Self, Final = Self> {
+    /// Performs a point observation on `other`, updating its expectation
+    /// accordingly. This will immediately output the associated [`QVal`].
     fn update(&self, other: &Rhs) -> Final;
 
+    /// Performs a partial update of the expectation, building up a sequence
+    /// as in the `sum` term of Value Iteration (denoted `tree` in Structured
+    /// Rewards).
     fn partial_update(&self, other: &Rhs) -> Output;
 
+    /// Used to finalize to a [`QVal`] after repeated calls to
+    /// [`partial_update`](Bellman::partial_update), making sure the expectation
+    /// properly adds to 100% in cases where that's tracks. This may also perform
+    /// simplification if desired.
+    ///
+    /// For some types (such as [`SimpleQ`](rewards::SimpleQ)) this is just a no-op.
     fn reweight(&self) -> Final;
 }
 
@@ -173,5 +186,9 @@ pub trait Bellman<Rhs = Self, Output = Self, Final = Self> {
 /// [`PartialQ`] values (with this output being on the `Rhs` of those calls), finalizes back into the [`QVal`]
 /// for that state, usable by other states updating their estimates.
 pub trait Compose<Rhs = Self, Output = Self> {
+    /// Composes this with `other`, yielding a [`PartialQ`].
+    ///
+    /// See the documentation for [`Compose`] and [`TransitionReward`]
+    /// for more detailed information.
     fn compose(&self, other: &Rhs) -> Output;
 }

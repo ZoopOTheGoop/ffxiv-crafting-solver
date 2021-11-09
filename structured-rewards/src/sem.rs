@@ -100,8 +100,13 @@ where
 ///
 /// [`QVal`]: crate::QVal
 pub trait SemanticEq {
+    /// Checks whether this and another instance of `Self` are
+    /// semantically equal.
     fn sem_eq(&self, other: &Self) -> bool;
 
+    /// Wraps this type in [`Sem`], to allow
+    /// for easy semantic comparison via built-in operators
+    /// and functions.
     fn sem(self) -> Sem<Self>
     where
         Self: Sized,
@@ -147,6 +152,9 @@ where
 ///
 /// [`QVal`]: crate::QVal
 pub trait SemanticOrd: SemanticEq {
+    /// Rank this and another instance of `Self` semantically,
+    /// determining if this one is "Better"/[`Greater`](Ordering::Greater),
+    /// "Worse"/[`Less`](Ordering::Less), or "Tied"/[`Equal`](Ordering::Equal).
     fn sem_cmp(&self, other: &Self) -> Ordering;
 }
 
