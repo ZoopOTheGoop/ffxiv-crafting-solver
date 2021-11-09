@@ -25,10 +25,6 @@ pub use sem::{Sem, SemanticEq, SemanticOrd};
 /// you implement your own domain-specific agent training loops that can exploit your reward
 /// and state structure, which would obviate the need for them, these should always be sufficient
 /// for the overriding type framework and may provide guidance in design.
-///
-/// Implementing all these traits, however, will give you a reward structure that can always be used
-/// with the solvers in [`simple_solvers`](crate::simple_solvers), provided a state/action domain is
-/// also provided with the traits needed for them to run.
 pub mod prelude {
     pub use crate::{
         Bellman, Compose, PartialQ, QVal, SemanticEq, SemanticOrd, TotalQ, TransitionReward,
