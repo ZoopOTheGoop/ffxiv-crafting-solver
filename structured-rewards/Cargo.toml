@@ -17,3 +17,4 @@ structured-rewards = { path = ".", features = ["environments"] }
 default = []
 solvers = []
 environments = ["solvers", "derivative", "strum"]
+all = ["solvers", "environments"]
