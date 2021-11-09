@@ -11,6 +11,9 @@
 //! In the future this should link to a more thorough overview of the concept.
 
 pub mod sem;
+
+pub mod rewards;
+#[cfg(any(test, solvers))]
 pub mod simple_solvers;
 
 pub use sem::{Sem, SemanticEq, SemanticOrd};
