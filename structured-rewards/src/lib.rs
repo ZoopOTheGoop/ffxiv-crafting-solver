@@ -2,11 +2,34 @@
 //! extension of the notion of "reward" in Reinforcement Learning to arbitrary types, with implementor-defined
 //! orderings and combination rules.
 //!
-//! This crate also implements a very simple [solvers](simple_solvers) for testing purposes.
-//! However, the environment is only really useful for playing with the concept at a broad level,
-//! and the solver is a very generic implementation of Value Iteration, albeit extended to Structured Rewards,
-//! and likely unsuitable for complex domains, especially since structural rewards
-//! can help you exploit your domain better while optimizing.
+#![cfg_attr(
+    not(feature = "solvers"),
+    doc = r#"By activating the 'solvers' feature, you can also gain access to a very simple,
+    general solver for testing purposes.
+
+"#
+)]
+#![cfg_attr(
+    feature = "solvers",
+    doc = r#"This crate also implements a very simple [solver](solvers::simple_solver) for testing purposes.
+    However, the environment is only really useful for playing with the concept at a broad level,
+    and the solver is a very generic implementation of Value Iteration, albeit extended to Structured Rewards,
+    and likely unsuitable for complex domains, especially since structural rewards
+    can help you exploit your domain better while optimizing.
+
+"#
+)]
+#![cfg_attr(
+    not(feature = "environments"),
+    doc = "You can also gain access to some environments with the `environments` feature flag."
+)]
+#![cfg_attr(
+    feature = "environments",
+    doc = r#"There are also simple test environments in the [environments](solvers::environments) module,
+    primarily useful for use with the [solver](solvers::simple_solver), and can be played with to get
+    a very basic feel for how the API and rewards work.  
+"#
+)]
 //!
 //! In the future this should link to a more thorough overview of the concept.
 
@@ -15,7 +38,7 @@
 pub mod sem;
 
 pub mod rewards;
-#[cfg(any(test, feature = "solvers"))]
+#[cfg(feature = "solvers")]
 pub mod simple_solvers;
 
 pub use sem::{Sem, SemanticEq, SemanticOrd};

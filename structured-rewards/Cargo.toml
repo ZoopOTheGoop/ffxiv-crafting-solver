@@ -10,9 +10,6 @@ edition = "2021"
 derivative = { version = "2.2.0", optional = true }
 strum = { version = "0.22", features = ["derive"], optional = true }
 
-[dev-dependencies]
-structured-rewards = { path = ".", features = ["environments"] }
-
 [features]
 default = []
 solvers = []

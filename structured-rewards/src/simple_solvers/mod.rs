@@ -12,7 +12,7 @@ use std::{
 
 use crate::{prelude::*, Sem};
 
-#[cfg(any(test, feature = "environments"))]
+#[cfg(feature = "environments")]
 pub mod environments;
 
 /// Defines the current place the agent/solver is evaluating. The general loop is that
