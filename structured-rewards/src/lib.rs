@@ -15,7 +15,7 @@
 pub mod sem;
 
 pub mod rewards;
-#[cfg(any(test, solvers))]
+#[cfg(any(test, feature = "solvers"))]
 pub mod simple_solvers;
 
 pub use sem::{Sem, SemanticEq, SemanticOrd};
