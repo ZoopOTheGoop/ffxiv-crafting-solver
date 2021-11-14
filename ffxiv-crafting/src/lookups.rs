@@ -652,4 +652,30 @@ mod test {
 
         assert_eq!(mods, (0..LEVEL_MOD_QUALITY.len()).collect::<Vec<_>>());
     }
+
+    #[test]
+    fn hq_lookup() {
+        // Use a weirder number so the percentages aren't always super even
+        let recipe_quality = 35276;
+
+        let mut hqs: Vec<_> = (0..=recipe_quality)
+            .map(|quality| lookup_hq(quality, recipe_quality))
+            .collect();
+
+        // `is_sorted` isn't stable yet, sadly
+        let (_, sorted) = hqs.iter().fold((0, true), |(prev, sorted), v| {
+            if sorted {
+                (*v, *v >= prev)
+            } else {
+                (*v, false)
+            }
+        });
+
+        assert!(sorted);
+        hqs.dedup();
+
+        let mut lookup = HQ.to_vec();
+        lookup.dedup();
+        assert_eq!(hqs, lookup);
+    }
 }
