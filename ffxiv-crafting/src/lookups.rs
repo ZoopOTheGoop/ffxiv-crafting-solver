@@ -436,7 +436,7 @@ pub(crate) const EXPERT_CRAFT_2: u16 = RawConditions::Normal as u16
     | RawConditions::Primed as u16;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct ConditionBits(u16);
+pub(crate) struct ConditionBits(pub u16);
 
 pub(crate) const RLVL_CONDITIONS: [ConditionBits; 80 + 4 * 3 + 9] = [
     ConditionBits(NORMAL_CONDITIONS),

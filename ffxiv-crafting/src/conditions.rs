@@ -1,17 +1,22 @@
+use std::error::Error;
+
+use derivative::Derivative;
 use ffxiv_crafting_derive::Condition;
 use rand::distributions::Distribution;
 
 use crate::lookups::{
-    CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier, StatusDurationModifier,
-    SuccessRateModifier,
+    self, ConditionBits, CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier,
+    StatusDurationModifier, SuccessRateModifier,
 };
 
 // // Two different types is sad, if we get the #[exhaustive_patterns] feature though
 // // we can create an unreachable variant that holds a PhantomData to QA/NoQA that defines
 // // the distribution
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derivative(Default)]
 pub enum NoQARegularConditions {
+    #[derivative(Default)]
     Normal,
     #[ffxiv(quality)]
     Good,
@@ -40,8 +45,22 @@ impl Distribution<Self> for NoQARegularConditions {
     }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition)]
+impl TryFrom<ConditionBits> for NoQARegularConditions {
+    type Error = Box<dyn Error>;
+
+    fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
+        if value.0 == lookups::NORMAL_CONDITIONS {
+            Ok(Self::default())
+        } else {
+            Err("Bits don't match this condition pattern".into())
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derivative(Default)]
 pub enum QARegularConditions {
+    #[derivative(Default)]
     Normal,
     #[ffxiv(quality)]
     Good,
@@ -70,9 +89,23 @@ impl Distribution<Self> for QARegularConditions {
     }
 }
 
+impl TryFrom<ConditionBits> for QARegularConditions {
+    type Error = Box<dyn Error>;
+
+    fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
+        if value.0 == lookups::NORMAL_CONDITIONS {
+            Ok(Self::default())
+        } else {
+            Err("Bits don't match this condition pattern".into())
+        }
+    }
+}
+
 // Corresponds to EXPERT_CRAFT_1
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derivative(Default)]
 pub enum RestoExpertConditions {
+    #[derivative(Default)]
     Normal,
     #[ffxiv(quality)]
     Good,
@@ -107,9 +140,23 @@ impl Distribution<Self> for RestoExpertConditions {
     }
 }
 
+impl TryFrom<ConditionBits> for RestoExpertConditions {
+    type Error = Box<dyn Error>;
+
+    fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
+        if value.0 == lookups::EXPERT_CRAFT_1 {
+            Ok(Self::default())
+        } else {
+            Err("Bits don't match this condition pattern".into())
+        }
+    }
+}
+
 // Corresponds to EXPERT_CRAFT_2
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derivative(Default)]
 pub enum RelicExpertConditions {
+    #[derivative(Default)]
     Normal,
     #[ffxiv(quality)]
     Good,
@@ -143,6 +190,18 @@ impl Distribution<Self> for RelicExpertConditions {
         }
 
         Self::Normal
+    }
+}
+
+impl TryFrom<ConditionBits> for RelicExpertConditions {
+    type Error = Box<dyn Error>;
+
+    fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
+        if value.0 == lookups::EXPERT_CRAFT_2 {
+            Ok(Self::default())
+        } else {
+            Err("Bits don't match this condition pattern".into())
+        }
     }
 }
 
