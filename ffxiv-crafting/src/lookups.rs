@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use derivative::Derivative;
+
 // It's 101 because it goes from [0-100], not [1-100]
 pub(crate) const HQ: [u8; 101] = [
     1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8,
@@ -92,21 +94,49 @@ pub enum RecipeLevelRanges {
 }
 
 impl RecipeLevelRanges {
+    pub fn verify_leveling(self) -> bool {
+        matches!(
+            self,
+            Self::ArrLeveling(1..=49)
+                | Self::HwLeveling(51..=59)
+                | Self::StbLeveling(61..=69)
+                | Self::ShbLeveling(71..=79)
+                | Self::ArrMax(_)
+                | Self::HwMax(_)
+                | Self::StbMax(_)
+                | Self::ShbMax(_)
+        )
+    }
+
     pub const fn to_canonical_idx(self) -> usize {
-        (match self {
+        let raw_lvl = match self {
             Self::ArrLeveling(lvl)
             | Self::HwLeveling(lvl)
             | Self::StbLeveling(lvl)
             | Self::ShbLeveling(lvl) => {
+                let lvl = lvl as i16;
                 let modifier = (lvl - 40) / 10;
+                let modifier = if modifier < 0 { 0 } else { modifier };
                 // Four stars of recipes every 10 levels (until ShB max...)
-                lvl + modifier * 4
+                (lvl + modifier * 4) as usize
             }
-            Self::ArrMax(stars) => 50 + stars as u8,
-            Self::HwMax(stars) => 60 + stars as u8,
-            Self::StbMax(stars) => 70 + stars as u8,
-            Self::ShbMax(stars) => 80 + stars as u8,
-        }) as usize
+            Self::ArrMax(stars) => 50 + stars as usize,
+            Self::HwMax(stars) => 60 + 4 + stars as usize,
+            Self::StbMax(stars) => 70 + 8 + stars as usize,
+            Self::ShbMax(stars) => 80 + 12 + stars as usize,
+        };
+
+        raw_lvl - 1
+    }
+
+    #[cfg(test)]
+    const fn max_level_recipe() -> Self {
+        Self::ShbMax(ShbStars::FourGold3)
+    }
+
+    #[cfg(test)]
+    const fn min_level_recipe() -> Self {
+        Self::ArrLeveling(1)
     }
 
     pub const fn to_recipe_level(self) -> u16 {
@@ -136,15 +166,136 @@ impl RecipeLevelRanges {
     const fn to_recipe_level_conditions(self) -> ConditionBits {
         RLVL_CONDITIONS[self.to_canonical_idx()]
     }
+
+    const fn to_progress_level_index(self, clvl: u16) -> usize {
+        const MAX_DISADVANTAGE: i16 = -30;
+        const MAX_ADVANTAGE: i16 = 49;
+
+        let delta = clvl as i16 - self.to_recipe_level() as i16;
+        let delta = clamp(-30, delta, 49) + 30;
+
+        // Clamp and then shift into the range 0+ to use as an index
+        (clamp(MAX_DISADVANTAGE, delta, MAX_ADVANTAGE) + (-MAX_DISADVANTAGE)) as usize
+    }
+
+    const fn to_progress_level_mod(self, clvl: u16) -> u16 {
+        LEVEL_MOD_PROGRESS[self.to_progress_level_index(clvl)]
+    }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct RecipeLevelIter {
+    curr: RecipeLevelRanges,
+    done: bool,
+}
+
+impl Default for RecipeLevelIter {
+    fn default() -> Self {
+        Self {
+            curr: RecipeLevelRanges::ArrLeveling(0),
+            done: false,
+        }
+    }
+}
+
+impl Iterator for RecipeLevelIter {
+    type Item = RecipeLevelRanges;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        use RecipeLevelRanges::*;
+        if self.done {
+            return None;
+        }
+
+        match &mut self.curr {
+            &mut ArrLeveling(ref mut val @ 0..=48)
+            | &mut HwLeveling(ref mut val @ 51..=58)
+            | &mut StbLeveling(ref mut val @ 61..=68)
+            | &mut ShbLeveling(ref mut val @ 71..=78) => {
+                *val += 1;
+            }
+            &mut ArrLeveling(49) => {
+                self.curr = ArrMax(Stars::Zero);
+            }
+            &mut HwLeveling(59) => {
+                self.curr = HwMax(Stars::Zero);
+            }
+            &mut StbLeveling(69) => {
+                self.curr = StbMax(Stars::Zero);
+            }
+            &mut ShbLeveling(79) => {
+                self.curr = ShbMax(ShbStars::Zero);
+            }
+            &mut ArrMax(ref mut stars) => {
+                if stars.next().is_none() {
+                    self.curr = HwLeveling(51);
+                }
+            }
+            &mut HwMax(ref mut stars) => {
+                if stars.next().is_none() {
+                    self.curr = StbLeveling(61);
+                }
+            }
+            &mut StbMax(ref mut stars) => {
+                if stars.next().is_none() {
+                    self.curr = ShbLeveling(71);
+                }
+            }
+            &mut ShbMax(ShbStars::FourGold3) => {
+                self.done = true;
+                return None;
+            }
+            &mut ShbMax(ref mut stars) => {
+                stars.next();
+            }
+            invalid => unreachable!("Invalid recipe configuration {:?}", invalid),
+        }
+
+        debug_assert!(self.curr.verify_leveling());
+
+        Some(self.curr)
+    }
+}
+
+// We can't use the built-in cuz it's not const yet :(
+const fn clamp(min: i16, med: i16, max: i16) -> i16 {
+    if med < min {
+        min
+    } else if med > max {
+        max
+    } else {
+        med
+    }
+}
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
+#[derivative(Default)]
 pub enum Stars {
+    #[derivative(Default)]
     Zero = 0,
     One,
     Two,
     Three,
     Four,
+}
+
+impl Iterator for Stars {
+    type Item = Self;
+
+    fn next(&mut self) -> Option<Self> {
+        let next = match self {
+            Self::Zero => Some(Self::One),
+            Self::One => Some(Self::Two),
+            Self::Two => Some(Self::Three),
+            Self::Three => Some(Self::Four),
+            Self::Four => None,
+        };
+
+        if let Some(val) = next {
+            *self = val;
+        }
+
+        next
+    }
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -154,10 +305,36 @@ pub enum ShbStars {
     Two,
     Three,
     ThreeGold,
+    ThreeGold2,
     Four,
     FourGold,
     FourGold2,
     FourGold3,
+}
+
+impl Iterator for ShbStars {
+    type Item = Self;
+
+    fn next(&mut self) -> Option<Self> {
+        let next = match self {
+            Self::Zero => Some(Self::One),
+            Self::One => Some(Self::Two),
+            Self::Two => Some(Self::Three),
+            Self::Three => Some(Self::ThreeGold),
+            Self::ThreeGold => Some(Self::ThreeGold2),
+            Self::ThreeGold2 => Some(Self::Four),
+            Self::Four => Some(Self::FourGold),
+            Self::FourGold => Some(Self::FourGold2),
+            Self::FourGold2 => Some(Self::FourGold3),
+            Self::FourGold3 => None,
+        };
+
+        if let Some(val) = next {
+            *self = val;
+        }
+
+        next
+    }
 }
 
 pub(crate) enum RawConditions {
@@ -172,7 +349,22 @@ pub(crate) enum RawConditions {
     Primed = 0x100,
 }
 
-/* Wanted to do these as one big enum but since Malleable has the same mod as Poor we can't */
+const LEVEL_MOD_PROGRESS: [u16; 80] = [
+    80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 105, 110, 115, 120, 125, 127, 129, 131, 133,
+    135, 137, 139, 141, 143, 145, 147, 147, 148, 149, 150, 150, 150, 150, 150, 150, 150, 150, 150,
+    150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150,
+    150, 150,
+];
+
+const LEVEL_MOD_QUALITY: [u16; 80] = [
+    60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100,
+];
+
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum QualityModifier {
     Poor = 50,
@@ -348,7 +540,7 @@ pub(crate) const RLVL_CONDITIONS: [ConditionBits; 80 + 4 * 3 + 9] = [
 
 #[cfg(test)]
 mod test {
-    use super::RLVL_CONDITIONS;
+    use super::*;
 
     const RLVL_CONDITIONS_RAW: [u16; 80 + 4 * 3 + 9] = [
         15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
@@ -361,5 +553,83 @@ mod test {
     #[test]
     fn rlvl_matches_conditions() {
         assert_eq!(RLVL_CONDITIONS_RAW, RLVL_CONDITIONS.map(|v| v.0));
+    }
+
+    #[test]
+    fn all_rlvls_same_len() {
+        assert_eq!(RLVL.len(), RLVL_CONDITIONS.len());
+        assert_eq!(RLVL.len(), RLVL_CONTROL.len());
+        assert_eq!(RLVL.len(), RLVL_CRAFTSMANSHIP.len());
+        assert_eq!(RLVL.len(), RLVL_DURABILITY.len());
+        assert_eq!(RLVL.len(), RLVL_PROGRESS.len());
+        assert_eq!(RLVL.len(), RLVL_QUALITY.len());
+    }
+
+    #[test]
+    fn max_level_is_max() {
+        let recipe = RecipeLevelRanges::max_level_recipe();
+        assert_eq!(recipe.to_canonical_idx(), RLVL.len() - 1);
+        assert_eq!(recipe.to_recipe_level(), RLVL[RLVL.len() - 1]);
+    }
+
+    #[test]
+    fn min_level_is_min() {
+        let recipe = RecipeLevelRanges::min_level_recipe();
+        assert_eq!(recipe.to_canonical_idx(), 0);
+        assert_eq!(recipe.to_recipe_level(), RLVL[0]);
+    }
+
+    #[test]
+    fn all_levels_match() {
+        let iter = RecipeLevelIter::default();
+        iter.map(|v| v.to_recipe_level())
+            .zip(RLVL.into_iter())
+            .for_each(|(got, expected)| assert_eq!(got, expected));
+    }
+
+    #[test]
+    fn all_conditions_match() {
+        let iter = RecipeLevelIter::default();
+        iter.map(|v| v.to_recipe_level_conditions())
+            .zip(RLVL_CONDITIONS.into_iter())
+            .for_each(|(got, expected)| assert_eq!(got, expected));
+    }
+
+    #[test]
+    fn all_controls_match() {
+        let iter = RecipeLevelIter::default();
+        iter.map(|v| v.to_recipe_level_control())
+            .zip(RLVL_CONTROL.into_iter())
+            .for_each(|(got, expected)| assert_eq!(got, expected));
+    }
+
+    #[test]
+    fn all_craftsmanship_match() {
+        let iter = RecipeLevelIter::default();
+        iter.map(|v| v.to_recipe_level_craftsmanship())
+            .zip(RLVL_CRAFTSMANSHIP.into_iter())
+            .for_each(|(got, expected)| assert_eq!(got, expected));
+    }
+
+    #[test]
+    fn all_durability_match() {
+        let iter = RecipeLevelIter::default();
+        iter.map(|v| v.to_recipe_level_durability())
+            .zip(RLVL_DURABILITY.into_iter())
+            .for_each(|(got, expected)| assert_eq!(got, expected));
+    }
+
+    #[test]
+    fn all_quality_match() {
+        let iter = RecipeLevelIter::default();
+        iter.map(|v| v.to_recipe_level_quality())
+            .zip(RLVL_QUALITY.into_iter())
+            .for_each(|(got, expected)| assert_eq!(got, expected));
+    }
+
+    #[test]
+    fn level_iter_count() {
+        let iter = RecipeLevelIter::default();
+        assert_eq!(iter.count(), RLVL.len());
     }
 }

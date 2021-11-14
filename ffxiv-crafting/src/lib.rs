@@ -17,9 +17,6 @@ where
     character: CharacterStats,
     recipe: RecipeStats,
 
-    // Lookup table from clvl - rlvl
-    lvl_mod: i16,
-
     // Arguably these should be on `Recipe`, may move later
     // Expert recipes implied by Condition type
     conditions: C,
@@ -49,6 +46,10 @@ pub struct RecipeStats {
     max_durability: u16,
     max_quality: u32,
     max_progress: u32,
+
+    difficulty_factor: u16,
+    quality_factor: u16,
+    durability_factor: u16,
 }
 
 #[derive(Clone, Copy, Derivative)]
