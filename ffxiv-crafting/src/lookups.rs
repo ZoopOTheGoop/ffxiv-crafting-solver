@@ -1,7 +1,5 @@
 #![allow(dead_code)]
 
-use derivative::Derivative;
-
 // It's 101 because it goes from [0-100], not [1-100]
 pub(crate) const HQ: [u8; 101] = [
     1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8,
@@ -84,13 +82,13 @@ pub(crate) const RLVL_DURABILITY: [u8; 80 + 4 * 3 + 9] = [
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RecipeLevelRanges {
     ArrLeveling(u8),
-    ArrMax(Stars),
+    ArrMax(u8),
     HwLeveling(u8),
-    HwMax(Stars),
+    HwMax(u8),
     StbLeveling(u8),
-    StbMax(Stars),
+    StbMax(u8),
     ShbLeveling(u8),
-    ShbMax(ShbStars),
+    ShbMax(u8),
 }
 
 impl RecipeLevelRanges {
@@ -101,10 +99,10 @@ impl RecipeLevelRanges {
                 | Self::HwLeveling(51..=59)
                 | Self::StbLeveling(61..=69)
                 | Self::ShbLeveling(71..=79)
-                | Self::ArrMax(_)
-                | Self::HwMax(_)
-                | Self::StbMax(_)
-                | Self::ShbMax(_)
+                | Self::ArrMax(0..=4)
+                | Self::HwMax(0..=4)
+                | Self::StbMax(0..=4)
+                | Self::ShbMax(0..=9)
         )
     }
 
@@ -138,7 +136,7 @@ impl RecipeLevelRanges {
 
     #[cfg(test)]
     const fn max_level_recipe() -> Self {
-        Self::ShbMax(ShbStars::FourGold3)
+        Self::ShbMax(9)
     }
 
     #[cfg(test)]
@@ -221,42 +219,37 @@ impl Iterator for RecipeLevelIter {
             &mut ArrLeveling(ref mut val @ 0..=48)
             | &mut HwLeveling(ref mut val @ 51..=58)
             | &mut StbLeveling(ref mut val @ 61..=68)
-            | &mut ShbLeveling(ref mut val @ 71..=78) => {
+            | &mut ShbLeveling(ref mut val @ 71..=78)
+            | &mut ArrMax(ref mut val @ 0..=3)
+            | &mut HwMax(ref mut val @ 0..=3)
+            | &mut StbMax(ref mut val @ 0..=3)
+            | &mut ShbMax(ref mut val @ 0..=8) => {
                 *val += 1;
             }
             &mut ArrLeveling(49) => {
-                self.curr = ArrMax(Stars::Zero);
+                self.curr = ArrMax(0);
             }
             &mut HwLeveling(59) => {
-                self.curr = HwMax(Stars::Zero);
+                self.curr = HwMax(0);
             }
             &mut StbLeveling(69) => {
-                self.curr = StbMax(Stars::Zero);
+                self.curr = StbMax(0);
             }
             &mut ShbLeveling(79) => {
-                self.curr = ShbMax(ShbStars::Zero);
+                self.curr = ShbMax(0);
             }
-            &mut ArrMax(ref mut stars) => {
-                if stars.next().is_none() {
-                    self.curr = HwLeveling(51);
-                }
+            &mut ArrMax(4) => {
+                self.curr = HwLeveling(51);
             }
-            &mut HwMax(ref mut stars) => {
-                if stars.next().is_none() {
-                    self.curr = StbLeveling(61);
-                }
+            &mut HwMax(4) => {
+                self.curr = StbLeveling(61);
             }
-            &mut StbMax(ref mut stars) => {
-                if stars.next().is_none() {
-                    self.curr = ShbLeveling(71);
-                }
+            &mut StbMax(4) => {
+                self.curr = ShbLeveling(71);
             }
-            &mut ShbMax(ShbStars::FourGold3) => {
+            &mut ShbMax(9) => {
                 self.done = true;
                 return None;
-            }
-            &mut ShbMax(ref mut stars) => {
-                stars.next();
             }
             invalid => unreachable!("Invalid recipe configuration {:?}", invalid),
         }
@@ -275,76 +268,6 @@ const fn clamp(min: i16, med: i16, max: i16) -> i16 {
         max
     } else {
         med
-    }
-}
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
-pub enum Stars {
-    #[derivative(Default)]
-    Zero = 0,
-    One,
-    Two,
-    Three,
-    Four,
-}
-
-impl Iterator for Stars {
-    type Item = Self;
-
-    fn next(&mut self) -> Option<Self> {
-        let next = match self {
-            Self::Zero => Some(Self::One),
-            Self::One => Some(Self::Two),
-            Self::Two => Some(Self::Three),
-            Self::Three => Some(Self::Four),
-            Self::Four => None,
-        };
-
-        if let Some(val) = next {
-            *self = val;
-        }
-
-        next
-    }
-}
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ShbStars {
-    Zero = 0,
-    One,
-    Two,
-    Three,
-    ThreeGold,
-    ThreeGold2,
-    Four,
-    FourGold,
-    FourGold2,
-    FourGold3,
-}
-
-impl Iterator for ShbStars {
-    type Item = Self;
-
-    fn next(&mut self) -> Option<Self> {
-        let next = match self {
-            Self::Zero => Some(Self::One),
-            Self::One => Some(Self::Two),
-            Self::Two => Some(Self::Three),
-            Self::Three => Some(Self::ThreeGold),
-            Self::ThreeGold => Some(Self::ThreeGold2),
-            Self::ThreeGold2 => Some(Self::Four),
-            Self::Four => Some(Self::FourGold),
-            Self::FourGold => Some(Self::FourGold2),
-            Self::FourGold2 => Some(Self::FourGold3),
-            Self::FourGold3 => None,
-        };
-
-        if let Some(val) = next {
-            *self = val;
-        }
-
-        next
     }
 }
 
