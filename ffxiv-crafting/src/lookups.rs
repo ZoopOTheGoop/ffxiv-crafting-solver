@@ -108,7 +108,7 @@ impl RecipeLevelRanges {
         )
     }
 
-    pub const fn to_canonical_idx(self) -> usize {
+    pub const fn to_rlvl_index(self) -> usize {
         let raw_lvl = match self {
             Self::ArrLeveling(lvl)
             | Self::HwLeveling(lvl)
@@ -140,46 +140,50 @@ impl RecipeLevelRanges {
     }
 
     pub const fn to_recipe_level(self) -> u16 {
-        RLVL[self.to_canonical_idx()]
+        RLVL[self.to_rlvl_index()]
     }
 
     pub const fn to_recipe_level_craftsmanship(self) -> u16 {
-        RLVL_CRAFTSMANSHIP[self.to_canonical_idx()]
+        RLVL_CRAFTSMANSHIP[self.to_rlvl_index()]
     }
 
     pub const fn to_recipe_level_progress(self) -> u32 {
-        RLVL_PROGRESS[self.to_canonical_idx()]
+        RLVL_PROGRESS[self.to_rlvl_index()]
     }
 
     pub const fn to_recipe_level_control(self) -> u16 {
-        RLVL_CONTROL[self.to_canonical_idx()]
+        RLVL_CONTROL[self.to_rlvl_index()]
     }
 
     pub const fn to_recipe_level_quality(self) -> u32 {
-        RLVL_QUALITY[self.to_canonical_idx()]
+        RLVL_QUALITY[self.to_rlvl_index()]
     }
 
     pub const fn to_recipe_level_durability(self) -> u8 {
-        RLVL_DURABILITY[self.to_canonical_idx()]
+        RLVL_DURABILITY[self.to_rlvl_index()]
     }
 
     const fn to_recipe_level_conditions(self) -> ConditionBits {
-        RLVL_CONDITIONS[self.to_canonical_idx()]
+        RLVL_CONDITIONS[self.to_rlvl_index()]
     }
 
-    const fn to_progress_level_index(self, clvl: u16) -> usize {
+    const fn to_level_mod_index(self, clvl: u16) -> usize {
         const MAX_DISADVANTAGE: i16 = -30;
         const MAX_ADVANTAGE: i16 = 49;
 
         let delta = clvl as i16 - self.to_recipe_level() as i16;
-        let delta = clamp(-30, delta, 49) + 30;
-
         // Clamp and then shift into the range 0+ to use as an index
-        (clamp(MAX_DISADVANTAGE, delta, MAX_ADVANTAGE) + (-MAX_DISADVANTAGE)) as usize
+        let delta = clamp(MAX_DISADVANTAGE, delta, MAX_ADVANTAGE) + (-MAX_DISADVANTAGE);
+
+        delta as usize
     }
 
     const fn to_progress_level_mod(self, clvl: u16) -> u16 {
-        LEVEL_MOD_PROGRESS[self.to_progress_level_index(clvl)]
+        LEVEL_MOD_PROGRESS[self.to_level_mod_index(clvl)]
+    }
+
+    const fn to_quality_level_mod(self, clvl: u16) -> u16 {
+        LEVEL_MOD_QUALITY[self.to_level_mod_index(clvl)]
     }
 }
 
@@ -568,14 +572,14 @@ mod test {
     #[test]
     fn max_level_is_max() {
         let recipe = RecipeLevelRanges::max_level_recipe();
-        assert_eq!(recipe.to_canonical_idx(), RLVL.len() - 1);
+        assert_eq!(recipe.to_rlvl_index(), RLVL.len() - 1);
         assert_eq!(recipe.to_recipe_level(), RLVL[RLVL.len() - 1]);
     }
 
     #[test]
     fn min_level_is_min() {
         let recipe = RecipeLevelRanges::min_level_recipe();
-        assert_eq!(recipe.to_canonical_idx(), 0);
+        assert_eq!(recipe.to_rlvl_index(), 0);
         assert_eq!(recipe.to_recipe_level(), RLVL[0]);
     }
 
@@ -631,5 +635,21 @@ mod test {
     fn level_iter_count() {
         let iter = RecipeLevelIter::default();
         assert_eq!(iter.count(), RLVL.len());
+    }
+
+    #[test]
+    fn level_mods_span() {
+        // Iterating over all the recipes is overkill, but it sure determines that this gets everything we need
+        // and bonus verifies they all exist
+        let recipes = RecipeLevelIter::default();
+
+        let mut mods: Vec<_> = recipes
+            .flat_map(|recipe| CLVL.map(|v| recipe.to_level_mod_index(v)))
+            .collect();
+
+        mods.sort_unstable();
+        mods.dedup();
+
+        assert_eq!(mods, (0..LEVEL_MOD_QUALITY.len()).collect::<Vec<_>>());
     }
 }
