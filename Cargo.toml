@@ -3,4 +3,5 @@
 members = [
     "structured-rewards",
     "ffxiv-crafting",
+    "ffxiv-crafting/ffxiv-crafting-derive",
 ]
