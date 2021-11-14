@@ -108,6 +108,13 @@ impl RecipeLevelRanges {
         )
     }
 
+    pub fn from_rlvl(rlvl: u16) -> Self {
+        // There's definitely many faster ways to do this but they're really not worth it at the moment IMO
+        RecipeLevelIter::default()
+            .find(|recipe| recipe.to_recipe_level() == rlvl)
+            .unwrap_or_else(|| panic!("Invalid rlvl {}", rlvl))
+    }
+
     pub const fn to_rlvl_index(self) -> usize {
         let raw_lvl = match self {
             Self::ArrLeveling(lvl)
@@ -677,5 +684,14 @@ mod test {
         let mut lookup = HQ.to_vec();
         lookup.dedup();
         assert_eq!(hqs, lookup);
+    }
+
+    #[test]
+    fn rlvl_to_recipe() {
+        let recipes = RecipeLevelIter::default();
+        let rlvl = RLVL.iter();
+
+        rlvl.zip(recipes)
+            .for_each(|(rlvl, recipe)| assert_eq!(RecipeLevelRanges::from_rlvl(*rlvl), recipe));
     }
 }
