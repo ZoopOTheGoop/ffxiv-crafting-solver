@@ -6,6 +6,7 @@ pub mod conditions;
 pub(crate) mod lookups;
 pub mod quality_map;
 
+use lookups::RecipeLevelRanges;
 use quality_map::QualityMap;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -42,15 +43,10 @@ pub struct CharacterStats {
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RecipeStats {
     /* Recipe stats */
-    // Actual level, 1..<max_char_lvl> (80 in Shb, 90 in EW etc)
-    recipe_level: u8,
-    stars: u8,
-    // Internal rlvl - recipe specific from lookup table
-    rlvl: u16,
-    rlvl_craftsmanship: u16,
-    rlvl_control: u16,
-    max_durability: u16,
+    // A lookup enum for rlvl stuff
+    recipe_level: RecipeLevelRanges,
 
+    max_durability: u16,
     max_quality: u32,
     max_progress: u32,
 }

@@ -80,7 +80,7 @@ pub(crate) const RLVL_DURABILITY: [u8; 80 + 4 * 3 + 9] = [
 /* RLVL conditions are at the bottom because it's long */
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum RecipeLevelRanges {
+pub enum RecipeLevelRanges {
     ArrLeveling(u8),
     ArrMax(Stars),
     HwLeveling(u8),
@@ -139,7 +139,7 @@ impl RecipeLevelRanges {
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum Stars {
+pub enum Stars {
     Zero = 0,
     One,
     Two,
@@ -148,7 +148,7 @@ pub(crate) enum Stars {
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum ShbStars {
+pub enum ShbStars {
     Zero = 0,
     One,
     Two,
