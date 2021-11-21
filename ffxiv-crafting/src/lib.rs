@@ -97,6 +97,7 @@ where
     // Misc
     // Determines if muscle memory/reflection/trained eye is usable
     first_step: bool,
+    // Allows for observation combo effects (if more combos get added we can abstract this, not worth it now)
     last_state_was_observation: bool,
 }
 
