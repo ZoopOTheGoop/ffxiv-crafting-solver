@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
+use buffs::quality::QualityBuffs;
 use derivative::Derivative;
 
+pub mod actions;
+pub mod buffs;
 pub mod conditions;
 pub(crate) mod lookups;
 pub mod quality_map;
@@ -65,7 +68,7 @@ where
         Ord = "ignore",
         Debug = "ignore"
     )]
-    problem_state: &'a CraftingSimulator<C, M>,
+    recipe: &'a CraftingSimulator<C, M>,
     condition: C,
 
     curr_quality: u32,
@@ -79,9 +82,7 @@ where
     // for storage and other concerns.
 
     /* Quality-related */
-    inner_quiet: u8,
-    innovation: u8,
-    great_strides: u8,
+    quality_buffs: QualityBuffs,
 
     /* Durability related */
     manipulation: u8,

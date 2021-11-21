@@ -168,7 +168,7 @@ impl RecipeLevelRanges {
         RLVL_DURABILITY[self.to_rlvl_index()]
     }
 
-    const fn to_recipe_level_conditions(self) -> ConditionBits {
+    pub(crate) const fn to_recipe_level_conditions(self) -> ConditionBits {
         RLVL_CONDITIONS[self.to_rlvl_index()]
     }
 
@@ -183,11 +183,11 @@ impl RecipeLevelRanges {
         delta as usize
     }
 
-    const fn to_progress_level_mod(self, clvl: u16) -> u16 {
+    pub const fn to_progress_level_mod(self, clvl: u16) -> u16 {
         LEVEL_MOD_PROGRESS[self.to_level_mod_index(clvl)]
     }
 
-    const fn to_quality_level_mod(self, clvl: u16) -> u16 {
+    pub const fn to_quality_level_mod(self, clvl: u16) -> u16 {
         LEVEL_MOD_QUALITY[self.to_level_mod_index(clvl)]
     }
 }
