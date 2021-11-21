@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use buffs::quality::QualityBuffs;
+use buffs::{progress::ProgressBuffs, quality::QualityBuffs};
 use derivative::Derivative;
 
 pub mod actions;
@@ -84,24 +84,11 @@ where
     waste_not_2: u8,
 
     /* Progress Related */
-    // Since brand can't be used twice
-    brand_of_elements: BrandState,
-    veneration: u8,
-    muscle_memory: u8,
+    progress_buffs: ProgressBuffs,
 
     // Misc
     // Determines if muscle memory/reflection/trained eye is usable
     first_step: bool,
     // Allows for observation combo effects (if more combos get added we can abstract this, not worth it now)
     last_state_was_observation: bool,
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
-enum BrandState {
-    #[derivative(Default)]
-    Unused,
-    InProgress(u8),
-    Used,
 }

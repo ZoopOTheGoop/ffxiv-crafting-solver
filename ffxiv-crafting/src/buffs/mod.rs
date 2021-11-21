@@ -2,6 +2,7 @@
 
 use std::ops::{Sub, SubAssign};
 
+pub mod progress;
 pub mod quality;
 
 /// The basic form of a crafting buff. Since buffs can be a lot of different forms, the only
