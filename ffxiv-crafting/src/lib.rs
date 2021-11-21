@@ -75,12 +75,6 @@ where
     curr_progress: u32,
     curr_cp: u16,
 
-    // Buffs; integers are stacks/steps left
-    // There's an argument to be made for generalizing this more,
-    // like a table or list of buffs that gets added and operated on
-    // generically by actions acting on the state, but this is much easier
-    // for storage and other concerns.
-
     /* Quality-related */
     quality_buffs: QualityBuffs,
 
