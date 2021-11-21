@@ -33,7 +33,7 @@ pub struct CharacterStats {
     /* Character stats */
     craftsmanship: u16,
     control: u16,
-    max_cp: u8,
+    max_cp: u16,
     /// Actual level, 1..<max_char_lvl> (80 in Shb, 90 in EW etc)
     char_level: u8,
     /// Internal clvl; just a table lookup from char_level
