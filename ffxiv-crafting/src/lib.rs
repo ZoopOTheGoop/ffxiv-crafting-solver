@@ -106,6 +106,7 @@ where
         quality * rlvl.to_quality_level_mod(clvl) as f64 / 100.
     }
 
+    /// The base progress that any action operating on `progress` will modify with its `efficiency`.
     fn base_progress(&self) -> f64 {
         let craftsmanship = self.recipe.character.craftsmanship as f64;
 
