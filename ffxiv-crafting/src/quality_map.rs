@@ -2,7 +2,7 @@ use crate::lookups;
 
 pub trait QualityMap {
     // HQ chance or Collectibility
-    type Outcome;
+    type Outcome: Sized;
 
     fn convert(quality: u32, recipe_quality: u32) -> Self::Outcome;
 }

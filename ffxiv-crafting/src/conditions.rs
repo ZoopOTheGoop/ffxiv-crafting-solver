@@ -212,4 +212,6 @@ pub trait Condition: Copy + Sized + Distribution<Self> {
     fn to_durability_modifier(self) -> DurabilityModifier;
     fn to_status_duration_modifier(self) -> StatusDurationModifier;
     fn to_cp_usage_modifier(self) -> CpUsageModifier;
+    fn is_good(self) -> bool;
+    fn is_excellent(self) -> bool;
 }

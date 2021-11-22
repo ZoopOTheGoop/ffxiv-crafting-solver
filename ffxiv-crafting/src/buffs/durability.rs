@@ -19,6 +19,14 @@ impl DurabilityBuffs {
         self.manipulation.decay_in_place();
         self.waste_not.decay_in_place();
     }
+
+    pub fn repair(&self) -> i8 {
+        self.manipulation.repair()
+    }
+
+    pub fn durability_cost_mod(&self) -> u16 {
+        self.waste_not.durability_cost_mod()
+    }
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
@@ -27,6 +35,17 @@ pub enum Manipulation {
     #[derivative(Default)]
     Inactive,
     Active(u8),
+}
+
+impl Manipulation {
+    const REPAIR_VALUE: i8 = 5;
+
+    pub fn repair(self) -> i8 {
+        match self {
+            Self::Active(_) => Self::REPAIR_VALUE,
+            Self::Inactive => 0,
+        }
+    }
 }
 
 impl Buff for Manipulation {
@@ -72,6 +91,17 @@ pub enum WasteNot {
     Inactive,
     WasteNot(u8),
     WasteNot2(u8),
+}
+
+impl WasteNot {
+    const DISCOUNT: u16 = 50;
+
+    pub fn durability_cost_mod(self) -> u16 {
+        match self {
+            Self::WasteNot(_) | Self::WasteNot2(_) => Self::DISCOUNT,
+            Self::Inactive => 100,
+        }
+    }
 }
 
 impl Buff for WasteNot {

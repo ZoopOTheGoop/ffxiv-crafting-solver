@@ -1,6 +1,6 @@
 //! Contains very simple concrete implementations of rewards.
 //!
-//! At the moment these just emulate traditional RL as a proof of concept that 
+//! At the moment these just emulate traditional RL as a proof of concept that
 //! traditional RL rewards can be reduced to Structured Rewards.
 
 use crate::prelude::*;

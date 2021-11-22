@@ -49,6 +49,20 @@ pub fn condition_macro_derive(input: TokenStream) -> TokenStream {
 
         let params = &generics.params;
 
+        let is_excellent = if data.variants.iter().any(|v| v.ident == "Excellent") {
+            quote! {
+                fn is_excellent(self) -> bool {
+                    matches!(self, Self::Excellent)
+                }
+            }
+        } else {
+            quote! {
+                fn is_excellent(self) -> bool {
+                    false
+                }
+            }
+        };
+
         let main_derive: TokenStream = quote! {
             #[automatically_derived]
             #[allow(unused_qualifications)]
@@ -58,6 +72,10 @@ pub fn condition_macro_derive(input: TokenStream) -> TokenStream {
                     self.into()
                 }
                 )*
+                fn is_good(self) -> bool {
+                    matches!(self, Self::Good)
+                }
+                #is_excellent
             }
         }
         .into();

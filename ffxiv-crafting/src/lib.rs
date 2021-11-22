@@ -74,7 +74,8 @@ where
 
     curr_quality: u32,
     curr_progress: u32,
-    curr_cp: u16,
+    curr_durability: i8,
+    curr_cp: i16,
 
     buffs: BuffState,
 
