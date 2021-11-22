@@ -5,7 +5,7 @@ use crate::{conditions::Condition, quality_map::QualityMap, CraftingState};
 /// An action that has some effect on the `quality` attribute. The
 /// [`EFFICIENCY`](QualityAction::EFFICIENCY) is the base efficiency of the given
 /// action, without any modifiers.
-pub trait QualityAction: Copy {
+pub trait QualityAction {
     const EFFICIENCY: u16;
 
     /// Calculates the efficiency of the current action on the crafting state. By default this is simply the efficiency bonus granted buffs,

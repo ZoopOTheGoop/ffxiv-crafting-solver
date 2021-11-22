@@ -4,7 +4,7 @@ use std::ops::{Sub, SubAssign};
 
 use derivative::Derivative;
 
-use super::{Buff, DurationalBuff};
+use super::{Buff, ConsumableBuff, DurationalBuff};
 
 /// A simple collection of all the progress buffs, for cleaner fields on simulation
 /// structs.
@@ -20,6 +20,32 @@ impl ProgressBuffs {
         self.brand_of_the_elements.decay_in_place();
         self.veneration.decay_in_place();
         self.muscle_memory.decay_in_place();
+    }
+
+    /// Calculates the efficiency bonuses granted by these buffs. This does NOT include the [`NameOfTheElements`] buff,
+    /// as it's overridden specially by its matching action [`BrandOfTheElements`].
+    pub fn efficiency_mod(&self) -> u16 {
+        self.veneration.efficiency_mod() + self.muscle_memory.efficiency_mod()
+    }
+}
+
+/// A trait that denotes something that affects quality. Largely just a marker trait
+/// to denote intent. This doesn't work for [`NameOfTheElements`], as that only has its
+/// efficiency effect when used with [`BrandOfTheElements`] and requires extra information.
+pub trait ProgressEfficiencyMod: DurationalBuff {
+    /// The quality modifier, as internally defined. This is a percentage
+    /// represented as an integer (i.e. 100 = 100% = 2x bonus).
+    const MODIFIER: u16;
+
+    /// Returns the efficiency modifier if the buff is currently active, otherwise 0.
+    ///
+    /// The default impl simply defers to [`Buff::is_active`].
+    fn efficiency_mod(&self) -> u16 {
+        if self.is_active() {
+            Self::MODIFIER
+        } else {
+            0
+        }
     }
 }
 
@@ -114,6 +140,10 @@ impl SubAssign<u8> for Veneration {
     }
 }
 
+impl ProgressEfficiencyMod for Veneration {
+    const MODIFIER: u16 = 50;
+}
+
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum MuscleMemory {
@@ -125,6 +155,15 @@ pub enum MuscleMemory {
 impl Buff for MuscleMemory {
     fn is_active(&self) -> bool {
         matches!(self, Self::Active(_))
+    }
+}
+
+impl ConsumableBuff for MuscleMemory {
+    fn deactivate(self) -> (Self, u8) {
+        match self {
+            Self::Active(val) => (Self::Inactive, val),
+            Self::Inactive => panic!("Attempt to deactivate inactive Muscle Memory"),
+        }
     }
 }
 
@@ -153,4 +192,8 @@ impl SubAssign<u8> for MuscleMemory {
     fn sub_assign(&mut self, rhs: u8) {
         *self = self.sub(rhs)
     }
+}
+
+impl ProgressEfficiencyMod for MuscleMemory {
+    const MODIFIER: u16 = 100;
 }

@@ -106,4 +106,16 @@ where
         let quality = quality * (iq + 10_000.) / (rlvl.to_recipe_level_control() as f64 + 10_000.);
         quality * rlvl.to_quality_level_mod(clvl) as f64 / 100.
     }
+
+    fn base_progress(&self) -> f64 {
+        let craftsmanship = self.recipe.character.craftsmanship as f64;
+
+        let rlvl = self.recipe.recipe.recipe_level;
+        let clvl = self.recipe.character.clvl();
+
+        let progress = craftsmanship * 21. / 100. + 2.;
+        let progress = progress * (craftsmanship + 10_000.)
+            / (rlvl.to_recipe_level_craftsmanship() as f64 / 10_000.);
+        progress * rlvl.to_progress_level_mod(clvl) as f64 / 100.
+    }
 }
