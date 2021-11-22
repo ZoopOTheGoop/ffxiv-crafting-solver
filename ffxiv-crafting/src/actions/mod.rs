@@ -174,7 +174,8 @@ pub trait Action:
     Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost
 {
     /// Prospectively executes an action. This means that even if the action cannot be executed due to
-    /// e.g. not having enough CP or it not being available in that state.
+    /// e.g. not having enough CP or it not being available in that state, it will still compute it as
+    /// if it had succeeded, returning the outcome and a marker indicating why it cannot execute.
     ///
     /// If you need to take into account an action's rng, use [`Action::propective_act_random`] or
     /// [`Action::prospective_act_and_fail`].
