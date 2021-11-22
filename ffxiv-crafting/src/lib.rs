@@ -67,8 +67,7 @@ where
         Hash = "ignore",
         PartialEq = "ignore",
         PartialOrd = "ignore",
-        Ord = "ignore",
-        Debug = "ignore"
+        Ord = "ignore"
     )]
     recipe: &'a CraftingSimulator<C, M>,
     condition: C,
