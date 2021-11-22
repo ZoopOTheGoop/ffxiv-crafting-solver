@@ -8,7 +8,8 @@ use crate::{conditions::Condition, quality_map::QualityMap, CraftingState};
 pub trait ProgressAction {
     const EFFICIENCY: u16;
 
-    /// Calculates the efficiency of the current action on the crafting state. By default this is simply the efficiency bonus granted buffs,
+    /// Calculates the efficiency of the current action on the crafting state.
+    /// By default this is simply the efficiency bonus granted buffs,
     /// multiplied by the action's efficiency.
     fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
     where
