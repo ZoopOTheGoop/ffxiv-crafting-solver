@@ -2,6 +2,9 @@
 
 use std::ops::{Sub, SubAssign};
 
+use self::{durability::DurabilityBuffs, progress::ProgressBuffs, quality::QualityBuffs};
+
+pub mod durability;
 pub mod progress;
 pub mod quality;
 
@@ -94,5 +97,23 @@ pub trait ConsumableBuff: Buff {
         let (new, remaining) = self.deactivate();
         *self = new;
         remaining
+    }
+}
+
+/// Encodes the buff state during crafting. Has several utility methods to make
+/// buff management a bit less ugly
+#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
+pub struct BuffState {
+    pub quality: QualityBuffs,
+    pub progress: ProgressBuffs,
+    pub durability: DurabilityBuffs,
+}
+
+impl BuffState {
+    /// Makes all active buffs that "tick down" over time decay one step.
+    pub fn decay(&mut self) {
+        self.quality.decay();
+        self.progress.decay();
+        self.durability.decay();
     }
 }

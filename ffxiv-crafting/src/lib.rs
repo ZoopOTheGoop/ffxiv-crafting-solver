@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use buffs::{progress::ProgressBuffs, quality::QualityBuffs};
+use buffs::BuffState;
+use conditions::Condition;
 use derivative::Derivative;
 
 pub mod actions;
@@ -36,8 +37,12 @@ pub struct CharacterStats {
     max_cp: u16,
     /// Actual level, 1..<max_char_lvl> (80 in Shb, 90 in EW etc)
     char_level: u8,
-    /// Internal clvl; just a table lookup from char_level
-    clvl: u16,
+}
+
+impl CharacterStats {
+    const fn clvl(&self) -> u16 {
+        lookups::CLVL[self.char_level as usize]
+    }
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -49,16 +54,13 @@ pub struct RecipeStats {
     max_durability: u16,
     max_quality: u32,
     max_progress: u32,
-
-    difficulty_factor: u16,
-    quality_factor: u16,
-    durability_factor: u16,
 }
 
 #[derive(Clone, Copy, Derivative)]
 #[derivative(Hash, PartialOrd, Ord, PartialEq, Eq, Debug)]
 pub struct CraftingState<'a, C, M>
 where
+    C: Condition,
     M: QualityMap,
 {
     #[derivative(
@@ -75,20 +77,33 @@ where
     curr_progress: u32,
     curr_cp: u16,
 
-    /* Quality-related */
-    quality_buffs: QualityBuffs,
-
-    /* Durability related */
-    manipulation: u8,
-    waste_not: u8,
-    waste_not_2: u8,
-
-    /* Progress Related */
-    progress_buffs: ProgressBuffs,
+    buffs: BuffState,
 
     // Misc
     // Determines if muscle memory/reflection/trained eye is usable
     first_step: bool,
     // Allows for observation combo effects (if more combos get added we can abstract this, not worth it now)
     last_state_was_observation: bool,
+}
+
+impl<'a, C, M> CraftingState<'a, C, M>
+where
+    C: Condition,
+    M: QualityMap,
+{
+    /// The base quality that any action operating on `quality` will modify with its `efficiency`.
+    fn base_quality(&self) -> f64 {
+        let iq = self
+            .buffs
+            .quality
+            .inner_quiet
+            .quality_mod(self.recipe.character.control);
+
+        let rlvl = self.recipe.recipe.recipe_level;
+        let clvl = self.recipe.character.clvl();
+
+        let quality = iq * 35. / 100. + 35.;
+        let quality = quality * (iq + 10_000.) / (rlvl.to_recipe_level_control() as f64 + 10_000.);
+        quality * rlvl.to_quality_level_mod(clvl) as f64 / 100.
+    }
 }

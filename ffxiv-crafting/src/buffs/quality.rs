@@ -21,6 +21,17 @@ pub struct QualityBuffs {
     pub innovation: Innovation,
 }
 
+impl QualityBuffs {
+    pub fn decay(&mut self) {
+        self.great_strides.decay_in_place();
+        self.innovation.decay_in_place();
+    }
+
+    pub fn efficiency_mod(&self) -> u16 {
+        self.great_strides.efficiency_mod() + self.innovation.efficiency_mod()
+    }
+}
+
 // We could make `InnerQuiet` a "StackingBuff" and "QualityModBuff", but it's such a special case tbh,
 // maybe if more buffs of that form get added. It wouldn't exactly be a difficult refactor.
 
