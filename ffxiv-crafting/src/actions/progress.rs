@@ -6,7 +6,7 @@ use crate::{conditions::Condition, quality_map::QualityMap, CraftingState};
 /// [`EFFICIENCY`](ProgressAction::EFFICIENCY) is the base efficiency of the given
 /// action, without any modifiers.
 pub trait ProgressAction {
-    const EFFICIENCY: u16;
+    const EFFICIENCY: u16 = 0;
 
     /// Calculates the efficiency of the current action on the crafting state.
     /// By default this is simply the efficiency bonus granted buffs,
@@ -16,6 +16,10 @@ pub trait ProgressAction {
         C: Condition,
         M: QualityMap,
     {
+        if Self::EFFICIENCY == 0 {
+            return 0.;
+        }
+
         let efficiency_mod = 100. + state.buffs.progress.efficiency_mod() as f64 / 100.;
 
         efficiency_mod * Self::EFFICIENCY as f64
@@ -31,6 +35,10 @@ pub trait ProgressAction {
         C: Condition,
         M: QualityMap,
     {
+        if Self::EFFICIENCY == 0 {
+            return 0;
+        }
+
         let progress = state.base_progress();
         let condition_mod = state.condition.to_progress_modifier() as u64 as f64 / 100.;
         let efficiency = self.efficiency(state);
