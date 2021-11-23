@@ -229,6 +229,7 @@ pub trait Action:
 
         delta.added_cp = self.cp_cost(state);
 
+        #[cfg(debug_assertions)]
         let can_act = self.can_execute(state);
 
         #[cfg(debug_assertions)]

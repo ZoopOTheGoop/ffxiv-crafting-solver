@@ -162,4 +162,14 @@ mod concrete {
     #[ffxiv_buff_act(class = "touch", amount = 2)]
     #[ffxiv_can_exe(class = "good_excellent")]
     pub struct PreciseTouch;
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[ffxiv_quality(efficiency = 150)]
+    #[ffxiv_act_lvl(level = 68)]
+    #[ffxiv_cp(cost = 18)]
+    #[ffxiv_buff_act(class = "touch")]
+    #[ffxiv_rand_act(chance = 50, class = "combo_observe")]
+    pub struct FocusedTouch;
 }

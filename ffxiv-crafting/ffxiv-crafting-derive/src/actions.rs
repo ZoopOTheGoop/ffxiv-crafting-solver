@@ -260,23 +260,50 @@ pub fn random_action(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_rand_act";
 
-    let chance = [(
-        CHANCE,
-        Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
-    )]
+    let attrs = [
+        (
+            CHANCE,
+            Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
+        ),
+        (
+            CLASS,
+            Box::new(attr_literal(CLASS)) as Box<FfxivAttrMatcher>,
+        ),
+    ]
     .into_iter()
     .collect();
 
-    let val = find_attributes(&ast, TAG, chance);
+    let attrs = find_attributes(&ast, TAG, attrs);
+    let chance = attrs.get(CHANCE).into_iter().map(|v| v.to_lit_int());
 
-    let val = val.get(CHANCE).into_iter().map(|v| v.to_lit_int());
+    let fail_rate_class = attrs
+        .get(CLASS)
+        .into_iter()
+        .map(|v| v.to_lit_str())
+        .filter(|v| &*v.value() == "combo_observe")
+        .map(|_| {
+            quote!(
+                fn fail_rate<C: Condition, M: QualityMap>(
+                    &self,
+                    state: &CraftingState<C, M>,
+                ) -> u8 {
+                    if !state.last_state_was_observation {
+                        Self::FAIL_RATE
+                    } else {
+                        0
+                    }
+                }
+            )
+        });
 
     quote!(
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::RandomAction for #ident #type_generic #(#where_clause)* {
-            #(const FAIL_RATE: u8 = #val;)*
+            #(const FAIL_RATE: u8 = #chance;)*
             type FailAction = crate::actions::failure::NullFailure<Self>;
+
+            #(#fail_rate_class)*
 
             fn fail_action(&self) -> Self::FailAction {
                 if Self::FAIL_RATE == 0 {
