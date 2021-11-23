@@ -6,6 +6,7 @@ use syn::{parse_macro_input, DeriveInput, Lit, LitInt, LitStr, Meta, MetaNameVal
 
 const EFFICIENCY: &str = "efficiency";
 const COST: &str = "cost";
+const BONUS: &str = "bonus";
 const LEVEL: &str = "level";
 const CHANCE: &str = "fail_rate";
 const CLASS: &str = "class";
@@ -133,20 +134,50 @@ pub fn cp_cost(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_cp";
 
-    let cost = [(COST, Box::new(attr_literal(COST)) as Box<FfxivAttrMatcher>)]
-        .into_iter()
-        .collect();
+    let cost = [
+        (COST, Box::new(attr_literal(COST)) as Box<FfxivAttrMatcher>),
+        (
+            BONUS,
+            Box::new(attr_literal(BONUS)) as Box<FfxivAttrMatcher>,
+        ),
+    ]
+    .into_iter()
+    .collect();
 
-    let val = find_attributes(&ast, TAG, cost);
+    let vals = find_attributes(&ast, TAG, cost);
 
-    let val = val.get(COST).map(|v| v.to_lit_int())
-    .expect( "Unlike some other proc macros, CpCost requires you to specify the CP_COST value as `cost`.");
+    let cost = vals
+        .get(COST)
+        .map(|v| -v.to_lit_int().base10_parse::<i16>().unwrap());
+    let bonus = vals
+        .get(BONUS)
+        .map(|v| v.to_lit_int().base10_parse().unwrap());
+
+    if cost.is_some() && bonus.is_some() {
+        panic!("Specify either cost or bonus");
+    }
+
+    if cost.is_some() && cost > Some(0) {
+        panic!(
+            "Use \"bonus\" instead of cost for positive values. \
+        \"cost\" is how much the move uses, \"bonus\" how much it gives you."
+        )
+    }
+
+    if bonus.is_some() && bonus < Some(0) {
+        panic!(
+            "Use \"cost\" instead of bonus for negative values. \
+        \"cost\" is how much the move uses, \"bonus\" how much it gives you."
+        )
+    }
+
+    let val = cost.or(bonus).expect("Unlike some other proc macros, CpCost requires you to specify the LEVEL value as `cost` or `bonus`.");
 
     quote!(
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #type_generic crate::actions::CpCost for #ident #impl_generic #(#where_clause)* {
-            const CP_COST: i16 = #val;
+            const CP_COST: i16 = -#val;
         }
     )
     .into()
@@ -160,19 +191,50 @@ pub fn durability(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_durability";
 
-    let cost = [(COST, Box::new(attr_literal(COST)) as Box<FfxivAttrMatcher>)]
-        .into_iter()
-        .collect();
+    let cost = [
+        (COST, Box::new(attr_literal(COST)) as Box<FfxivAttrMatcher>),
+        (
+            BONUS,
+            Box::new(attr_literal(BONUS)) as Box<FfxivAttrMatcher>,
+        ),
+    ]
+    .into_iter()
+    .collect();
 
-    let val = find_attributes(&ast, TAG, cost);
+    let vals = find_attributes(&ast, TAG, cost);
 
-    let val = val.get(COST).into_iter().map(|v| v.to_lit_int());
+    let cost = vals
+        .get(COST)
+        .map(|v| -v.to_lit_int().base10_parse::<i8>().unwrap());
+    let bonus = vals
+        .get(BONUS)
+        .map(|v| v.to_lit_int().base10_parse().unwrap());
+
+    if cost.is_some() && bonus.is_some() {
+        panic!("Specify either cost or bonus");
+    }
+
+    if cost.is_some() && cost > Some(0) {
+        panic!(
+            "Use \"bonus\" instead of cost for positive values. \
+        \"cost\" is how much the move uses, \"bonus\" how much it gives you."
+        )
+    }
+
+    if bonus.is_some() && bonus < Some(0) {
+        panic!(
+            "Use \"cost\" instead of bonus for negative values. \
+        \"cost\" is how much the move uses, \"bonus\" how much it gives you."
+        )
+    }
+
+    let val = cost.or(bonus).into_iter();
 
     quote!(
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::DurabilityFactor for #ident #type_generic #(#where_clause)* {
-            #(const DURABILITY_USAGE: i8 = #val;)*
+            #(const DURABILITY_USAGE: i8 = -#val;)*
         }
     )
     .into()

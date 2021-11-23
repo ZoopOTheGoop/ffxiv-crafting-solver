@@ -165,6 +165,26 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+    #[derive(BuffAction, ActionLevel, RandomAction)]
+    #[ffxiv_quality(efficiency = 100)]
+    #[ffxiv_act_lvl(level = 66)]
+    #[ffxiv_cp(cost = 25)]
+    #[ffxiv_buff_act(class = "touch")]
+    #[ffxiv_durability(cost = 5)]
+    pub struct PrudentTouch;
+
+    impl CanExecute for PrudentTouch {
+        fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
+        where
+            C: Condition,
+            M: QualityMap,
+        {
+            state.buffs.durability.waste_not.is_inactive()
+        }
+    }
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
     #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
     #[ffxiv_quality(efficiency = 150)]
     #[ffxiv_act_lvl(level = 68)]
