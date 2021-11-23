@@ -35,6 +35,16 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
     actions::buff_action(input)
 }
 
+#[proc_macro_derive(ActionLevel, attributes(ffxiv_act_lvl))]
+pub fn action_level(input: TokenStream) -> TokenStream {
+    actions::action_level(input)
+}
+
+#[proc_macro_derive(RandomAction, attributes(ffxiv_rand_act))]
+pub fn random_action(input: TokenStream) -> TokenStream {
+    actions::random_action(input)
+}
+
 #[proc_macro_derive(Condition, attributes(ffxiv))]
 pub fn condition_macro_derive(input: TokenStream) -> TokenStream {
     condition::condition_derive(input)

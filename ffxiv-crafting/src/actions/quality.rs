@@ -64,13 +64,15 @@ pub trait QualityAction {
 
 mod concrete {
     use ffxiv_crafting_derive::{
-        BuffAction, CanExecute, CpCost, DurabilityFactor, ProgressAction, QualityAction,
+        ActionLevel, BuffAction, CanExecute, CpCost, DurabilityFactor, ProgressAction,
+        QualityAction, RandomAction,
     };
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction)]
-    #[ffxiv_cp(cost = 0)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[ffxiv_cp(cost = 18)]
     #[ffxiv_quality(efficiency = 100)]
+    #[ffxiv_act_lvl(level = 5)]
     pub struct BasicTouch;
 }
