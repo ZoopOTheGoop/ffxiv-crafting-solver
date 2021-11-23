@@ -152,8 +152,8 @@ impl ActionOutcome {
         C: Condition,
         M: QualityMap,
     {
-        let finished = state.recipe.recipe.max_progress..=u32::MAX;
-        let unfinished = 0..state.recipe.recipe.max_progress;
+        let finished = state.problem_def.recipe.max_progress..=u32::MAX;
+        let unfinished = 0..state.problem_def.recipe.max_progress;
 
         match (state.curr_durability + delta.action_durability, state.curr_progress + delta.added_progress) {
             (_, progress) if finished.contains(&progress) => Self::Completed(delta.no_repair()),
@@ -174,7 +174,7 @@ impl ActionOutcome {
         match self {
             Self::Completed(StateDelta { added_quality, .. }) => Some(M::convert(
                 added_quality + state.curr_quality,
-                state.recipe.recipe.max_quality,
+                state.problem_def.recipe.max_quality,
             )),
             _ => None,
         }

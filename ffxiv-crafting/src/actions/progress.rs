@@ -99,7 +99,8 @@ mod concrete {
             if state.buffs.progress.name_of_the_elements.is_active() {
                 efficiency
                     + 2. * ((1.
-                        - state.curr_progress as f64 / state.recipe.recipe.max_progress as f64)
+                        - state.curr_progress as f64
+                            / state.problem_def.recipe.max_progress as f64)
                         * 100.)
                         .ceil()
             } else {

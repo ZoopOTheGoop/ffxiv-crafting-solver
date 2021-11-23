@@ -1,3 +1,9 @@
+//! Implements the [`Condition`] trait, which determines the distribution of conditions
+//! in the crafting state, providing various benefits or detriments to the crafter depending
+//! on the actions used, as well as enabling certain [`actions`].
+//!
+//! [`actions`]: crate::actions
+
 use std::error::Error;
 
 use derivative::Derivative;
@@ -13,7 +19,9 @@ use crate::lookups::{
 // // we can create an unreachable variant that holds a PhantomData to QA/NoQA that defines
 // // the distribution
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derive(
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+)]
 #[derivative(Default)]
 pub enum NoQARegularConditions {
     #[derivative(Default)]
@@ -57,7 +65,9 @@ impl TryFrom<ConditionBits> for NoQARegularConditions {
     }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derive(
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+)]
 #[derivative(Default)]
 pub enum QARegularConditions {
     #[derivative(Default)]
@@ -102,7 +112,9 @@ impl TryFrom<ConditionBits> for QARegularConditions {
 }
 
 // Corresponds to EXPERT_CRAFT_1
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derive(
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+)]
 #[derivative(Default)]
 pub enum RestoExpertConditions {
     #[derivative(Default)]
@@ -153,7 +165,9 @@ impl TryFrom<ConditionBits> for RestoExpertConditions {
 }
 
 // Corresponds to EXPERT_CRAFT_2
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative)]
+#[derive(
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+)]
 #[derivative(Default)]
 pub enum RelicExpertConditions {
     #[derivative(Default)]

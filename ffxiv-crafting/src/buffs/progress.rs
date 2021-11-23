@@ -234,10 +234,10 @@ impl FinalAppraisal {
         M: QualityMap,
     {
         if self.is_active()
-            && state.curr_progress + new_progress >= state.recipe.recipe.max_progress
+            && state.curr_progress + new_progress >= state.problem_def.recipe.max_progress
         {
             buffs.progress.final_appraisal.deactivate();
-            (state.recipe.recipe.max_progress - 1) - state.curr_progress
+            (state.problem_def.recipe.max_progress - 1) - state.curr_progress
         } else {
             new_progress
         }

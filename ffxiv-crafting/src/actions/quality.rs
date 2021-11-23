@@ -283,7 +283,7 @@ mod concrete {
             C: Condition,
             M: QualityMap,
         {
-            state.recipe.recipe.max_quality
+            state.problem_def.recipe.max_quality
         }
     }
 
@@ -294,8 +294,12 @@ mod concrete {
             M: QualityMap,
         {
             state.first_step
-                && (state.recipe.character.char_level as i8
-                    - state.recipe.recipe.recipe_level.to_player_facing_level() as i8)
+                && (state.problem_def.character.char_level as i8
+                    - state
+                        .problem_def
+                        .recipe
+                        .recipe_level
+                        .to_player_facing_level() as i8)
                     >= 10
         }
     }
