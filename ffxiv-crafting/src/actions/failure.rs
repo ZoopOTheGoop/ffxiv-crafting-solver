@@ -1,12 +1,22 @@
-//! Contains definitions used with [`RandomAction`] for when an action fails its roll.
+//! Contains definitions used with [`RandomAction`] for when an action fails its roll. These
+//! don't implement [`RandomAction`] itself due to what that means not being entirely clear.
 //!
-//! [`RandomAction`]: super::RandomAction
+//! [`RandomAction`]: crate::actions::RandomAction
 
 use ffxiv_crafting_derive::*;
 
 use super::{buffs::BuffAction, Action, CanExecute, CpCost, DurabilityFactor};
 use crate::{quality_map::QualityMap, Condition, CraftingState};
 
+/// This is what happens when most [`RandomAction`]s fail - they just use their
+/// CP and take off their durability but have no effect. This takes the action
+/// and simply defers to its costs when being run through [`act`].
+///
+/// This is the [`FailAction`] chosen by default when deriving [`RandomAction`].
+///
+/// [`RandomAction`]: crate::actions::RandomAction
+/// [`act`]: Action::act
+/// [`FailAction`]: crate::actions::RandomAction::FailAction
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 #[derive(ProgressAction, QualityAction, BuffAction, TimePassing)]
 pub struct NullFailure<A: Action>(pub A);
@@ -44,15 +54,15 @@ impl<A: Action> CanExecute for NullFailure<A> {
     }
 }
 
+/// This failure of the [`PatientTouch`] action, which halves [`InnerQuiet`]
+/// stacks. See the [`PatientTouch`] documentation for more thorough info.
+///
+/// [`PatientTouch`]: crate::actions::quality::PatientTouch
+/// [`act`]: Action::act
+/// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(
-    ProgressAction,
-    QualityAction,
-    CpCost,
-    DurabilityFactor,
-    CanExecute,
-    TimePassing
-)]
+#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+#[derive(CanExecute, TimePassing)]
 #[ffxiv_cp(cost = 6)]
 pub struct PatientFailure;
 
