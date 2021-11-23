@@ -156,7 +156,7 @@ mod concrete {
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
     #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
-    #[ffxiv_quality(efficiency = 125)]
+    #[ffxiv_quality(efficiency = 150)]
     #[ffxiv_act_lvl(level = 53)]
     #[ffxiv_cp(cost = 18)]
     #[ffxiv_buff_act(class = "touch", amount = 2)]
