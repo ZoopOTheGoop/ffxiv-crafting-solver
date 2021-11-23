@@ -1,3 +1,7 @@
+//! Contains definitions used with [`RandomAction`] for when an action fails its roll.
+//!
+//! [`RandomAction`]: super::RandomAction
+
 use ffxiv_crafting_derive::*;
 
 use super::{buffs::BuffAction, Action, CanExecute, CpCost, DurabilityFactor};

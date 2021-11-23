@@ -234,6 +234,10 @@ pub trait Action:
 
         if self.time_passed(state) {
             delta.new_buffs.decay();
+        } else {
+            // Combo actions still fail to trigger after using
+            // time-agnostic actions
+            delta.new_buffs.combo.decay();
         }
         self.buff(state, &mut delta.new_buffs);
 
@@ -290,6 +294,10 @@ pub trait Action:
 
         if self.time_passed(state) {
             delta.new_buffs.decay();
+        } else {
+            // Combo actions still fail to trigger after using
+            // time-agnostic actions
+            delta.new_buffs.combo.decay();
         }
         self.buff(state, &mut delta.new_buffs);
 
@@ -419,6 +427,9 @@ pub trait CanExecute {
 /// Currently, aside from the constant, this should not need overriding for any current action
 /// and should monomorphize well.
 pub trait DurabilityFactor {
+    /// How much durability this action uses. Most actions are negative or 0. This is added
+    /// to the current state's durability to that means negative means it does damage to the
+    /// durability.
     const DURABILITY_USAGE: i8 = -10;
 
     /// Determines the amount of durability this action will restore or use given the current [`Condition`].
@@ -439,7 +450,10 @@ pub trait DurabilityFactor {
         // There may be another floor or ceiling present, but I don't think mathematically
         // any current combination of durabilities can use them since Prudent Touch is the only
         // odd durability action and it can't be used during Waste Not (the only other modifier).
-        (Self::DURABILITY_USAGE as f64 * condition_mod * buff_mod).ceil() as i8
+        //
+        // NOTE: Floor is used since durability usage is negative - we're actually rounding "away"
+        // from zero.
+        (Self::DURABILITY_USAGE as f64 * condition_mod * buff_mod).floor() as i8
     }
 }
 
@@ -450,6 +464,8 @@ pub trait DurabilityFactor {
 ///
 /// This takes into account the current [`Condition`] in expert crafting.
 pub trait CpCost {
+    /// The amount of CP the action costs under normal circumstances. This is added onto the
+    /// state's CP value, so most actions will be negative, and positive means you gain CP.
     const CP_COST: i16;
 
     /// Determines the amount of CP this action will restore or use given the current [`Condition`].
@@ -478,8 +494,11 @@ pub trait CpCost {
 }
 
 /// The outcome of rolling between two possibilities.
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub enum RollOutcome<A, B> {
+    #[allow(missing_docs)]
     Success(A),
+    #[allow(missing_docs)]
     Failure(B),
 }
 
@@ -496,7 +515,18 @@ pub enum RollOutcome<A, B> {
 /// [`act`]: Action::act
 /// [`Observe`]: crate::actions::misc::Observe
 pub trait RandomAction: Sized + Action {
+    /// The probability of an action failing under unmodified circumstances. Lower is better.
+    /// I'm honestly not sure why I implemented it this way given FFXIV lists success
+    /// chance, but it'd be annoying to change it now for not much benefit.
     const FAIL_RATE: u8 = 0;
+
+    /// The dummy action this defers to if it rolls a failure. This action can be executed
+    /// in the current action's stead. Deriving this trait by default provides a
+    /// [`NullFailure`] that will automatically take on the parent action's CP, durability
+    /// cost etc for the typical case where failure essentially just damages the item and
+    /// wastes buff duration and CP.
+    ///
+    /// [`NullFailure`]: self::failure::NullFailure
     type FailAction: Action;
 
     /// Rolls a number and in the range `[1,100]` and checks if it's lower than
@@ -524,27 +554,44 @@ pub trait RandomAction: Sized + Action {
 
     /// The actual chance of this action failing given the current state. Lower => fails less often.
     ///
-    /// By default this is the same as [`FAIL_RATE`](RandomAction::FAIL_RATE).
+    /// By default this is the same as [`FAIL_RATE`](RandomAction::FAIL_RATE), but discounted
+    /// by improved failure rate due to conditions.
     #[allow(unused_variables)]
     fn fail_rate<C: Condition, M: QualityMap>(&self, state: &CraftingState<C, M>) -> u8 {
-        Self::FAIL_RATE
+        Self::FAIL_RATE - (state.condition.to_success_rate_modifier() as u8).min(Self::FAIL_RATE)
     }
 
     /// Constructs the associated [`FailAction`](RandomAction::FailAction).
     fn fail_action(&self) -> Self::FailAction;
 }
 
+/// The level the action is learned at. Nothing should need to be overridden in this.
 pub trait ActionLevel: Action {
+    /// The level this action is learned at.
     const LEVEL: u16;
 
+    /// A function version that just returns [`LEVEL`], reserved just in
+    /// case something weird is done with this later.
+    ///
+    /// [`LEVEL`]: ActionLevel::LEVEL
     fn level(&self) -> u16 {
         Self::LEVEL
     }
 }
 
+/// Denotes whether time passes when an action is taken. This basically means whether
+/// or not buffs tick down and whether you lose your first turn bonus. It does not
+/// preserve any active combos, however. This is a niche trait largely useful for
+/// two abilities.
 pub trait TimePassing {
+    /// Whether this action passes time as per the rules given in the trait
+    /// definition.
     const TIME_PASSED: bool = false;
 
+    /// Currently just defers to [`TIME_PASSED`], but is reserved in case
+    /// FFXIV adds actions that stop time only when certain criteria are met.
+    ///
+    /// [`TIME_PASSED`]: TimePassing::TIME_PASSED
     #[allow(unused_variables)]
     fn time_passed<C, M>(&self, state: &CraftingState<C, M>) -> bool
     where

@@ -1,3 +1,5 @@
+//! Contains miscellaneous action defitions that don't neatly fit into the other categories.
+
 use ffxiv_crafting_derive::*;
 
 use crate::buffs::DurationalBuff;
