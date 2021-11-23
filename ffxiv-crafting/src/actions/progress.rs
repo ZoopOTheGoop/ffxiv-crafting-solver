@@ -1,8 +1,8 @@
-//! Defines the effects of progress-related actions.
+//! Defines the effects on progress that actions have, as well as collects actions whose primary purpose is increasing the progress property.
 
 use crate::{conditions::Condition, quality_map::QualityMap, CraftingState};
 
-/// An action that has some effect on the `progress` attribute. The
+/// An action's effect on the `progress` attribute. The
 /// [`EFFICIENCY`](ProgressAction::EFFICIENCY) is the base efficiency of the given
 /// action, without any modifiers.
 pub trait ProgressAction {

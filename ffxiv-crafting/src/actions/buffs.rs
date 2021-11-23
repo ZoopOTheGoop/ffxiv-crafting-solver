@@ -1,3 +1,5 @@
+//! Contains the stage of an action where it affects the buff state, as well as actions whose primary purpose is to buff the player.
+
 use crate::{buffs::BuffState, conditions::Condition, quality_map::QualityMap, CraftingState};
 
 /// Defines the buffs (if any) and action applies to the current state.

@@ -1,10 +1,10 @@
-//! Defines the effects of quality-related actions.
+//! Defines the effects on quality that actions have, as well as collects actions whose primary purpose is increasing the quality property.
 
 use crate::{
     buffs::quality::InnerQuiet, conditions::Condition, quality_map::QualityMap, CraftingState,
 };
 
-/// An action that has some effect on the `quality` attribute. The
+/// An action's effect on the `quality` attribute. The
 /// [`EFFICIENCY`](QualityAction::EFFICIENCY) is the base efficiency of the given
 /// action, without any modifiers.
 pub trait QualityAction {
