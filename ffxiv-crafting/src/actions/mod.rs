@@ -369,7 +369,7 @@ pub trait CanExecute {
 /// Currently, aside from the constant, this should not need overriding for any current action
 /// and should monomorphize well.
 pub trait DurabilityFactor {
-    const DURABILITY_USAGE: i8 = -5;
+    const DURABILITY_USAGE: i8 = -10;
 
     /// Determines the amount of durability this action will restore or use given the current [`Condition`].
     fn durability<C>(&self, buffs: &BuffState, condition: &C) -> i8
