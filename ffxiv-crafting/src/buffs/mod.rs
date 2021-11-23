@@ -46,6 +46,7 @@ pub trait Buff: Copy + Sized {
 /// to this.
 ///
 /// [`GreatStrides`]: crate::buffs::quality::GreatStrides
+/// [`Primed`]: crate::conditions::RelicExpertConditions::Primed
 pub trait DurationalBuff: Sub<u8, Output = Self> + SubAssign<u8> + Buff {
     /// The length that this buff will be active for when triggered by an action,
     /// before any condition or other modifiers.
@@ -83,9 +84,10 @@ pub trait DurationalBuff: Sub<u8, Output = Self> + SubAssign<u8> + Buff {
 /// When consumed, the buff returns its remaining duration for use by the user. If the buff is
 /// already inactive this should panic, as a well-formed implementation will not do that.
 ///
-/// [`InnerQuiet`]: crate::actions::quality::buffs::InnerQuiet
-/// [`GreatStrides`]: crate::actions::quality::buffs::GreatStrides
+/// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
+/// [`GreatStrides`]: crate::buffs::quality::GreatStrides
 /// [quality action]: crate::actions::quality
+/// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
 pub trait ConsumableBuff: Buff {
     /// Returns a deactivated version of `self`,
     /// as well as any stacks or remaining duration. This should

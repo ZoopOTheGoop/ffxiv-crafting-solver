@@ -28,6 +28,8 @@ impl ProgressBuffs {
 
     /// Calculates the efficiency bonuses granted by these buffs. This does NOT include the [`NameOfTheElements`] buff,
     /// as it's overridden specially by its matching action [`BrandOfTheElements`].
+    ///
+    /// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
     pub fn efficiency_mod(&self) -> u16 {
         self.veneration.efficiency_mod() + self.muscle_memory.efficiency_mod()
     }
@@ -36,6 +38,8 @@ impl ProgressBuffs {
 /// A trait that denotes something that affects quality. Largely just a marker trait
 /// to denote intent. This doesn't work for [`NameOfTheElements`], as that only has its
 /// efficiency effect when used with [`BrandOfTheElements`] and requires extra information.
+///
+/// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
 pub trait ProgressEfficiencyMod: DurationalBuff {
     /// The quality modifier, as internally defined. This is a percentage
     /// represented as an integer (i.e. 100 = 100% = 2x bonus).

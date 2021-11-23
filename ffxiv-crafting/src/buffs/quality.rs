@@ -51,8 +51,10 @@ pub enum InnerQuietBaseStacks {
 ///
 /// This is a very unique type of buff in logic, so it doesn't implement many buff traits,
 /// as no other current buffs operate off stacks nor do they have multiple activation
-/// modes ([`Reflection`] vs the action [`InnerQuiet`]() itself) that can't be done if
-/// already active.
+/// modes ([`Reflect`] vs the action [`InnerQuiet`](crate::actions::buffs::InnerQuiet) itself) that
+/// can't be done if already active.
+///
+/// [`Reflect`]: crate::actions::quality::Reflect
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum InnerQuiet {

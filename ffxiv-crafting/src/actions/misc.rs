@@ -1,6 +1,3 @@
-use std::ops::{Sub, SubAssign};
-
-use derivative::Derivative;
 use ffxiv_crafting_derive::*;
 
 use crate::buffs::DurationalBuff;
@@ -50,56 +47,6 @@ pub struct TricksOfTheTrade;
 #[ffxiv_progress(efficiency = 100)]
 #[ffxiv_buff_act(class = "touch")]
 pub struct DelicateSynthesis;
-
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Derivative)]
-#[derivative(Default)]
-pub enum SpecialistActions {
-    #[derivative(Default)]
-    NotSpecialist,
-    Unavailable,
-    Availalble(u8),
-}
-
-impl SpecialistActions {
-    pub fn actions_available(&self) -> bool {
-        matches!(self, Self::Availalble(_))
-    }
-
-    pub fn actions_unavailable(&self) -> bool {
-        matches!(self, Self::Unavailable | Self::NotSpecialist)
-    }
-}
-
-impl Sub<u8> for SpecialistActions {
-    type Output = Self;
-
-    fn sub(self, rhs: u8) -> Self::Output {
-        debug_assert_eq!(rhs, 1, "Action should only use one delineation at a time");
-
-        #[cfg(debug_assertions)]
-        match self {
-            Self::Availalble(3..=u8::MAX) => {
-                panic!("Too many crafters delineations - we're constrained to 3 per craft.")
-            }
-            Self::Availalble(val @ 0..=2) => Self::Availalble(val - 1),
-            Self::NotSpecialist => Self::NotSpecialist,
-            Self::Unavailable => Self::Unavailable,
-        }
-
-        #[cfg(not(debug_assertions))]
-        match self {
-            Self::Availalble(val) => Self::Availalble(val - 1),
-            Self::NotSpecialist => Self::NotSpecialist,
-            Self::Unavailable => Self::Unavailable,
-        }
-    }
-}
-
-impl SubAssign<u8> for SpecialistActions {
-    fn sub_assign(&mut self, rhs: u8) {
-        *self = self.sub(rhs)
-    }
-}
 
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]

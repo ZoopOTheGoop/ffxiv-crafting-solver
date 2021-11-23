@@ -394,6 +394,8 @@ impl<T> Action for T where
 /// Note that this is specifically for actions such as [`MuscleMemory`] that can only be executed
 /// on the first action, CP execution availability is determined separately and you should not
 /// implement CP cost checks in this trait.
+///
+/// [`MuscleMemory`]: crate::actions::progress::MuscleMemory
 pub trait CanExecute {
     /// Determines whether the action can be executed in the given state.
     #[allow(unused_variables)]
@@ -487,6 +489,7 @@ pub enum RollOutcome<A, B> {
 ///
 /// [`FailAction`]: RandomAction::FailAction
 /// [`act`]: Action::act
+/// [`Observe`]: crate::actions::misc::Observe
 pub trait RandomAction: Sized + Action {
     const FAIL_RATE: u8 = 0;
     type FailAction: Action;
