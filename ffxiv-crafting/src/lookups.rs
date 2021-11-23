@@ -79,7 +79,14 @@ pub(crate) const RLVL_DURABILITY: [u8; 80 + 4 * 3 + 9] = [
 
 /* RLVL conditions are at the bottom because it's long */
 
+/// An enum for looking up internal recipe values from FFXIV tables.
+///
+/// This is likely incomplete, but was taken from the spreadsheet linked in the
+/// README. Note that for the max levels it corresponds to the number of stars,
+/// except for ShB which has an array of very specific `rlvls` that denote a bunch
+/// of things like expert crafts and minor differences in difficulty.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(missing_docs)]
 pub enum RecipeLevelRanges {
     ArrLeveling(u8),
     ArrMax(u8),
@@ -92,6 +99,7 @@ pub enum RecipeLevelRanges {
 }
 
 impl RecipeLevelRanges {
+    /// Verifies the enum contains a valid value.
     pub fn verify_leveling(self) -> bool {
         matches!(
             self,
@@ -106,6 +114,9 @@ impl RecipeLevelRanges {
         )
     }
 
+    /// Returns the corresponding user-facing level variant given an internal `rlvl`
+    /// value. This just does a linear search right now but could be modified to a lookup
+    /// table in the future.
     pub fn from_rlvl(rlvl: u16) -> Self {
         // There's definitely many faster ways to do this but they're really not worth it at the moment IMO
         RecipeLevelIter::default()
@@ -113,6 +124,7 @@ impl RecipeLevelRanges {
             .unwrap_or_else(|| panic!("Invalid rlvl {}", rlvl))
     }
 
+    /// Calculates the index into the internal RLVL table.
     pub const fn to_rlvl_index(self) -> usize {
         let raw_lvl = match self {
             Self::ArrLeveling(lvl)
@@ -134,16 +146,23 @@ impl RecipeLevelRanges {
         raw_lvl - 1
     }
 
+    /// Returns the current most difficult (highest rlvl) recipe
     #[cfg(test)]
     const fn max_level_recipe() -> Self {
         Self::ShbMax(9)
     }
 
+    /// Returns the current easiest (rlvl 1) recipe.
     #[cfg(test)]
     const fn min_level_recipe() -> Self {
         Self::ArrLeveling(1)
     }
 
+    /// Turns this into the "player facing" level, aka
+    /// 1-\[level_cap\] (80 in ShB, 90 in EW etc). This
+    /// is pretty much solely used for [`TrainedEye`].
+    ///
+    /// [`TrainedEye`]: crate::actions::quality::TrainedEye
     pub const fn to_player_facing_level(self) -> u8 {
         match self {
             Self::ArrLeveling(lvl)
@@ -157,34 +176,47 @@ impl RecipeLevelRanges {
         }
     }
 
+    /// Looks up the internal `rlvl` from this value.
     pub const fn to_recipe_level(self) -> u16 {
         RLVL[self.to_rlvl_index()]
     }
 
+    /// Looks up the internal `rlvl`'s craftsmanship modifier from this value.
     pub const fn to_recipe_level_craftsmanship(self) -> u16 {
         RLVL_CRAFTSMANSHIP[self.to_rlvl_index()]
     }
 
+    /// Looks up the internal `rlvl`'s progress modifier from this value.
     pub const fn to_recipe_level_progress(self) -> u32 {
         RLVL_PROGRESS[self.to_rlvl_index()]
     }
 
+    /// Looks up the internal `rlvl`'s control modifier from this value.
     pub const fn to_recipe_level_control(self) -> u16 {
         RLVL_CONTROL[self.to_rlvl_index()]
     }
 
+    /// Looks up the internal `rlvl`'s quality modifier from this value.
     pub const fn to_recipe_level_quality(self) -> u32 {
         RLVL_QUALITY[self.to_rlvl_index()]
     }
 
+    /// Looks up the internal `rlvl`'s durability modifier from this value.
     pub const fn to_recipe_level_durability(self) -> u8 {
         RLVL_DURABILITY[self.to_rlvl_index()]
     }
 
+    /// Looks up the internal `rlvl`'s condition spread from this value.
+    ///
+    /// Probably use the stuff in [`Condition`] instead.
+    ///
+    /// [`Condition`]: crate::Condition
     pub(crate) const fn to_recipe_level_conditions(self) -> ConditionBits {
         RLVL_CONDITIONS[self.to_rlvl_index()]
     }
 
+    /// Computes the index into the level modifier table between
+    /// this recipes `rlvl` and the given `clvl` of the crafter.
     const fn to_level_mod_index(self, clvl: u16) -> usize {
         const MAX_DISADVANTAGE: i16 = -30;
         const MAX_ADVANTAGE: i16 = 49;
@@ -196,15 +228,20 @@ impl RecipeLevelRanges {
         delta as usize
     }
 
+    /// Computes the progress level modifier given the difference between
+    /// this recipes `rlvl` and the given `clvl` of the crafter.
     pub const fn to_progress_level_mod(self, clvl: u16) -> u16 {
         LEVEL_MOD_PROGRESS[self.to_level_mod_index(clvl)]
     }
 
+    /// Computes the quality level modifier given the difference between
+    /// this recipes `rlvl` and the given `clvl` of the crafter.
     pub const fn to_quality_level_mod(self, clvl: u16) -> u16 {
         LEVEL_MOD_QUALITY[self.to_level_mod_index(clvl)]
     }
 }
 
+/// Iterates over all the recipe levels possible.
 pub struct RecipeLevelIter {
     curr: RecipeLevelRanges,
     done: bool,

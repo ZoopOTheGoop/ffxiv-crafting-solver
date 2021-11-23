@@ -13,7 +13,8 @@ pub mod conditions;
 pub(crate) mod lookups;
 pub mod quality_map;
 
-use lookups::RecipeLevelRanges;
+#[doc(inline)]
+pub use lookups::RecipeLevelRanges;
 use quality_map::QualityMap;
 
 /// The overall simulator problem. This is actually just the definition that gives
