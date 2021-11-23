@@ -19,6 +19,16 @@ use self::{
     quality::QualityAction,
 };
 
+mod prelude {
+    pub use crate::{
+        actions::{
+            buffs::BuffAction, progress::ProgressAction, quality::QualityAction, Action,
+            CanExecute, CpCost, DurabilityFactor, RandomAction,
+        },
+        CraftingState,
+    };
+}
+
 /// A `delta` that encodes a change to a given [`CraftingState`]. It can be added to
 /// the state with the add operator to yield a new one (or modify it in-place with `+=`).
 ///
@@ -171,7 +181,7 @@ impl ActionOutcome {
 /// the algorithms implemented by default by this trait. Only overriding the methods on the requirements such as
 /// [`ProgressAction`] should be needed to control the actual behavior (barring FFXIV adding a very crazy ability).
 pub trait Action:
-    Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost
+    Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost + CanExecute
 {
     /// Prospectively executes an action. This means that even if the action cannot be executed due to
     /// e.g. not having enough CP or it not being available in that state, it will still compute it as
@@ -244,16 +254,6 @@ pub trait Action:
         self.buff(state, &mut delta.new_buffs);
 
         ActionOutcome::from_delta_state(delta, state)
-    }
-
-    /// Determines whether the action can be executed in the given state.
-    #[allow(unused_variables)]
-    fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        true
     }
 
     /// Takes into account a [`RandomAction`]'s chance to fail, and does
@@ -339,8 +339,20 @@ pub trait Action:
 }
 
 impl<T> Action for T where
-    T: Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost
+    T: Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost + CanExecute
 {
+}
+
+pub trait CanExecute {
+    /// Determines whether the action can be executed in the given state.
+    #[allow(unused_variables)]
+    fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        true
+    }
 }
 
 /// Defines the amount of durability an [`Action`] uses. Like other action qualities, the
