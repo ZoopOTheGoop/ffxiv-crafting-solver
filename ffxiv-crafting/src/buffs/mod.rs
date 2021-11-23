@@ -2,15 +2,14 @@
 
 use std::ops::{Sub, SubAssign};
 
-use crate::actions::misc::SpecialistActions;
-
 use self::{
-    combo::ComboTriggers, durability::DurabilityBuffs, progress::ProgressBuffs,
-    quality::QualityBuffs,
+    combo::ComboTriggers, durability::DurabilityBuffs, misc::SpecialistActions,
+    progress::ProgressBuffs, quality::QualityBuffs,
 };
 
 pub mod combo;
 pub mod durability;
+pub mod misc;
 pub mod progress;
 pub mod quality;
 
@@ -46,7 +45,7 @@ pub trait Buff: Copy + Sized {
 /// such as [`GreatStrides`], you're looking for [`ConsumableBuff`] either instead of or in addition
 /// to this.
 ///
-/// [`GreatStrides`]: crate::actions::quality::buffs::GreatStrides
+/// [`GreatStrides`]: crate::buffs::quality::GreatStrides
 pub trait DurationalBuff: Sub<u8, Output = Self> + SubAssign<u8> + Buff {
     /// The length that this buff will be active for when triggered by an action,
     /// before any condition or other modifiers.
