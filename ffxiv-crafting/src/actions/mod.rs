@@ -97,8 +97,9 @@ where
             curr_quality: self.curr_quality + other.added_quality,
             curr_progress: self.curr_progress + other.added_progress,
             buffs: other.new_buffs,
-            curr_durability: self.curr_durability + other.buff_repair + other.action_durability,
-            curr_cp: self.curr_cp + other.added_cp,
+            curr_durability: (self.curr_durability + other.buff_repair + other.action_durability)
+                .min(self.problem_def.recipe.max_durability),
+            curr_cp: (self.curr_cp + other.added_cp).min(self.problem_def.character.max_cp),
             first_step: self.first_step && !other.time_passed,
             ..*self
         }
@@ -114,7 +115,11 @@ where
         self.curr_quality += rhs.added_quality;
         self.curr_progress += rhs.added_progress;
         self.curr_cp += rhs.added_cp;
+        self.curr_cp = self.curr_cp.min(self.problem_def.character.max_cp);
         self.curr_durability += rhs.buff_repair + rhs.action_durability;
+        self.curr_durability = self
+            .curr_durability
+            .min(self.problem_def.recipe.max_durability);
         self.buffs = rhs.new_buffs;
         self.first_step = self.first_step && !rhs.time_passed
     }
@@ -230,14 +235,15 @@ pub trait Action:
         delta.added_quality = self.quality(state);
         delta.action_durability = self.durability(&state.buffs, &state.condition);
 
-        delta.buff_repair = state.buffs.durability.repair();
-
         if self.time_passed(state) {
             delta.new_buffs.decay();
         } else {
             // Combo actions still fail to trigger after using
             // time-agnostic actions
             delta.new_buffs.combo.decay();
+
+            // Repair isn't applied during a "time stop"
+            delta.buff_repair = state.buffs.durability.repair();
         }
         self.buff(state, &mut delta.new_buffs);
 
@@ -298,6 +304,9 @@ pub trait Action:
             // Combo actions still fail to trigger after using
             // time-agnostic actions
             delta.new_buffs.combo.decay();
+
+            // Repair isn't applied during a "time stop"
+            delta.buff_repair = state.buffs.durability.repair();
         }
         self.buff(state, &mut delta.new_buffs);
 

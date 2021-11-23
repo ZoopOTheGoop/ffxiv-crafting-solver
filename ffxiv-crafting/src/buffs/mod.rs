@@ -46,7 +46,7 @@ pub trait Buff: Copy + Sized {
 /// to this.
 ///
 /// [`GreatStrides`]: crate::buffs::quality::GreatStrides
-/// [`Primed`]: crate::conditions::RelicExpertConditions::Primed
+/// [`Primed`]: crate::conditions::RestoExpertConditions::Primed
 pub trait DurationalBuff: Sub<u8, Output = Self> + SubAssign<u8> + Buff {
     /// The length that this buff will be active for when triggered by an action,
     /// before any condition or other modifiers.
@@ -110,13 +110,15 @@ pub trait ConsumableBuff: Buff {
 /// Encodes the buff state during crafting. Has several utility methods to make
 /// buff management a bit less ugly
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
+#[allow(missing_docs)]
 pub struct BuffState {
     pub quality: QualityBuffs,
     pub progress: ProgressBuffs,
     pub durability: DurabilityBuffs,
     pub combo: ComboTriggers,
-    // This is honestly only in the buff state because I didn't want to add another
-    // trait just for this
+    /// This is honestly only in the buff state because I didn't want to add another
+    /// trait just for modifying this. See the type documentation for more info on
+    /// what this enum is for.
     pub specialist_actions: SpecialistActions,
 }
 

@@ -14,10 +14,19 @@ use derivative::Derivative;
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Derivative)]
 #[derivative(Default)]
 pub enum SpecialistActions {
+    /// The crafter is not a specialist.
     #[derivative(Default)]
     NotSpecialist,
+    /// The crafter is a specialist, but has no delineations (or
+    /// has used all 3 allowed charges already).
     Unavailable,
-    Availalble(u8),
+    /// The crafter has crafters delineations that are still allowed to be used.
+    Availalble(
+        /// The number of delineations - from 1-3. At 0 this will change to [`Unavailable`]
+        ///
+        /// [`Unavailable`]: SpecialistActions::Unavailable
+        u8,
+    ),
 }
 
 impl SpecialistActions {

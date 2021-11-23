@@ -51,7 +51,7 @@ pub struct CharacterStats {
     #[allow(missing_docs)]
     pub control: u16,
     #[allow(missing_docs)]
-    pub max_cp: u16,
+    pub max_cp: i16,
 
     /// Actual level, 1..<max_char_lvl> (80 in Shb, 90 in EW etc)
     pub char_level: u8,
@@ -78,7 +78,7 @@ pub struct RecipeStats {
     pub recipe_level: RecipeLevelRanges,
 
     /// The durability this recipe starts at and cannot go above.
-    max_durability: u16,
+    max_durability: i8,
 
     /// The maximum quality of the recipe for determining HQ/collectability.
     max_quality: u32,

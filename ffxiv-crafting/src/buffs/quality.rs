@@ -14,6 +14,7 @@ const MAX_IQ: u8 = 11;
 
 /// A simple collection of all the quality buffs, for cleaner fields on simulation
 /// structs.
+#[allow(missing_docs)]
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
 pub struct QualityBuffs {
     pub inner_quiet: InnerQuiet,
@@ -22,11 +23,19 @@ pub struct QualityBuffs {
 }
 
 impl QualityBuffs {
+    /// Causes all durational quality buffs to tick down by one.
     pub fn decay(&mut self) {
         self.great_strides.decay_in_place();
         self.innovation.decay_in_place();
     }
 
+    /// Calculates the efficiency bonuses granted by these buffs.
+    /// This does NOT include the [`InnerQuiet`] buff,
+    /// as it's a heavily special case that has its own effect during the computation
+    /// of [`QualityAction`]s as well as [`ByregotsBlessing`].
+    ///
+    /// [`QualityAction`]: crate::actions::quality::QualityAction
+    /// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
     pub fn efficiency_mod(&self) -> u16 {
         self.great_strides.efficiency_mod() + self.innovation.efficiency_mod()
     }
@@ -36,13 +45,21 @@ impl QualityBuffs {
 // maybe if more buffs of that form get added. It wouldn't exactly be a difficult refactor.
 
 /// The number of stacks to initialize [`InnerQuiet`] at, depending on the ability used.
-/// #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum InnerQuietBaseStacks {
+    /// 1 - the number of stacks applied by the actual [`InnerQuiet`] action.
+    ///
+    /// [`InnerQuiet`]: crate::actions::buffs::InnerQuiet
     InnerQuiet = 1,
+
+    /// 3 - the number of stacks applied by the [`Reflect`] action.
+    ///
+    /// [`Reflect`]: crate::actions::quality::Reflect
     Reflection = 3,
 }
 
-/// The Inner Quiet buff, when active, provides a 20% quality modifier per stack.
+/// The Inner Quiet buff, when active, provides a 20% quality modifier per stack as
+/// well as allowing the use of [`ByregotsBlessing`].
 ///
 /// This implements [`Add`], [`Mul`], and [`Div`] to account for the abilities that have
 /// these effects on Inner Quiet stacks. To have any effect, `activate` must be called
@@ -55,12 +72,28 @@ pub enum InnerQuietBaseStacks {
 /// can't be done if already active.
 ///
 /// [`Reflect`]: crate::actions::quality::Reflect
+/// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum InnerQuiet {
+    /// This buff is current not active and gives no benefit.
     #[derivative(Default)]
     Inactive,
-    Active(u8),
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active(
+        /// The number of stacks of [`InnerQuiet`], up to a max
+        /// of 11. This provides a 20% efficiency bonus per stack as
+        /// well as allowing the use of [`ByregotsBlessing`].
+        ///
+        /// Upon using [`ByregotsBlessing`] this buff will be [consumed],
+        /// changing it back to [`Inactive`].
+        ///
+        /// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
+        /// [consumed]: ConsumableBuff
+        /// [`Inactive`]: InnerQuiet::Inactive
+        u8,
+    ),
 }
 
 impl InnerQuiet {
@@ -80,6 +113,9 @@ impl InnerQuiet {
         }
     }
 
+    /// Retrieves the number of stacks, panicking in the state is [`Inactive`]
+    ///
+    /// [`Inactive`]: InnerQuiet::Inactive
     pub fn stacks(&self) -> u8 {
         match self {
             Self::Active(val) => *val,
@@ -200,13 +236,29 @@ pub trait QualityEfficiencyMod: DurationalBuff {
     }
 }
 
-/// The Great Strides buff, which adds 100% efficiency onto the next quality action.
+/// The buff associated with the action [GreatStrides],
+/// which adds 1.0 to the multiplier on the efficiency of the next [`quality`]
+/// related actions (the base multiplier is 1.0, so this changes it to 2.0, not including
+/// other buffs).
+///
+/// [`quality`]: crate::actions::quality
+/// [`GreatStrides`]: crate::actions::buffs::GreatStrides
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum GreatStrides {
+    /// This buff is currently not active and gives no benefit.
     #[derivative(Default)]
     Inactive,
-    Active(u8),
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active(
+        /// The number of turns remaining on this buff, once it hits
+        /// 0 this will become [`Inactive`]. As this is a [`ConsumableBuff`],
+        /// this will also become [`Inactive`] if its trigger is hit.
+        ///
+        /// [`Inactive`]: GreatStrides::Inactive
+        u8,
+    ),
 }
 
 impl Buff for GreatStrides {
@@ -255,13 +307,28 @@ impl SubAssign<u8> for GreatStrides {
     }
 }
 
-/// The Innovation buff, which adds 50% efficiency onto the next quality action.
+/// The buff associated with the action [`Innovation`],
+/// which adds 0.5 to the multiplier on the efficiency of the next [`quality`]
+/// related actions (the base multiplier is 1.0, so this changes it to 1.5, not including
+/// other buffs).
+///
+/// [`quality`]: crate::actions::quality
+/// [`Innovation`]: crate::actions::buffs::Innovation
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum Innovation {
+    /// This buff is currently not active and gives no benefit.
     #[derivative(Default)]
     Inactive,
-    Active(u8),
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active(
+        /// The number of turns remaining on this buff, once it hits
+        /// 0 this will become [`Inactive`].
+        ///
+        /// [`Inactive`]: Innovation::Inactive
+        u8,
+    ),
 }
 
 impl Buff for Innovation {

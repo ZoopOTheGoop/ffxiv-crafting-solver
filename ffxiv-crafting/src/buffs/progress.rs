@@ -11,6 +11,7 @@ use super::{Buff, BuffState, ConsumableBuff, DurationalBuff};
 /// A simple collection of all the progress buffs, for cleaner fields on simulation
 /// structs.
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
+#[allow(missing_docs)]
 pub struct ProgressBuffs {
     pub name_of_the_elements: NameOfTheElements,
     pub veneration: Veneration,
@@ -19,6 +20,7 @@ pub struct ProgressBuffs {
 }
 
 impl ProgressBuffs {
+    /// Causes all durational progress buffs to tick down by one.
     pub fn decay(&mut self) {
         self.name_of_the_elements.decay_in_place();
         self.veneration.decay_in_place();
@@ -26,7 +28,8 @@ impl ProgressBuffs {
         self.final_appraisal.decay_in_place();
     }
 
-    /// Calculates the efficiency bonuses granted by these buffs. This does NOT include the [`NameOfTheElements`] buff,
+    /// Calculates the efficiency bonuses granted by these buffs.
+    /// This does NOT include the [`NameOfTheElements`] buff,
     /// as it's overridden specially by its matching action [`BrandOfTheElements`].
     ///
     /// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
@@ -57,20 +60,42 @@ pub trait ProgressEfficiencyMod: DurationalBuff {
     }
 }
 
+/// The buff state relating to the action [`NameOfTheElements`],
+/// which increases the efficiency of [`BrandOfTheElements`] up to
+/// `200` based on the current progress relative to the maximum
+/// progress to the recipe.
+///
+/// [`NameOfTheElements`]: crate::actions::buffs::NameOfTheElements
+/// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum NameOfTheElements {
+    /// The action [`NameOfTheElements`] has not been used yet.
+    ///
+    /// [`NameOfTheElements`]: crate::actions::buffs::NameOfTheElements
     #[derivative(Default)]
     Unused,
-    Active(u8),
+    /// The buff is active.
+    Active(
+        /// The number of turns remaining on this buff, once it hits
+        /// 0 this will become [`Used`].
+        ///
+        /// [`Used`]: NameOfTheElements::Used
+        u8,
+    ),
+    /// This buff has been used, its duration finished, and may not be used again.
     Used,
 }
 
 impl NameOfTheElements {
+    /// Determines if this can be activated, since this buff can only be used
+    /// once.
     pub fn can_activate(&self) -> bool {
         matches!(self, Self::Unused)
     }
 
+    /// Determines if this has already been activated, since this buff can only be used
+    /// once.
     pub fn already_activated(&self) -> bool {
         matches!(self, Self::Active(_) | Self::Used)
     }
@@ -115,12 +140,28 @@ impl SubAssign<u8> for NameOfTheElements {
     }
 }
 
+/// The buff state corresponding to the action [`Veneration`],
+/// which adds 0.5 to the multiplier on the efficiency of [`progress`] related
+/// actions (the base multiplier is 1.0, so this changes it to 1.5, not including
+/// other buffs).
+///
+/// [`Veneration`]: crate::actions::buffs::Veneration
+/// [`progress`]: crate::actions::progress
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum Veneration {
+    /// This buff is currently not active and gives no benefit.
     #[derivative(Default)]
     Inactive,
-    Active(u8),
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active(
+        /// The number of turns remaining on this buff, once it hits
+        /// 0 this will become [`Inactive`].
+        ///
+        /// [`Inactive`]: Veneration::Inactive
+        u8,
+    ),
 }
 
 impl Buff for Veneration {
@@ -160,12 +201,32 @@ impl ProgressEfficiencyMod for Veneration {
     const MODIFIER: u16 = 50;
 }
 
+/// The buff state corresponding to the action [`MuscleMemory`],
+/// which adds 1x to the multiplier on the efficiency of [`progress`] related
+/// actions (the base multiplier is 1.0, so this changes it to 2.0, not including
+/// other buffs).
+///
+/// This is technically a "combo action", and is consumed once another [`progress`]
+/// related action is used, consuming the buff.
+///
+/// [`MuscleMemory`]: crate::actions::progress::MuscleMemory
+/// [`progress`]: crate::actions::progress
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum MuscleMemory {
+    /// This buff is currently not active and gives no benefit.
     #[derivative(Default)]
     Inactive,
-    Active(u8),
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active(
+        /// The number of turns remaining on this buff, once it hits
+        /// 0 this will become [`Inactive`]. As this is a [`ConsumableBuff`],
+        /// this will also become [`Inactive`] if its trigger is hit.
+        ///
+        /// [`Inactive`]: MuscleMemory::Inactive
+        u8,
+    ),
 }
 
 impl Buff for MuscleMemory {
@@ -214,15 +275,38 @@ impl ProgressEfficiencyMod for MuscleMemory {
     const MODIFIER: u16 = 100;
 }
 
+/// The buff state corresponding to the action [`FinalAppraisal`],
+/// which causes the next action by a [`progress`] related
+/// actions that would finish the craft to leave it with 1 left instead.
+///
+/// [`FinalAppraisal`]: crate::actions::buffs::FinalAppraisal
+/// [`progress`]: crate::actions::progress
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum FinalAppraisal {
+    /// This buff is currently not active and gives no benefit.
     #[derivative(Default)]
     Inactive,
-    Active(u8),
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active(
+        /// The number of turns remaining on this buff, once it hits
+        /// 0 this will become [`Inactive`]. As this is a [`ConsumableBuff`],
+        /// this will also become [`Inactive`] if its trigger is hit.
+        ///
+        /// [`Inactive`]: FinalAppraisal::Inactive
+        u8,
+    ),
 }
 
 impl FinalAppraisal {
+    /// Compares progress computed during the most recent
+    /// action execution stage to the progress needed to
+    /// finish the craft, returning the actual delta that must
+    /// be applied to just barely not finish the craft and [consuming]
+    /// the buff.
+    ///
+    /// [consuming]: ConsumableBuff
     pub fn handle_progress<C, M>(
         &self,
         state: &CraftingState<C, M>,
