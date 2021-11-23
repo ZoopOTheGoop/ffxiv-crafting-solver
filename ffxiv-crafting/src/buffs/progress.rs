@@ -10,14 +10,14 @@ use super::{Buff, ConsumableBuff, DurationalBuff};
 /// structs.
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
 pub struct ProgressBuffs {
-    pub brand_of_the_elements: NameOfTheElements,
+    pub name_of_the_elements: NameOfTheElements,
     pub veneration: Veneration,
     pub muscle_memory: MuscleMemory,
 }
 
 impl ProgressBuffs {
     pub fn decay(&mut self) {
-        self.brand_of_the_elements.decay_in_place();
+        self.name_of_the_elements.decay_in_place();
         self.veneration.decay_in_place();
         self.muscle_memory.decay_in_place();
     }

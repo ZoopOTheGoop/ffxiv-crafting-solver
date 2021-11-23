@@ -96,7 +96,7 @@ mod concrete {
 
             let efficiency = efficiency_mod * Self::EFFICIENCY as f64;
 
-            if state.buffs.progress.brand_of_the_elements.is_active() {
+            if state.buffs.progress.name_of_the_elements.is_active() {
                 efficiency
                     + 2. * ((1.
                         - state.curr_progress as f64 / state.recipe.recipe.max_progress as f64)
