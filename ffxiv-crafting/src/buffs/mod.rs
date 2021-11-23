@@ -2,6 +2,8 @@
 
 use std::ops::{Sub, SubAssign};
 
+use crate::actions::misc::SpecialistActions;
+
 use self::{
     combo::ComboTriggers, durability::DurabilityBuffs, progress::ProgressBuffs,
     quality::QualityBuffs,
@@ -112,6 +114,9 @@ pub struct BuffState {
     pub progress: ProgressBuffs,
     pub durability: DurabilityBuffs,
     pub combo: ComboTriggers,
+    // This is honestly only in the buff state because I didn't want to add another
+    // trait just for this
+    pub specialist_actions: SpecialistActions,
 }
 
 impl BuffState {

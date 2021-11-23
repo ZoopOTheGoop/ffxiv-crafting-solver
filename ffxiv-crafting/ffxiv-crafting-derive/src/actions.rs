@@ -79,8 +79,8 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             quote!(
                 fn buff<C, M>(&self, state: &crate::CraftingState<C, M>, so_far: &mut crate::BuffState)
                 where
-                    C: Condition,
-                    M: QualityMap,
+                    C: crate::conditions::Condition,
+                    M: crate::quality_map::QualityMap,
                 {
                     so_far.quality.inner_quiet += #magnitude;
                 }
@@ -266,8 +266,8 @@ pub fn can_execute(input: TokenStream) -> TokenStream {
         quote!(
             fn can_execute<C, M>(&self, state: &crate::CraftingState<C, M>) -> bool
             where
-                C: Condition,
-                M: QualityMap,
+                C: crate::conditions::Condition,
+                M: crate::quality_map::QualityMap,
             {
                 #condition
             }
