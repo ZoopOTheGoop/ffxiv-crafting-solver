@@ -433,8 +433,13 @@ pub trait DurabilityFactor {
         let condition_mod = condition.to_durability_modifier() as u64 as f64 / 100.;
         let buff_mod = buffs.durability.durability_cost_mod() as f64 / 100.;
 
-        // TODO: Verify where floors might be
-        (Self::DURABILITY_USAGE as f64 * condition_mod * buff_mod) as i8
+        // TODO: Verify where floors/ceilings might be for sure. I think this is right
+        // since when using Prudent Touch during Sturdy I used 3 durability.
+        //
+        // There may be another floor or ceiling present, but I don't think mathematically
+        // any current combination of durabilities can use them since Prudent Touch is the only
+        // odd durability action and it can't be used during Waste Not (the only other modifier).
+        (Self::DURABILITY_USAGE as f64 * condition_mod * buff_mod).ceil() as i8
     }
 }
 
