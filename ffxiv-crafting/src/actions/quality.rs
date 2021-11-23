@@ -87,7 +87,7 @@ impl BuffAction for BasicTouch {
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 9)]
 #[ffxiv_rand_act(fail_rate = 40)]
-#[ffxiv_buff_act(class = "touch")]
+#[ffxiv_buff_act(touch)]
 pub struct HastyTouch;
 
 /// An inefficient quality increasing action. This becomes efficient if combo'd
@@ -97,7 +97,7 @@ pub struct HastyTouch;
 #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
 #[ffxiv_quality(efficiency = 125)]
 #[ffxiv_act_lvl(level = 9)]
-#[ffxiv_buff_act(class = "touch")]
+#[ffxiv_buff_act(touch)]
 pub struct StandardTouch;
 
 impl CpCost for StandardTouch {
@@ -186,7 +186,7 @@ impl BuffAction for ByregotsBlessing {
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 53)]
 #[ffxiv_cp(cost = 18)]
-#[ffxiv_buff_act(class = "touch", amount = 2)]
+#[ffxiv_buff_act(touch = 2)]
 #[ffxiv_can_exe(class = "good_excellent")]
 pub struct PreciseTouch;
 
@@ -221,6 +221,9 @@ impl BuffAction for PatientTouch {
         M: QualityMap,
     {
         so_far.quality.inner_quiet *= 2;
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        }
     }
 }
 
@@ -232,7 +235,7 @@ impl BuffAction for PatientTouch {
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 66)]
 #[ffxiv_cp(cost = 25)]
-#[ffxiv_buff_act(class = "touch")]
+#[ffxiv_buff_act(touch)]
 #[ffxiv_durability(cost = 5)]
 pub struct PrudentTouch;
 
@@ -258,7 +261,7 @@ impl CanExecute for PrudentTouch {
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 68)]
 #[ffxiv_cp(cost = 18)]
-#[ffxiv_buff_act(class = "touch")]
+#[ffxiv_buff_act(touch)]
 #[ffxiv_rand_act(chance = 50, class = "combo_observe")]
 pub struct FocusedTouch;
 
@@ -289,8 +292,8 @@ impl BuffAction for Reflect {
     }
 }
 
-/// A very expensive action with twice as much efficiency as [`BasicTouch`]. Its
-/// durability cost is the same as doing two [`BasicTouch`]es in a row, with its CP
+/// A very expensive action with twice as much efficiency as [`BasicTouch`], and gives two [`InnerQuiet`] stacks at once.
+/// Its durability cost is the same as doing two [`BasicTouch`]es in a row, with its CP
 /// cost being about 4 more than that, so it ends up being 50 efficiency and 4 CP inferior to the
 /// [`BasicTouch`]+[`StandardTouch`] combo.
 ///
@@ -300,13 +303,14 @@ impl BuffAction for Reflect {
 /// and its appeal only increases as you add in more buffs.
 ///
 /// [`Innovation`]: crate::buffs::quality::Innovation
+/// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
 #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
 #[ffxiv_quality(efficiency = 200)]
 #[ffxiv_act_lvl(level = 71)]
 #[ffxiv_cp(cost = 40)]
-#[ffxiv_buff_act(class = "touch", amount = 2)]
+#[ffxiv_buff_act(touch = 2)]
 #[ffxiv_durability(cost = 20)]
 pub struct PreparatoryTouch;
 

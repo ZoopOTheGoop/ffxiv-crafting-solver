@@ -2,7 +2,9 @@ use std::collections::{HashMap, HashSet};
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Lit, LitInt, LitStr, Meta, MetaNameValue, NestedMeta};
+use syn::{
+    parse_macro_input, DeriveInput, ExprField, Lit, LitInt, LitStr, Meta, MetaNameValue, NestedMeta,
+};
 
 const EFFICIENCY: &str = "efficiency";
 const COST: &str = "cost";
@@ -47,51 +49,94 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
     let where_clause = where_clause.iter();
 
     const TAG: &str = "ffxiv_buff_act";
-    const MAGNITUDE: &str = "amount";
+
+    const IQ: &str = "touch";
+    const MM: &str = "synthesis";
+    const ACTIVATE: &str = "activate";
 
     let class = [
+        (IQ, Box::new(attr_literal(IQ)) as Box<FfxivAttrMatcher>),
+        (MM, Box::new(attr_literal(MM)) as Box<FfxivAttrMatcher>),
         (
-            CLASS,
-            Box::new(attr_literal(CLASS)) as Box<FfxivAttrMatcher>,
+            ACTIVATE,
+            Box::new(attr_literal(ACTIVATE)) as Box<FfxivAttrMatcher>,
         ),
-        (MAGNITUDE, Box::new(attr_literal(MAGNITUDE))),
     ]
     .into_iter()
     .collect();
 
     let val = find_attributes(&ast, TAG, class);
 
-    let magnitude: u8 = val
-        .get(MAGNITUDE)
-        .map(|v| {
-            v.to_lit_int()
-                .base10_parse()
-                .expect("Literal should be integer")
-        })
-        .unwrap_or(1);
-
-    let buff_impl = val
-        .get(CLASS)
+    let clause = val
+        .get(IQ)
         .into_iter()
-        .map(|v| v.to_lit_str())
-        .filter(|v| &*v.value() == "touch")
-        .map(|_| {
+        .map(|v| {
+            let magnitude: u8 = match v {
+                FfxivAttr::Found => 1,
+                FfxivAttr::Constant(lit) => lit.base10_parse().expect("Need to match touch with an integer"),
+                _ => panic!("Invalid format for touch on BuffAction derive. Need `touch = <integer>` or else `touch` which implies 1.")
+            };
             quote!(
-                fn buff<C, M>(&self, state: &crate::CraftingState<C, M>, so_far: &mut crate::BuffState)
-                where
-                    C: crate::conditions::Condition,
-                    M: crate::quality_map::QualityMap,
-                {
-                    so_far.quality.inner_quiet += #magnitude;
+                so_far.quality.inner_quiet += #magnitude;
+                
+                if so_far.quality.great_strides.is_active(){
+                    so_far.quality.great_strides.deactivate_in_place();
                 }
             )
         });
+
+    let clause = clause.chain(val
+        .get(MM)
+        .into_iter()
+        .map(|v| {
+            match v {
+                FfxivAttr::Found => {},
+                _ => panic!("Invalid format for synthesis on BuffAction derive. The `synthesis` directive must not be set with `=`")
+            }
+
+            quote!(
+                if so_far.progress.muscle_memory.is_active(){
+                    so_far.progress.muscle_memory.deactivate_in_place();
+                }
+            )
+        }));
+
+    let clause = clause.chain(val.get(ACTIVATE).into_iter().map(|v| {
+        let parts: ExprField = match v {
+            FfxivAttr::Kind(lit) => {
+                let val = lit.value();
+                syn::parse_str(&*val).expect(
+                    "Invalid format for activate, \
+                        it must be a string describing struct field access",
+                )
+            }
+            _ => panic!(
+                "Invalid format for activate, it must be a string describing struct field access"
+            ),
+        };
+
+        quote!(
+            so_far.#parts.activate_in_place(state.condition.to_status_duration_modifier() as u8)
+        )
+    }));
+
+    let buff_impl = quote!(
+        fn buff<C, M>(&self, state: &crate::CraftingState<C, M>, so_far: &mut crate::BuffState)
+        where
+            C: crate::conditions::Condition,
+            M: crate::quality_map::QualityMap,
+        {
+            use crate::buffs::ConsumableBuff;
+            
+            #(#clause)*
+        }
+    );
 
     quote!(
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::buffs::BuffAction for #ident #type_generic #(#where_clause)* {
-            #(#buff_impl)*
+            #buff_impl
         }
     )
     .into()
@@ -410,10 +455,11 @@ pub fn time_passed(input: TokenStream) -> TokenStream {
     .into()
 }
 
+#[derive(Debug)]
 enum FfxivAttr {
     Constant(LitInt),
     Kind(LitStr),
-    // Name(syn::Path),
+    Found,
 }
 
 impl FfxivAttr {
@@ -430,13 +476,6 @@ impl FfxivAttr {
             _ => panic!("Attempt to fetch lit str from non-lit-str type"),
         }
     }
-
-    // fn to_name(&self) -> &syn::Path {
-    //     match self {
-    //         Self::Name(name) => name,
-    //         _ => panic!("Attempt to fetch name int from non-path type"),
-    //     }
-    // }
 }
 
 type FfxivAttrMatcher = dyn Fn(NestedMeta) -> Option<FfxivAttr>;
@@ -486,6 +525,9 @@ fn attr_literal(assoc_const_attr: &'static str) -> impl Fn(NestedMeta) -> Option
                 lit: Lit::Str(lit),
                 ..
             })) if path.is_ident(assoc_const_attr) => Some(FfxivAttr::Kind(lit)),
+            NestedMeta::Meta(Meta::Path(path)) if path.is_ident(assoc_const_attr) => {
+                Some(FfxivAttr::Found)
+            }
             _ => None,
         }
     }

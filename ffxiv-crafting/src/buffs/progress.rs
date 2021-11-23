@@ -34,7 +34,12 @@ impl ProgressBuffs {
     ///
     /// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
     pub fn efficiency_mod(&self) -> u16 {
-        self.veneration.efficiency_mod() + self.muscle_memory.efficiency_mod()
+        self.veneration.efficiency_mod()
+    }
+
+    /// Calculates the efficiency added on to the next action, if any.
+    pub fn bonus_efficiency(&self) -> u16 {
+        self.muscle_memory.bonus_efficiency()
     }
 }
 
@@ -202,11 +207,10 @@ impl ProgressEfficiencyMod for Veneration {
 }
 
 /// The buff state corresponding to the action [`MuscleMemory`],
-/// which adds 1x to the multiplier on the efficiency of [`progress`] related
-/// actions (the base multiplier is 1.0, so this changes it to 2.0, not including
-/// other buffs).
+/// which adds 100 to the base efficiency of the next [`progress`] related
+/// action.
 ///
-/// This is technically a "combo action", and is consumed once another [`progress`]
+/// This is a "combo action", and is consumed once another [`progress`]
 /// related action is used, consuming the buff.
 ///
 /// [`MuscleMemory`]: crate::actions::progress::MuscleMemory
@@ -227,6 +231,22 @@ pub enum MuscleMemory {
         /// [`Inactive`]: MuscleMemory::Inactive
         u8,
     ),
+}
+
+impl MuscleMemory {
+    /// The bonus efficiency added onto the next synthesis action, when
+    /// active.
+    pub const BONUS: u16 = 100;
+
+    /// Returns the bonus efficiency to be added on to the next
+    /// synthesis action. 100 if active and 0 otherwise.
+    fn bonus_efficiency(&self) -> u16 {
+        if self.is_active() {
+            100
+        } else {
+            0
+        }
+    }
 }
 
 impl Buff for MuscleMemory {
@@ -269,10 +289,6 @@ impl SubAssign<u8> for MuscleMemory {
     fn sub_assign(&mut self, rhs: u8) {
         *self = self.sub(rhs)
     }
-}
-
-impl ProgressEfficiencyMod for MuscleMemory {
-    const MODIFIER: u16 = 100;
 }
 
 /// The buff state corresponding to the action [`FinalAppraisal`],
