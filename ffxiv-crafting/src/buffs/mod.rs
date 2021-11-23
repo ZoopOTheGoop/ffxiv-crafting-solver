@@ -2,8 +2,12 @@
 
 use std::ops::{Sub, SubAssign};
 
-use self::{durability::DurabilityBuffs, progress::ProgressBuffs, quality::QualityBuffs};
+use self::{
+    combo::ComboTriggers, durability::DurabilityBuffs, progress::ProgressBuffs,
+    quality::QualityBuffs,
+};
 
+pub mod combo;
 pub mod durability;
 pub mod progress;
 pub mod quality;
@@ -107,6 +111,7 @@ pub struct BuffState {
     pub quality: QualityBuffs,
     pub progress: ProgressBuffs,
     pub durability: DurabilityBuffs,
+    pub combo: ComboTriggers,
 }
 
 impl BuffState {
@@ -115,5 +120,6 @@ impl BuffState {
         self.quality.decay();
         self.progress.decay();
         self.durability.decay();
+        self.combo.decay();
     }
 }

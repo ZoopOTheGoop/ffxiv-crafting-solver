@@ -349,7 +349,7 @@ pub fn random_action(input: TokenStream) -> TokenStream {
                     &self,
                     state: &CraftingState<C, M>,
                 ) -> u8 {
-                    if !state.last_state_was_observation {
+                    if !state.buffs.combo.observation.is_active() {
                         Self::FAIL_RATE
                     } else {
                         0

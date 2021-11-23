@@ -53,7 +53,7 @@ mod concrete {
 
     use crate::{
         actions::{buffs::BuffAction, failure::PatientFailure, CanExecute, CpCost, RandomAction},
-        buffs::{quality::InnerQuietBaseStacks, Buff, ConsumableBuff},
+        buffs::{quality::InnerQuietBaseStacks, Buff, ConsumableBuff, DurationalBuff},
         conditions::Condition,
         quality_map::QualityMap,
         CraftingState,
@@ -63,12 +63,22 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+    #[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 18)]
     #[ffxiv_quality(efficiency = 100)]
     #[ffxiv_act_lvl(level = 5)]
-    #[ffxiv_buff_act(class = "touch")]
     pub struct BasicTouch;
+
+    impl BuffAction for BasicTouch {
+        fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+        where
+            C: Condition,
+            M: QualityMap,
+        {
+            so_far.combo.basic_touch.activate(0);
+            so_far.quality.inner_quiet += 1;
+        }
+    }
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
@@ -96,7 +106,7 @@ mod concrete {
             C: Condition,
             M: QualityMap,
         {
-            let cost = if state.last_state_was_basic_touch {
+            let cost = if state.buffs.combo.basic_touch.is_active() {
                 BasicTouch::CP_COST
             } else {
                 Self::CP_COST

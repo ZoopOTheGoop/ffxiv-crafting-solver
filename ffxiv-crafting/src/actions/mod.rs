@@ -11,6 +11,7 @@ use crate::{buffs::BuffState, conditions::Condition, quality_map::QualityMap, Cr
 pub mod buffs;
 pub mod errors;
 pub mod failure;
+pub mod misc;
 pub mod progress;
 pub mod quality;
 

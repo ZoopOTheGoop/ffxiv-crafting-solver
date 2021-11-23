@@ -221,14 +221,6 @@ mod concrete {
     }
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-    #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
-    #[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
-    #[ffxiv_cp(cost = 88)]
-    #[ffxiv_act_lvl(level = 7)]
-    #[ffxiv_durability(bonus = 30)]
-    pub struct MastersMend;
-
-    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
     #[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 96)]
