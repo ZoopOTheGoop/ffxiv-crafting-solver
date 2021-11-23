@@ -196,18 +196,16 @@ pub trait Action:
         M: QualityMap,
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
-        let mut iq = state.buffs.quality.inner_quiet;
 
         // Don't check CP or viability yet, prospectively execute
-        delta.added_cp = self.cp_cost(&state.condition);
+        delta.added_cp = self.cp_cost(state);
 
         delta.added_progress = self.progress(state);
-        delta.added_quality = self.quality(state, &mut iq);
+        delta.added_quality = self.quality(state);
         delta.action_durability = self.durability(&state.buffs, &state.condition);
 
         delta.buff_repair = state.buffs.durability.repair();
 
-        delta.new_buffs.quality.inner_quiet = iq;
         self.buff(state, &mut delta.new_buffs);
         delta.new_buffs.decay();
 
@@ -228,9 +226,8 @@ pub trait Action:
         M: QualityMap,
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
-        let mut iq = state.buffs.quality.inner_quiet;
 
-        delta.added_cp = self.cp_cost(&state.condition);
+        delta.added_cp = self.cp_cost(state);
 
         let can_act = self.can_execute(state);
 
@@ -246,13 +243,13 @@ pub trait Action:
         };
 
         delta.added_quality = self.progress(state);
-        delta.added_quality = self.quality(state, &mut iq);
+        delta.added_quality = self.quality(state);
         delta.action_durability = self.durability(&state.buffs, &state.condition);
 
         delta.buff_repair = state.buffs.durability.repair();
 
-        delta.new_buffs.quality.inner_quiet = iq;
         self.buff(state, &mut delta.new_buffs);
+        delta.new_buffs.decay();
 
         ActionOutcome::from_delta_state(delta, state)
     }
@@ -396,30 +393,28 @@ pub trait DurabilityFactor {
 /// a different amount of CP should be used or restored in the current state.
 ///
 /// This takes into account the current [`Condition`] in expert crafting.
-///
-/// Currently, aside from the constant, this should not need overriding for any current action.
-/// (Yes it even takes into account [`TricksOfTheTrade`]) and should monomorphize well.
 pub trait CpCost {
     const CP_COST: i16;
 
     /// Determines the amount of CP this action will restore or use given the current [`Condition`].
-    fn cp_cost<C>(&self, condition: &C) -> i16
+    fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
     where
         C: Condition,
+        M: QualityMap,
     {
         if Self::CP_COST == 0 {
             return 0;
         }
 
         if Self::CP_COST > 0 {
-            return if condition.is_good() || condition.is_excellent() {
+            return if state.condition.is_good() || state.condition.is_excellent() {
                 Self::CP_COST
             } else {
                 0
             };
         }
 
-        let condition_mod = condition.to_cp_usage_modifier() as u64 as f64 / 100.;
+        let condition_mod = state.condition.to_cp_usage_modifier() as u64 as f64 / 100.;
 
         // Todo: verify where floor/ceil might be
         (Self::CP_COST as f64 * condition_mod) as i16

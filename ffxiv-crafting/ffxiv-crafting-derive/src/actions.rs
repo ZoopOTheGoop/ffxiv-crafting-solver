@@ -2,12 +2,13 @@ use std::collections::{HashMap, HashSet};
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Lit, LitInt, Meta, MetaNameValue, NestedMeta};
+use syn::{parse_macro_input, DeriveInput, Lit, LitInt, LitStr, Meta, MetaNameValue, NestedMeta};
 
 const EFFICIENCY: &str = "efficiency";
 const COST: &str = "cost";
 const LEVEL: &str = "level";
 const CHANCE: &str = "fail_rate";
+const CLASS: &str = "class";
 
 pub fn progress_action(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -19,7 +20,7 @@ pub fn progress_action(input: TokenStream) -> TokenStream {
 
     let efficiency = [(
         EFFICIENCY,
-        Box::new(attr_efficiency(EFFICIENCY)) as Box<FfxivAttrMatcher>,
+        Box::new(attr_literal(EFFICIENCY)) as Box<FfxivAttrMatcher>,
     )]
     .into_iter()
     .collect();
@@ -44,10 +45,53 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
     let (impl_generic, type_generic, where_clause) = &ast.generics.split_for_impl();
     let where_clause = where_clause.iter();
 
+    const TAG: &str = "ffxiv_buff_act";
+    const MAGNITUDE: &str = "amount";
+
+    let class = [
+        (
+            CLASS,
+            Box::new(attr_literal(CLASS)) as Box<FfxivAttrMatcher>,
+        ),
+        (MAGNITUDE, Box::new(attr_literal(MAGNITUDE))),
+    ]
+    .into_iter()
+    .collect();
+
+    let val = find_attributes(&ast, TAG, class);
+
+    let magnitude: u8 = val
+        .get(MAGNITUDE)
+        .map(|v| {
+            v.to_lit_int()
+                .base10_parse()
+                .expect("Literal should be integer")
+        })
+        .unwrap_or(1);
+
+    let buff_impl = val
+        .get(CLASS)
+        .into_iter()
+        .map(|v| v.to_lit_str())
+        .filter(|v| &*v.value() == "touch")
+        .map(|_| {
+            quote!(
+                fn buff<C, M>(&self, state: &crate::CraftingState<C, M>, so_far: &mut crate::BuffState)
+                where
+                    C: Condition,
+                    M: QualityMap,
+                {
+                    so_far.quality.inner_quiet += #magnitude;
+                }
+            )
+        });
+
     quote!(
         #[automatically_derived]
         #[allow(unused_qualifications)]
-        impl #impl_generic crate::actions::buffs::BuffAction for #ident #type_generic #(#where_clause)* {}
+        impl #impl_generic crate::actions::buffs::BuffAction for #ident #type_generic #(#where_clause)* {
+            #(#buff_impl)*
+        }
     )
     .into()
 }
@@ -62,7 +106,7 @@ pub fn quality_action(input: TokenStream) -> TokenStream {
 
     let efficiency = [(
         EFFICIENCY,
-        Box::new(attr_efficiency(EFFICIENCY)) as Box<FfxivAttrMatcher>,
+        Box::new(attr_literal(EFFICIENCY)) as Box<FfxivAttrMatcher>,
     )]
     .into_iter()
     .collect();
@@ -89,12 +133,9 @@ pub fn cp_cost(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_cp";
 
-    let cost = [(
-        COST,
-        Box::new(attr_efficiency(COST)) as Box<FfxivAttrMatcher>,
-    )]
-    .into_iter()
-    .collect();
+    let cost = [(COST, Box::new(attr_literal(COST)) as Box<FfxivAttrMatcher>)]
+        .into_iter()
+        .collect();
 
     let val = find_attributes(&ast, TAG, cost);
 
@@ -119,12 +160,9 @@ pub fn durability(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_durability";
 
-    let cost = [(
-        COST,
-        Box::new(attr_efficiency(COST)) as Box<FfxivAttrMatcher>,
-    )]
-    .into_iter()
-    .collect();
+    let cost = [(COST, Box::new(attr_literal(COST)) as Box<FfxivAttrMatcher>)]
+        .into_iter()
+        .collect();
 
     let val = find_attributes(&ast, TAG, cost);
 
@@ -146,10 +184,40 @@ pub fn can_execute(input: TokenStream) -> TokenStream {
     let (impl_generic, type_generic, where_clause) = &ast.generics.split_for_impl();
     let where_clause = where_clause.iter();
 
+    const TAG: &str = "ffxiv_can_exe";
+
+    let class = [(
+        CLASS,
+        Box::new(attr_literal(CLASS)) as Box<FfxivAttrMatcher>,
+    )]
+    .into_iter()
+    .collect();
+
+    let val = find_attributes(&ast, TAG, class);
+
+    let can_execute_impl = val
+        .get(CLASS)
+        .into_iter()
+        .map(|v| v.to_lit_str())
+        .filter(|v| &*v.value() == "good_excellent")
+        .map(|_| {
+            quote!(
+                fn can_execute<C, M>(&self, state: &crate::CraftingState<C, M>) -> bool
+                where
+                    C: Condition,
+                    M: QualityMap,
+                {
+                    state.condition.is_good() || state.condition.is_excellent()
+                }
+            )
+        });
+
     quote!(
         #[automatically_derived]
         #[allow(unused_qualifications)]
-        impl #impl_generic crate::actions::CanExecute for #ident #type_generic #(#where_clause)* {}
+        impl #impl_generic crate::actions::CanExecute for #ident #type_generic #(#where_clause)* {
+            #(#can_execute_impl)*
+        }
     )
     .into()
 }
@@ -164,7 +232,7 @@ pub fn action_level(input: TokenStream) -> TokenStream {
 
     let level = [(
         LEVEL,
-        Box::new(attr_efficiency(LEVEL)) as Box<FfxivAttrMatcher>,
+        Box::new(attr_literal(LEVEL)) as Box<FfxivAttrMatcher>,
     )]
     .into_iter()
     .collect();
@@ -194,7 +262,7 @@ pub fn random_action(input: TokenStream) -> TokenStream {
 
     let chance = [(
         CHANCE,
-        Box::new(attr_efficiency(CHANCE)) as Box<FfxivAttrMatcher>,
+        Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
     )]
     .into_iter()
     .collect();
@@ -207,7 +275,7 @@ pub fn random_action(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::RandomAction for #ident #type_generic #(#where_clause)* {
-            #(const FAIL_RATE: i8 = #val;)*
+            #(const FAIL_RATE: u8 = #val;)*
             type FailAction = crate::actions::failure::NullFailure<Self>;
 
             fn fail_action(&self) -> Self::FailAction {
@@ -224,7 +292,8 @@ pub fn random_action(input: TokenStream) -> TokenStream {
 
 enum FfxivAttr {
     Constant(LitInt),
-    Name(syn::Path),
+    Kind(LitStr),
+    // Name(syn::Path),
 }
 
 impl FfxivAttr {
@@ -235,12 +304,19 @@ impl FfxivAttr {
         }
     }
 
-    fn to_name(&self) -> &syn::Path {
+    fn to_lit_str(&self) -> &LitStr {
         match self {
-            Self::Name(name) => name,
-            _ => panic!("Attempt to fetch name int from non-path type"),
+            Self::Kind(lit) => lit,
+            _ => panic!("Attempt to fetch lit str from non-lit-str type"),
         }
     }
+
+    // fn to_name(&self) -> &syn::Path {
+    //     match self {
+    //         Self::Name(name) => name,
+    //         _ => panic!("Attempt to fetch name int from non-path type"),
+    //     }
+    // }
 }
 
 type FfxivAttrMatcher = dyn Fn(NestedMeta) -> Option<FfxivAttr>;
@@ -277,7 +353,7 @@ fn find_attributes(
     out
 }
 
-fn attr_efficiency(assoc_const_attr: &'static str) -> impl Fn(NestedMeta) -> Option<FfxivAttr> {
+fn attr_literal(assoc_const_attr: &'static str) -> impl Fn(NestedMeta) -> Option<FfxivAttr> {
     |nested: NestedMeta| -> Option<FfxivAttr> {
         match nested {
             NestedMeta::Meta(Meta::NameValue(MetaNameValue {
@@ -285,6 +361,11 @@ fn attr_efficiency(assoc_const_attr: &'static str) -> impl Fn(NestedMeta) -> Opt
                 lit: Lit::Int(lit),
                 ..
             })) if path.is_ident(assoc_const_attr) => Some(FfxivAttr::Constant(lit)),
+            NestedMeta::Meta(Meta::NameValue(MetaNameValue {
+                path,
+                lit: Lit::Str(lit),
+                ..
+            })) if path.is_ident(assoc_const_attr) => Some(FfxivAttr::Kind(lit)),
             _ => None,
         }
     }

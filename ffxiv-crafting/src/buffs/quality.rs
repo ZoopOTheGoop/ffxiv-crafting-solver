@@ -78,6 +78,13 @@ impl InnerQuiet {
         }
     }
 
+    pub fn stacks(&self) -> u8 {
+        match self {
+            Self::Active(val) => *val,
+            Self::Inactive => panic!("Attempt to get stacks of inactive Byregot's"),
+        }
+    }
+
     /* Arguably these could be `Option` or `Result`, but IMO your program is wrong if you try
     to activate/deactivate at the wrong time. If you need to switch use `match` or `is_active` */
 
