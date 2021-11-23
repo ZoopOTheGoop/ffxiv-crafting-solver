@@ -126,7 +126,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             C: crate::conditions::Condition,
             M: crate::quality_map::QualityMap,
         {
-            use crate::buffs::ConsumableBuff;
+            use crate::buffs::{Buff, DurationalBuff, ConsumableBuff};
             
             #(#clause)*
         }
