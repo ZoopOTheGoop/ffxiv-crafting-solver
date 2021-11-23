@@ -39,7 +39,7 @@ impl QualityBuffs {
 /// #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum InnerQuietBaseStacks {
     InnerQuiet = 1,
-    Reflection = 4,
+    Reflection = 3,
 }
 
 /// The Inner Quiet buff, when active, provides a 20% quality modifier per stack.

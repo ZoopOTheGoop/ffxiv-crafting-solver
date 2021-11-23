@@ -144,6 +144,19 @@ impl RecipeLevelRanges {
         Self::ArrLeveling(1)
     }
 
+    pub const fn to_player_facing_level(self) -> u8 {
+        match self {
+            Self::ArrLeveling(lvl)
+            | Self::HwLeveling(lvl)
+            | Self::StbLeveling(lvl)
+            | Self::ShbLeveling(lvl) => lvl,
+            Self::ArrMax(_) => 50,
+            Self::HwMax(_) => 60,
+            Self::StbMax(_) => 70,
+            Self::ShbMax(_) => 80,
+        }
+    }
+
     pub const fn to_recipe_level(self) -> u16 {
         RLVL[self.to_rlvl_index()]
     }

@@ -257,22 +257,22 @@ pub fn can_execute(input: TokenStream) -> TokenStream {
 
     let val = find_attributes(&ast, TAG, class);
 
-    let can_execute_impl = val
-        .get(CLASS)
-        .into_iter()
-        .map(|v| v.to_lit_str())
-        .filter(|v| &*v.value() == "good_excellent")
-        .map(|_| {
-            quote!(
-                fn can_execute<C, M>(&self, state: &crate::CraftingState<C, M>) -> bool
-                where
-                    C: Condition,
-                    M: QualityMap,
-                {
-                    state.condition.is_good() || state.condition.is_excellent()
-                }
-            )
-        });
+    let can_execute_impl = val.get(CLASS).into_iter().map(|v| v.to_lit_str()).map(|v| {
+        let condition = match &*v.value() {
+            "good_excellent" => quote!(state.condition.is_good() || state.condition.is_excellent()),
+            "first_step" => quote!(state.first_step),
+            _ => panic!("Unsupported condition for \"can execute\"."),
+        };
+        quote!(
+            fn can_execute<C, M>(&self, state: &crate::CraftingState<C, M>) -> bool
+            where
+                C: Condition,
+                M: QualityMap,
+            {
+                #condition
+            }
+        )
+    });
 
     quote!(
         #[automatically_derived]

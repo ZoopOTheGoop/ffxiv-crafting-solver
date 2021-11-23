@@ -1,6 +1,6 @@
 use ffxiv_crafting_derive::*;
 
-use super::{Action, CanExecute, CpCost, DurabilityFactor};
+use super::{buffs::BuffAction, Action, CanExecute, CpCost, DurabilityFactor};
 use crate::{quality_map::QualityMap, Condition, CraftingState};
 
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
@@ -37,5 +37,20 @@ impl<A: Action> CanExecute for NullFailure<A> {
         M: crate::quality_map::QualityMap,
     {
         self.0.can_execute(state)
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
+#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, CanExecute)]
+#[ffxiv_cp(cost = 6)]
+pub struct PatientFailure;
+
+impl BuffAction for PatientFailure {
+    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        so_far.quality.inner_quiet /= 2;
     }
 }

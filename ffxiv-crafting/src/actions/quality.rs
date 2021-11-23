@@ -55,8 +55,8 @@ mod concrete {
     };
 
     use crate::{
-        actions::{buffs::BuffAction, CanExecute, CpCost},
-        buffs::{Buff, ConsumableBuff},
+        actions::{buffs::BuffAction, failure::PatientFailure, CanExecute, CpCost, RandomAction},
+        buffs::{quality::InnerQuietBaseStacks, Buff, ConsumableBuff},
         conditions::Condition,
         quality_map::QualityMap,
         CraftingState,
@@ -165,6 +165,35 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+    #[derive(CanExecute, ActionLevel)]
+    #[ffxiv_quality(efficiency = 150)]
+    #[ffxiv_act_lvl(level = 53)]
+    #[ffxiv_cp(cost = 6)]
+    #[ffxiv_can_exe(class = "good_excellent")]
+    pub struct PatientTouch;
+
+    impl RandomAction for PatientTouch {
+        const FAIL_RATE: u8 = 50;
+
+        type FailAction = PatientFailure;
+
+        fn fail_action(&self) -> Self::FailAction {
+            PatientFailure
+        }
+    }
+
+    impl BuffAction for PatientTouch {
+        fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+        where
+            C: Condition,
+            M: QualityMap,
+        {
+            so_far.quality.inner_quiet *= 2;
+        }
+    }
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
     #[derive(BuffAction, ActionLevel, RandomAction)]
     #[ffxiv_quality(efficiency = 100)]
     #[ffxiv_act_lvl(level = 66)]
@@ -192,4 +221,68 @@ mod concrete {
     #[ffxiv_buff_act(class = "touch")]
     #[ffxiv_rand_act(chance = 50, class = "combo_observe")]
     pub struct FocusedTouch;
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+    #[derive(CanExecute, ActionLevel, RandomAction)]
+    #[ffxiv_quality(efficiency = 100)]
+    #[ffxiv_act_lvl(level = 69)]
+    #[ffxiv_cp(cost = 24)]
+    #[ffxiv_can_exe(class = "first_step")]
+    pub struct Reflect;
+
+    impl BuffAction for Reflect {
+        fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+        where
+            C: Condition,
+            M: QualityMap,
+        {
+            so_far
+                .quality
+                .inner_quiet
+                .activate(InnerQuietBaseStacks::Reflection);
+        }
+    }
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[ffxiv_quality(efficiency = 200)]
+    #[ffxiv_act_lvl(level = 71)]
+    #[ffxiv_cp(cost = 40)]
+    #[ffxiv_buff_act(class = "touch", amount = 2)]
+    #[ffxiv_durability(cost = 20)]
+    #[ffxiv_can_exe(class = "good_excellent")]
+    pub struct PreparatoryTouch;
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, DurabilityFactor, CpCost)]
+    #[derive(BuffAction, ActionLevel, RandomAction)]
+    #[ffxiv_act_lvl(level = 80)]
+    #[ffxiv_cp(cost = 250)]
+    #[ffxiv_durability(cost = 0)]
+    pub struct TrainedEye;
+
+    impl QualityAction for TrainedEye {
+        fn quality<C, M>(&self, state: &CraftingState<C, M>) -> u32
+        where
+            C: Condition,
+            M: QualityMap,
+        {
+            state.recipe.recipe.max_quality
+        }
+    }
+
+    impl CanExecute for TrainedEye {
+        fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
+        where
+            C: Condition,
+            M: QualityMap,
+        {
+            state.first_step
+                && (state.recipe.character.char_level as i8
+                    - state.recipe.recipe.recipe_level.to_player_facing_level() as i8)
+                    >= 10
+        }
+    }
 }
