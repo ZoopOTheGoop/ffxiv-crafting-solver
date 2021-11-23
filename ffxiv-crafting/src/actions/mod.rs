@@ -343,6 +343,10 @@ impl<T> Action for T where
 {
 }
 
+/// A trait that denotes an action's ability to determine if it can execute in the current state.
+/// Note that this is specifically for actions such as [`MuscleMemory`] that can only be executed
+/// on the first action, CP execution availability is determined separately and you should not
+/// implement CP cost checks in this trait.
 pub trait CanExecute {
     /// Determines whether the action can be executed in the given state.
     #[allow(unused_variables)]
@@ -451,6 +455,12 @@ pub trait RandomAction: Sized + Action {
         state: &CraftingState<C, M>,
     ) -> RollOutcome<Self, Self::FailAction> {
         let fail_rate = self.fail_rate(state);
+
+        if fail_rate == 0 {
+            return RollOutcome::Success(self);
+        } else if fail_rate == 100 {
+            return RollOutcome::Failure(self.fail_action());
+        }
 
         if rng.gen_range(1..=100) <= fail_rate {
             RollOutcome::Failure(self.fail_action())

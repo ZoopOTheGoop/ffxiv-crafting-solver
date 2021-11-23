@@ -4,6 +4,8 @@ use crate::{
     buffs::quality::InnerQuiet, conditions::Condition, quality_map::QualityMap, CraftingState,
 };
 
+pub use self::concrete::*;
+
 /// An action's effect on the `quality` attribute. The
 /// [`EFFICIENCY`](QualityAction::EFFICIENCY) is the base efficiency of the given
 /// action, without any modifiers.
@@ -14,6 +16,9 @@ pub trait QualityAction {
     ///
     /// Further buffs to IQ (e.g. from [`PreciseTouch`] are applies in the normal buff stage).
     fn pre_iq(&self, iq: &mut InnerQuiet) {
+        if Self::EFFICIENCY == 0 {
+            return;
+        }
         *iq += 1;
     }
 
@@ -55,4 +60,17 @@ pub trait QualityAction {
 
         ((quality * condition_mod).floor() * efficiency) as u32
     }
+}
+
+mod concrete {
+    use ffxiv_crafting_derive::{
+        BuffAction, CanExecute, CpCost, DurabilityFactor, ProgressAction, QualityAction,
+    };
+
+    #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+    #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+    #[derive(CanExecute, BuffAction)]
+    #[ffxiv_cp(cost = 0)]
+    #[ffxiv_quality(efficiency = 100)]
+    pub struct BasicTouch;
 }
