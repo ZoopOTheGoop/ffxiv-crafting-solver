@@ -312,42 +312,68 @@ const LEVEL_MOD_QUALITY: [u16; 80] = [
     100, 100,
 ];
 
+/// Maps a condition to the raw modifier (before dividing by 100) from
+/// the game files used in quality math.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum QualityModifier {
+    /// 50
     Poor = 50,
+    /// 100
     Normal = 100,
+    /// 150
     Good = 150,
+    /// 400
     Excellent = 400,
 }
 
+/// Maps a condition to the raw modifier (before dividing by 100) from
+/// the game files used in progress math.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ProgressModifier {
+    /// 150
     Malleable = 150,
+    /// 100
     Normal = 100,
 }
 
+/// Maps a condition to the raw modifier from
+/// the game files used in success rate math.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SuccessRateModifier {
+    /// 25
     Centered = 25,
+    /// 0
     Normal = 0,
 }
 
+/// Maps a condition to the raw modifier (before dividing by 100) from
+/// the game files used in durability math.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DurabilityModifier {
+    /// 50
     Sturdy = 50,
+    /// 100
     Normal = 100,
 }
 
+/// Maps a condition to the raw modifier from
+/// the game files added on to status effects.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StatusDurationModifier {
+    /// 2
     Primed = 2,
+    /// 0
     Normal = 0,
 }
 
+/// Maps a condition to the raw modifier (before dividing by 100) from
+/// the game files used in CP cost math.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CpUsageModifier {
+    /// 50
     Pliant = 50,
-    Normal = 0,
+    /// 100
+    Normal = 100,
 }
 
 // This is largely here because it's how it is in the files, we use the

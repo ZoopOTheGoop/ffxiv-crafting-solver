@@ -1,3 +1,6 @@
+//! Contains types that map the crafting state's quality value to [`HQChance`]
+//! or [`Collectability`].
+
 use crate::lookups;
 
 /// Maps the `quality` property to either [`HQChance`] or
