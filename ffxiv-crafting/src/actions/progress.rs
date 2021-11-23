@@ -62,7 +62,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 0)]
     #[ffxiv_progress(efficiency = 100)]
     #[ffxiv_act_lvl(level = 1)]
@@ -70,7 +70,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 0)]
     #[ffxiv_progress(efficiency = 500)]
     #[ffxiv_act_lvl(level = 9)]
@@ -79,7 +79,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 6)]
     #[ffxiv_act_lvl(level = 37)]
     pub struct BrandOfTheElements;
@@ -110,7 +110,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, ActionLevel, RandomAction)]
+    #[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 6)]
     #[ffxiv_progress(efficiency = 300)]
     #[ffxiv_act_lvl(level = 54)]
@@ -130,7 +130,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 7)]
     #[ffxiv_progress(efficiency = 150)]
     #[ffxiv_act_lvl(level = 62)]
@@ -138,7 +138,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 5)]
     #[ffxiv_progress(efficiency = 200)]
     #[ffxiv_act_lvl(level = 67)]
@@ -147,7 +147,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 0)]
     #[ffxiv_act_lvl(level = 72)]
     #[ffxiv_durability(cost = 20)]
@@ -176,7 +176,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 6)]
     #[ffxiv_progress(efficiency = 400)]
     #[ffxiv_act_lvl(level = 78)]

@@ -4,7 +4,9 @@ use std::ops::{Sub, SubAssign};
 
 use derivative::Derivative;
 
-use super::{Buff, ConsumableBuff, DurationalBuff};
+use crate::{conditions::Condition, quality_map::QualityMap, CraftingState};
+
+use super::{Buff, BuffState, ConsumableBuff, DurationalBuff};
 
 /// A simple collection of all the progress buffs, for cleaner fields on simulation
 /// structs.
@@ -13,6 +15,7 @@ pub struct ProgressBuffs {
     pub name_of_the_elements: NameOfTheElements,
     pub veneration: Veneration,
     pub muscle_memory: MuscleMemory,
+    pub final_appraisal: FinalAppraisal,
 }
 
 impl ProgressBuffs {
@@ -20,6 +23,7 @@ impl ProgressBuffs {
         self.name_of_the_elements.decay_in_place();
         self.veneration.decay_in_place();
         self.muscle_memory.decay_in_place();
+        self.final_appraisal.decay_in_place();
     }
 
     /// Calculates the efficiency bonuses granted by these buffs. This does NOT include the [`NameOfTheElements`] buff,
@@ -56,6 +60,16 @@ pub enum NameOfTheElements {
     Unused,
     Active(u8),
     Used,
+}
+
+impl NameOfTheElements {
+    pub fn can_activate(&self) -> bool {
+        matches!(self, Self::Unused)
+    }
+
+    pub fn already_activated(&self) -> bool {
+        matches!(self, Self::Active(_) | Self::Used)
+    }
 }
 
 impl Buff for NameOfTheElements {
@@ -97,8 +111,6 @@ impl SubAssign<u8> for NameOfTheElements {
     }
 }
 
-// TODO: veneration is 4 steps, muscle memory is 5
-
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum Veneration {
@@ -114,7 +126,7 @@ impl Buff for Veneration {
 }
 
 impl DurationalBuff for Veneration {
-    const BASE_DURATION: u8 = 3;
+    const BASE_DURATION: u8 = 4;
 
     fn activate(self, bonus: u8) -> Self {
         Self::Active(Self::BASE_DURATION + bonus)
@@ -168,7 +180,7 @@ impl ConsumableBuff for MuscleMemory {
 }
 
 impl DurationalBuff for MuscleMemory {
-    const BASE_DURATION: u8 = 3;
+    const BASE_DURATION: u8 = 5;
 
     fn activate(self, bonus: u8) -> Self {
         Self::Active(Self::BASE_DURATION + bonus)
@@ -196,4 +208,76 @@ impl SubAssign<u8> for MuscleMemory {
 
 impl ProgressEfficiencyMod for MuscleMemory {
     const MODIFIER: u16 = 100;
+}
+
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
+#[derivative(Default)]
+pub enum FinalAppraisal {
+    #[derivative(Default)]
+    Inactive,
+    Active(u8),
+}
+
+impl FinalAppraisal {
+    pub fn handle_progress<C, M>(
+        &self,
+        state: &CraftingState<C, M>,
+        new_progress: u32,
+        buffs: &mut BuffState,
+    ) -> u32
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        if self.is_active()
+            && state.curr_progress + new_progress >= state.recipe.recipe.max_progress
+        {
+            buffs.progress.final_appraisal.deactivate();
+            (state.recipe.recipe.max_progress - 1) - state.curr_progress
+        } else {
+            new_progress
+        }
+    }
+}
+
+impl Buff for FinalAppraisal {
+    fn is_active(&self) -> bool {
+        matches!(self, Self::Active(_))
+    }
+}
+
+impl ConsumableBuff for FinalAppraisal {
+    fn deactivate(self) -> (Self, u8) {
+        match self {
+            Self::Active(val) => (Self::Inactive, val),
+            Self::Inactive => panic!("Attempt to deactivate inactive Final Appraisal"),
+        }
+    }
+}
+
+impl DurationalBuff for FinalAppraisal {
+    const BASE_DURATION: u8 = 5;
+
+    fn activate(self, bonus: u8) -> Self {
+        Self::Active(Self::BASE_DURATION + bonus)
+    }
+}
+
+impl Sub<u8> for FinalAppraisal {
+    type Output = Self;
+
+    fn sub(self, rhs: u8) -> Self {
+        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
+
+        match self {
+            Self::Active(val) => Self::Active(val - rhs),
+            Self::Inactive => Self::Inactive,
+        }
+    }
+}
+
+impl SubAssign<u8> for FinalAppraisal {
+    fn sub_assign(&mut self, rhs: u8) {
+        *self = self.sub(rhs)
+    }
 }

@@ -4,7 +4,7 @@ use super::{buffs::BuffAction, Action, CanExecute, CpCost, DurabilityFactor};
 use crate::{quality_map::QualityMap, Condition, CraftingState};
 
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(ProgressAction, QualityAction, BuffAction)]
+#[derive(ProgressAction, QualityAction, BuffAction, TimePassing)]
 pub struct NullFailure<A: Action>(pub A);
 
 impl<A: Action> DurabilityFactor for NullFailure<A> {
@@ -41,7 +41,14 @@ impl<A: Action> CanExecute for NullFailure<A> {
 }
 
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, CanExecute)]
+#[derive(
+    ProgressAction,
+    QualityAction,
+    CpCost,
+    DurabilityFactor,
+    CanExecute,
+    TimePassing
+)]
 #[ffxiv_cp(cost = 6)]
 pub struct PatientFailure;
 

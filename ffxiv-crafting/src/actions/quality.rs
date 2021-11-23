@@ -49,10 +49,7 @@ pub trait QualityAction {
 }
 
 mod concrete {
-    use ffxiv_crafting_derive::{
-        ActionLevel, BuffAction, CanExecute, CpCost, DurabilityFactor, ProgressAction,
-        QualityAction, RandomAction,
-    };
+    use ffxiv_crafting_derive::*;
 
     use crate::{
         actions::{buffs::BuffAction, failure::PatientFailure, CanExecute, CpCost, RandomAction},
@@ -66,7 +63,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 18)]
     #[ffxiv_quality(efficiency = 100)]
     #[ffxiv_act_lvl(level = 5)]
@@ -75,7 +72,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_cp(cost = 0)]
     #[ffxiv_quality(efficiency = 100)]
     #[ffxiv_act_lvl(level = 9)]
@@ -85,7 +82,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_quality(efficiency = 125)]
     #[ffxiv_act_lvl(level = 9)]
     #[ffxiv_buff_act(class = "touch")]
@@ -113,7 +110,14 @@ mod concrete {
     }
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-    #[derive(ProgressAction, DurabilityFactor, CpCost, RandomAction, ActionLevel)]
+    #[derive(
+        ProgressAction,
+        DurabilityFactor,
+        CpCost,
+        RandomAction,
+        ActionLevel,
+        TimePassing
+    )]
     #[ffxiv_cp(cost = 24)]
     #[ffxiv_act_lvl(level = 50)]
     pub struct ByregotsBlessing;
@@ -155,7 +159,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_quality(efficiency = 150)]
     #[ffxiv_act_lvl(level = 53)]
     #[ffxiv_cp(cost = 18)]
@@ -164,7 +168,7 @@ mod concrete {
     pub struct PreciseTouch;
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+    #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost, TimePassing)]
     #[derive(CanExecute, ActionLevel)]
     #[ffxiv_quality(efficiency = 150)]
     #[ffxiv_act_lvl(level = 53)]
@@ -194,7 +198,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-    #[derive(BuffAction, ActionLevel, RandomAction)]
+    #[derive(BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_quality(efficiency = 100)]
     #[ffxiv_act_lvl(level = 66)]
     #[ffxiv_cp(cost = 25)]
@@ -214,7 +218,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_quality(efficiency = 150)]
     #[ffxiv_act_lvl(level = 68)]
     #[ffxiv_cp(cost = 18)]
@@ -224,7 +228,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-    #[derive(CanExecute, ActionLevel, RandomAction)]
+    #[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_quality(efficiency = 100)]
     #[ffxiv_act_lvl(level = 69)]
     #[ffxiv_cp(cost = 24)]
@@ -246,7 +250,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction)]
+    #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_quality(efficiency = 200)]
     #[ffxiv_act_lvl(level = 71)]
     #[ffxiv_cp(cost = 40)]
@@ -257,7 +261,7 @@ mod concrete {
 
     #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
     #[derive(ProgressAction, DurabilityFactor, CpCost)]
-    #[derive(BuffAction, ActionLevel, RandomAction)]
+    #[derive(BuffAction, ActionLevel, RandomAction, TimePassing)]
     #[ffxiv_act_lvl(level = 80)]
     #[ffxiv_cp(cost = 250)]
     #[ffxiv_durability(cost = 0)]

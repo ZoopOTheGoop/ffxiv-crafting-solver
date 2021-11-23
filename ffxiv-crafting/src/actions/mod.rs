@@ -3,6 +3,7 @@
 
 use std::ops::{Add, AddAssign};
 
+use derivative::Derivative;
 use rand::Rng;
 
 use crate::{buffs::BuffState, conditions::Condition, quality_map::QualityMap, CraftingState};
@@ -35,7 +36,8 @@ mod prelude {
 ///
 /// This does not check if the state it's being added to matches the state it was generated from,
 /// so it's up to the user to keep these values together.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Derivative)]
+#[derivative(Default)]
 pub struct StateDelta {
     added_quality: u32,
     added_progress: u32,
@@ -43,6 +45,9 @@ pub struct StateDelta {
     action_durability: i8,
     buff_repair: i8,
     added_cp: i16,
+    #[derivative(Default(value = "true"))]
+    time_passed: bool,
+    final_appraisal_triggered: bool,
 }
 
 impl StateDelta {
@@ -93,6 +98,7 @@ where
             buffs: other.new_buffs,
             curr_durability: self.curr_durability + other.buff_repair + other.action_durability,
             curr_cp: self.curr_cp + other.added_cp,
+            first_step: self.first_step && !other.time_passed,
             ..*self
         }
     }
@@ -109,6 +115,7 @@ where
         self.curr_cp += rhs.added_cp;
         self.curr_durability += rhs.buff_repair + rhs.action_durability;
         self.buffs = rhs.new_buffs;
+        self.first_step = self.first_step && !rhs.time_passed
     }
 }
 
@@ -182,7 +189,14 @@ impl ActionOutcome {
 /// the algorithms implemented by default by this trait. Only overriding the methods on the requirements such as
 /// [`ProgressAction`] should be needed to control the actual behavior (barring FFXIV adding a very crazy ability).
 pub trait Action:
-    Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost + CanExecute
+    Sized
+    + BuffAction
+    + ProgressAction
+    + QualityAction
+    + DurabilityFactor
+    + CpCost
+    + CanExecute
+    + TimePassing
 {
     /// Prospectively executes an action. This means that even if the action cannot be executed due to
     /// e.g. not having enough CP or it not being available in that state, it will still compute it as
@@ -201,13 +215,26 @@ pub trait Action:
         delta.added_cp = self.cp_cost(state);
 
         delta.added_progress = self.progress(state);
+        let appraised = state.buffs.progress.final_appraisal.handle_progress(
+            state,
+            delta.added_progress,
+            &mut delta.new_buffs,
+        );
+
+        if appraised < delta.added_progress {
+            delta.final_appraisal_triggered = true;
+        }
+        delta.added_progress = appraised;
+
         delta.added_quality = self.quality(state);
         delta.action_durability = self.durability(&state.buffs, &state.condition);
 
         delta.buff_repair = state.buffs.durability.repair();
 
+        if self.time_passed(state) {
+            delta.new_buffs.decay();
+        }
         self.buff(state, &mut delta.new_buffs);
-        delta.new_buffs.decay();
 
         let prospective_outcome = ActionOutcome::from_delta_state(delta, state);
 
@@ -243,14 +270,27 @@ pub trait Action:
             _ => {},
         };
 
-        delta.added_quality = self.progress(state);
+        delta.added_progress = self.progress(state);
+        let appraised = state.buffs.progress.final_appraisal.handle_progress(
+            state,
+            delta.added_progress,
+            &mut delta.new_buffs,
+        );
+
+        if appraised < delta.added_progress {
+            delta.final_appraisal_triggered = true;
+        }
+        delta.added_progress = appraised;
+
         delta.added_quality = self.quality(state);
         delta.action_durability = self.durability(&state.buffs, &state.condition);
 
         delta.buff_repair = state.buffs.durability.repair();
 
+        if self.time_passed(state) {
+            delta.new_buffs.decay();
+        }
         self.buff(state, &mut delta.new_buffs);
-        delta.new_buffs.decay();
 
         ActionOutcome::from_delta_state(delta, state)
     }
@@ -338,7 +378,14 @@ pub trait Action:
 }
 
 impl<T> Action for T where
-    T: Sized + BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost + CanExecute
+    T: Sized
+        + BuffAction
+        + ProgressAction
+        + QualityAction
+        + DurabilityFactor
+        + CpCost
+        + CanExecute
+        + TimePassing
 {
 }
 
@@ -483,5 +530,18 @@ pub trait ActionLevel: Action {
 
     fn level(&self) -> u16 {
         Self::LEVEL
+    }
+}
+
+pub trait TimePassing {
+    const TIME_PASSED: bool = false;
+
+    #[allow(unused_variables)]
+    fn time_passed<C, M>(&self, state: &CraftingState<C, M>) -> bool
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        Self::TIME_PASSED
     }
 }

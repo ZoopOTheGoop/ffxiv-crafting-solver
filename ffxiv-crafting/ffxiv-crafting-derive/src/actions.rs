@@ -379,6 +379,37 @@ pub fn random_action(input: TokenStream) -> TokenStream {
     .into()
 }
 
+pub fn time_passed(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let ident = &ast.ident;
+    let (impl_generic, type_generic, where_clause) = &ast.generics.split_for_impl();
+    let where_clause = where_clause.iter();
+
+    const TAG: &str = "ffxiv_no_time_pass";
+
+    let val = !ast
+        .attrs
+        .iter()
+        .filter_map(|v| v.parse_meta().ok())
+        .filter_map(|v| {
+            if let Meta::List(list) = v {
+                Some(list)
+            } else {
+                None
+            }
+        })
+        .any(|v| v.path.is_ident(TAG));
+
+    quote!(
+        #[automatically_derived]
+        #[allow(unused_qualifications)]
+        impl #impl_generic crate::actions::TimePassing for #ident #type_generic #(#where_clause)* {
+            const TIME_PASSED: bool = #val;
+        }
+    )
+    .into()
+}
+
 enum FfxivAttr {
     Constant(LitInt),
     Kind(LitStr),
