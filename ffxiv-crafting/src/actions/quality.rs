@@ -61,7 +61,7 @@ use ffxiv_crafting_derive::*;
 /// The most basic quality increasing action. Combos with [`StandardTouch`].
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 5)]
@@ -82,7 +82,7 @@ impl BuffAction for BasicTouch {
 /// durability if it fails.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 0)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 9)]
@@ -94,7 +94,7 @@ pub struct HastyTouch;
 /// with [`BasicTouch`] as it becomes 25 bonus efficiency for the same cost.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 125)]
 #[ffxiv_act_lvl(level = 9)]
 #[ffxiv_buff_act(touch)]
@@ -126,14 +126,8 @@ impl CpCost for StandardTouch {
 ///
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(
-    ProgressAction,
-    DurabilityFactor,
-    CpCost,
-    RandomAction,
-    ActionLevel,
-    TimePassing
-)]
+#[derive(ProgressAction, DurabilityFactor, CpCost)]
+#[derive(RandomAction, ActionLevel, TimePassing, Action)]
 #[ffxiv_cp(cost = 24)]
 #[ffxiv_act_lvl(level = 50)]
 pub struct ByregotsBlessing;
@@ -182,7 +176,7 @@ impl BuffAction for ByregotsBlessing {
 /// [`Excellent`]: crate::conditions::QARegularConditions::Excellent
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 53)]
 #[ffxiv_cp(cost = 18)]
@@ -198,7 +192,7 @@ pub struct PreciseTouch;
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost, TimePassing)]
-#[derive(CanExecute, ActionLevel)]
+#[derive(CanExecute, ActionLevel, Action)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 53)]
 #[ffxiv_cp(cost = 6)]
@@ -231,7 +225,7 @@ impl BuffAction for PatientTouch {
 /// has the same efficiency as [`BasicTouch`].
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 66)]
 #[ffxiv_cp(cost = 25)]
@@ -257,7 +251,7 @@ impl CanExecute for PrudentTouch {
 /// [`Observe`]: crate::actions::misc::Observe
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 68)]
 #[ffxiv_cp(cost = 18)]
@@ -272,7 +266,7 @@ pub struct FocusedTouch;
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 69)]
 #[ffxiv_cp(cost = 24)]
@@ -306,7 +300,7 @@ impl BuffAction for Reflect {
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 200)]
 #[ffxiv_act_lvl(level = 71)]
 #[ffxiv_cp(cost = 40)]
@@ -319,7 +313,7 @@ pub struct PreparatoryTouch;
 /// finish its `progress`, but at a 10 level advantage that's extremely likely).
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, DurabilityFactor, CpCost)]
-#[derive(BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_act_lvl(level = 80)]
 #[ffxiv_cp(cost = 250)]
 #[ffxiv_durability(cost = 0)]

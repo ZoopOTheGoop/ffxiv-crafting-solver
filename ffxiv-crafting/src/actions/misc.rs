@@ -7,7 +7,7 @@ use super::{buffs::BuffAction, CanExecute};
 /// Spends 88 CP to instantly repair 30 durability.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 88)]
 #[ffxiv_act_lvl(level = 7)]
 #[ffxiv_durability(bonus = 30)]
@@ -22,7 +22,7 @@ pub struct MastersMend;
 /// [`PatientTouch`]: crate::actions::quality::PatientTouch
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
 #[ffxiv_cp(cost = 7)]
 #[ffxiv_act_lvl(level = 13)]
 #[ffxiv_durability(cost = 0)]
@@ -36,7 +36,7 @@ pub struct Observe;
 /// [`Excellent`]: crate::conditions::QARegularConditions::Excellent
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(bonus = 20)]
 #[ffxiv_act_lvl(level = 13)]
 #[ffxiv_can_exe(class = "good_excellent")]
@@ -50,7 +50,7 @@ pub struct TricksOfTheTrade;
 /// [`BasicSynthesis`]: crate::actions::progress::BasicSynthesis
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 32)]
 #[ffxiv_act_lvl(level = 76)]
 #[ffxiv_quality(efficiency = 100)]
@@ -71,7 +71,7 @@ pub struct DelicateSynthesis;
 /// [`FinalAppraisal`]: crate::actions::buffs::FinalAppraisal
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(ActionLevel, RandomAction, TimePassing)]
+#[derive(ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 0)]
 #[ffxiv_act_lvl(level = 55)]
 #[ffxiv_durability(cost = 0)]

@@ -5,7 +5,7 @@
 
 use ffxiv_crafting_derive::*;
 
-use super::{buffs::BuffAction, Action, CanExecute, CpCost, DurabilityFactor};
+use super::{buffs::BuffAction, Action, ActionComponents, CanExecute, CpCost, DurabilityFactor};
 use crate::{quality_map::QualityMap, Condition, CraftingState};
 
 /// This is what happens when most [`RandomAction`]s fail - they just use their
@@ -18,10 +18,10 @@ use crate::{quality_map::QualityMap, Condition, CraftingState};
 /// [`act`]: Action::act
 /// [`FailAction`]: crate::actions::RandomAction::FailAction
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(ProgressAction, QualityAction, BuffAction, TimePassing)]
-pub struct NullFailure<A: Action>(pub A);
+#[derive(ProgressAction, QualityAction, BuffAction, TimePassing, Action)]
+pub struct NullFailure<A: Action + ActionComponents>(pub A);
 
-impl<A: Action> DurabilityFactor for NullFailure<A> {
+impl<A: Action + ActionComponents> DurabilityFactor for NullFailure<A> {
     const DURABILITY_USAGE: i8 = 0;
 
     fn durability<C>(&self, buffs: &crate::buffs::BuffState, condition: &C) -> i8
@@ -32,7 +32,7 @@ impl<A: Action> DurabilityFactor for NullFailure<A> {
     }
 }
 
-impl<A: Action> CpCost for NullFailure<A> {
+impl<A: Action + ActionComponents> CpCost for NullFailure<A> {
     const CP_COST: i16 = 0;
 
     fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
@@ -44,7 +44,7 @@ impl<A: Action> CpCost for NullFailure<A> {
     }
 }
 
-impl<A: Action> CanExecute for NullFailure<A> {
+impl<A: Action + ActionComponents> CanExecute for NullFailure<A> {
     fn can_execute<C, M>(&self, state: &crate::CraftingState<C, M>) -> bool
     where
         C: crate::conditions::Condition,
@@ -61,7 +61,7 @@ impl<A: Action> CanExecute for NullFailure<A> {
 /// [`act`]: Action::act
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, Action)]
 #[derive(CanExecute, TimePassing)]
 #[ffxiv_cp(cost = 6)]
 pub struct PatientFailure;

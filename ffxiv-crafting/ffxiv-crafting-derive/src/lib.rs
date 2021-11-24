@@ -51,6 +51,11 @@ pub fn time_passed(input: TokenStream) -> TokenStream {
     actions::time_passed(input)
 }
 
+#[proc_macro_derive(Action)]
+pub fn action(input: TokenStream) -> TokenStream {
+    actions::action(input)
+}
+
 #[proc_macro_derive(Condition, attributes(ffxiv))]
 pub fn condition_macro_derive(input: TokenStream) -> TokenStream {
     condition::condition_derive(input)

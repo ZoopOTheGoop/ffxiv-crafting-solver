@@ -2,7 +2,7 @@
 
 use crate::{conditions::Condition, quality_map::QualityMap, CraftingState};
 
-use super::{Action, ActionOutcome, StateDelta};
+use super::{Action, ActionComponents, ActionOutcome, StateDelta};
 
 use std::{
     error::Error,
@@ -39,7 +39,7 @@ impl ActionError {
     where
         C: Condition,
         M: QualityMap,
-        A: Action,
+        A: Action + ActionComponents,
     {
         match (state.curr_cp + delta.added_cp, action.can_execute(state)) {
             (0..=i16::MAX, true) => Ok(outcome),

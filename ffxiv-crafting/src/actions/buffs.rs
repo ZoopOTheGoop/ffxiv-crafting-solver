@@ -34,7 +34,7 @@ pub trait BuffAction {
 /// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, TimePassing)]
-#[derive(ActionLevel, RandomAction)]
+#[derive(ActionLevel, RandomAction, Action)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_act_lvl(level = 11)]
 #[ffxiv_durability(cost = 0)]
@@ -70,7 +70,7 @@ impl CanExecute for InnerQuiet {
 /// [synthesis]: crate::actions::progress
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, TimePassing)]
-#[derive(CanExecute, ActionLevel, RandomAction, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, BuffAction, Action)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_act_lvl(level = 15)]
 #[ffxiv_durability(cost = 0)]
@@ -84,7 +84,7 @@ pub struct Veneration;
 /// [`PrudentTouch`]: crate::actions::quality::PrudentTouch
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, TimePassing)]
-#[derive(CanExecute, ActionLevel, RandomAction, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, BuffAction, Action)]
 #[ffxiv_cp(cost = 56)]
 #[ffxiv_act_lvl(level = 15)]
 #[ffxiv_durability(cost = 0)]
@@ -99,7 +99,7 @@ pub struct WasteNot;
 /// [touch]: crate::actions::quality
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
 #[ffxiv_cp(cost = 32)]
 #[ffxiv_act_lvl(level = 21)]
 #[ffxiv_durability(cost = 0)]
@@ -113,7 +113,7 @@ pub struct GreatStrides;
 /// [touch]: crate::actions::quality
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_act_lvl(level = 26)]
 #[ffxiv_durability(cost = 0)]
@@ -129,7 +129,7 @@ pub struct Innovation;
 /// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(ActionLevel, RandomAction, TimePassing, BuffAction)]
+#[derive(ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
 #[ffxiv_cp(cost = 30)]
 #[ffxiv_act_lvl(level = 37)]
 #[ffxiv_durability(cost = 0)]
@@ -160,7 +160,7 @@ impl CanExecute for NameOfTheElements {
 /// [`MuscleMemory`]: crate::actions::progress::MuscleMemory
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
 #[ffxiv_cp(cost = 1)]
 #[ffxiv_act_lvl(level = 42)]
 #[ffxiv_durability(cost = 0)]
@@ -176,7 +176,7 @@ pub struct FinalAppraisal;
 /// [`PrudentTouch`]: crate::actions::quality::PrudentTouch
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 98)]
 #[ffxiv_act_lvl(level = 47)]
 #[ffxiv_durability(cost = 0)]
@@ -203,7 +203,7 @@ impl BuffAction for WasteNot2 {
 /// [`Manipulation`]: crate::buffs::durability::Manipulation
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
 #[ffxiv_cp(cost = 96)]
 #[ffxiv_act_lvl(level = 65)]
 #[ffxiv_durability(cost = 0)]

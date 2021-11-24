@@ -455,6 +455,19 @@ pub fn time_passed(input: TokenStream) -> TokenStream {
     .into()
 }
 
+pub fn action(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let ident = &ast.ident;
+    let (impl_generic, type_generic, where_clause) = &ast.generics.split_for_impl();
+    let where_clause = where_clause.iter();
+
+    quote!(
+        #[automatically_derived]
+        #[allow(unused_qualifications)]
+        impl #impl_generic crate::actions::Action for #ident #type_generic #(#where_clause)* {}
+    ).into()
+}
+
 #[derive(Debug)]
 enum FfxivAttr {
     Constant(LitInt),

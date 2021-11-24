@@ -186,6 +186,27 @@ impl ActionOutcome {
     }
 }
 
+/// All the components of an [`Action`] -- this is autoimplemented for the implementors. Doing it
+/// this was allows you to develop "meta" actions which encapsulate multiple actions and still
+/// override [`act`] and such for dispatch with less branching
+///
+/// [`act`]: Action::act
+pub trait ActionComponents:
+    BuffAction + ProgressAction + QualityAction + DurabilityFactor + CpCost + CanExecute + TimePassing
+{
+}
+
+impl<T> ActionComponents for T where
+    T: BuffAction
+        + ProgressAction
+        + QualityAction
+        + DurabilityFactor
+        + CpCost
+        + CanExecute
+        + TimePassing
+{
+}
+
 /// A crafting action. This generates a description of how to get from the current state to the next state,
 /// and the outcome of taking that action (if any). The only value not encoded by the resulting outcome is the
 /// [`Condition`] value, which is left up to the caller for finer-grained control over the distribution and rng state.
@@ -194,16 +215,7 @@ impl ActionOutcome {
 /// Its implementation reflects the rules of FFXIV crafting, and all actions should be able to be represented by
 /// the algorithms implemented by default by this trait. Only overriding the methods on the requirements such as
 /// [`ProgressAction`] should be needed to control the actual behavior (barring FFXIV adding a very crazy ability).
-pub trait Action:
-    Sized
-    + BuffAction
-    + ProgressAction
-    + QualityAction
-    + DurabilityFactor
-    + CpCost
-    + CanExecute
-    + TimePassing
-{
+pub trait Action: Sized {
     /// Prospectively executes an action. This means that even if the action cannot be executed due to
     /// e.g. not having enough CP or it not being available in that state, it will still compute it as
     /// if it had succeeded, returning the outcome and a marker indicating why it cannot execute.
@@ -214,6 +226,7 @@ pub trait Action:
     where
         C: Condition,
         M: QualityMap,
+        Self: ActionComponents,
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
@@ -262,6 +275,7 @@ pub trait Action:
     where
         C: Condition,
         M: QualityMap,
+        Self: ActionComponents,
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
@@ -322,7 +336,7 @@ pub trait Action:
         state: &CraftingState<C, M>,
     ) -> RollOutcome<ActionOutcome, ActionOutcome>
     where
-        Self: RandomAction,
+        Self: RandomAction + ActionComponents,
     {
         match self.roll(rng, state) {
             RollOutcome::Failure(fail) => RollOutcome::Failure(fail.act(state)),
@@ -339,7 +353,7 @@ pub trait Action:
         state: &CraftingState<C, M>,
     ) -> RollOutcome<ActionResult, ActionResult>
     where
-        Self: RandomAction,
+        Self: RandomAction + ActionComponents,
     {
         match self.roll(rng, state) {
             RollOutcome::Failure(fail) => RollOutcome::Failure(fail.prospective_act(state)),
@@ -357,7 +371,7 @@ pub trait Action:
         state: &CraftingState<C, M>,
     ) -> [(u8, RollOutcome<ActionResult, ActionResult>); 2]
     where
-        Self: RandomAction,
+        Self: RandomAction + ActionComponents,
     {
         let fail_rate = self.fail_rate(state);
         [
@@ -382,7 +396,7 @@ pub trait Action:
         state: &CraftingState<C, M>,
     ) -> [(u8, RollOutcome<ActionOutcome, ActionOutcome>); 2]
     where
-        Self: RandomAction,
+        Self: RandomAction + ActionComponents,
     {
         let fail_rate = self.fail_rate(state);
         [
@@ -393,18 +407,6 @@ pub trait Action:
             (100 - fail_rate, RollOutcome::Success(self.act(state))),
         ]
     }
-}
-
-impl<T> Action for T where
-    T: Sized
-        + BuffAction
-        + ProgressAction
-        + QualityAction
-        + DurabilityFactor
-        + CpCost
-        + CanExecute
-        + TimePassing
-{
 }
 
 /// A trait that denotes an action's ability to determine if it can execute in the current state.
@@ -475,7 +477,7 @@ pub trait DurabilityFactor {
 pub trait CpCost {
     /// The amount of CP the action costs under normal circumstances. This is added onto the
     /// state's CP value, so most actions will be negative, and positive means you gain CP.
-    const CP_COST: i16;
+    const CP_COST: i16 = 0;
 
     /// Determines the amount of CP this action will restore or use given the current [`Condition`].
     fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
@@ -536,7 +538,7 @@ pub trait RandomAction: Sized + Action {
     /// wastes buff duration and CP.
     ///
     /// [`NullFailure`]: self::failure::NullFailure
-    type FailAction: Action;
+    type FailAction: Action + ActionComponents;
 
     /// Rolls a number and in the range `[1,100]` and checks if it's lower than
     /// [`fail_rate`](RandomAction::fail_rate). Then returns a [`RollOutcome`] with

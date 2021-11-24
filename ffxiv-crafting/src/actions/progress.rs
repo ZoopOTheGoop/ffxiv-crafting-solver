@@ -61,7 +61,7 @@ use ffxiv_crafting_derive::*;
 /// other than the standard 10 durability taken off.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 0)]
 #[ffxiv_progress(efficiency = 120)]
 #[ffxiv_act_lvl(level = 1)]
@@ -75,7 +75,7 @@ pub struct BasicSynthesis;
 /// the power of consistently leveraging buffs.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 0)]
 #[ffxiv_progress(efficiency = 500)]
 #[ffxiv_act_lvl(level = 9)]
@@ -92,7 +92,7 @@ pub struct RapidSynthesis;
 /// [`NameOfTheElements`]: crate::actions::buffs::NameOfTheElements
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 6)]
 #[ffxiv_act_lvl(level = 37)]
 #[ffxiv_buff_act(synthesis)]
@@ -128,7 +128,7 @@ impl ProgressAction for BrandOfTheElements {
 /// to gain 100 bonus efficiency
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
-#[derive(CanExecute, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 6)]
 #[ffxiv_progress(efficiency = 300)]
 #[ffxiv_act_lvl(level = 54)]
@@ -140,7 +140,7 @@ pub struct MuscleMemory;
 /// also doesn't cost very much.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 7)]
 #[ffxiv_progress(efficiency = 150)]
 #[ffxiv_act_lvl(level = 62)]
@@ -157,7 +157,7 @@ pub struct CarefulSynthesis;
 /// [`Observe`]: crate::actions::misc::Observe
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 5)]
 #[ffxiv_progress(efficiency = 200)]
 #[ffxiv_act_lvl(level = 67)]
@@ -177,7 +177,7 @@ pub struct FocusedSynthesis;
 /// [`Veneration`]: crate::buffs::progress::Veneration
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_act_lvl(level = 72)]
 #[ffxiv_durability(cost = 20)]
@@ -212,7 +212,7 @@ impl ProgressAction for Groundwork {
 /// [`Excellent`]: crate::conditions::QARegularConditions::Excellent
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing)]
+#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 6)]
 #[ffxiv_progress(efficiency = 400)]
 #[ffxiv_act_lvl(level = 78)]
