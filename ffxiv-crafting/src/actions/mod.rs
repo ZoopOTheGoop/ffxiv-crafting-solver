@@ -9,6 +9,7 @@ use rand::Rng;
 use crate::{buffs::BuffState, conditions::Condition, quality_map::QualityMap, CraftingState};
 
 pub mod buffs;
+pub mod collection;
 pub mod errors;
 pub mod failure;
 pub mod misc;
