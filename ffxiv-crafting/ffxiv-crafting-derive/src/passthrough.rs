@@ -12,7 +12,7 @@ pub fn magic_action_passthrough(_attr: TokenStream, input: TokenStream) -> Token
     let variants = target.variants.iter();
     let variants_mirror = variants.clone().cloned().map(|mut v| {
         v.attrs = vec![
-            parse_quote!(#[doc="The concrete action this defers to. Its docs are repeated here."]),
+            parse_quote!(#[doc="The concrete action this defers to. Click it to see the docs for this action."]),
         ];
         v
     });
