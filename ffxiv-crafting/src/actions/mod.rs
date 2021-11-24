@@ -583,7 +583,7 @@ pub trait RandomAction: Sized + Action {
 /// The level the action is learned at. Nothing should need to be overridden in this.
 pub trait ActionLevel: Action {
     /// The level this action is learned at.
-    const LEVEL: u16;
+    const LEVEL: u16 = 0;
 
     /// A function version that just returns [`LEVEL`], reserved just in
     /// case something weird is done with this later.

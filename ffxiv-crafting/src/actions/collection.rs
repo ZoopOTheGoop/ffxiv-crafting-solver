@@ -11,10 +11,21 @@ use ffxiv_crafting_derive::ffxiv_action_enum;
 ///
 /// Each variant is documented with a link to the underlying action it executes.
 ///
+/// This uses some truly ugly autogen magic to prevent having to copy+paste probably
+/// several thousand lines of enum variant matching. Its associated failure is
+/// [`ComboFailure`], which simply defers to the underlying action's failure type
+/// (this is manually implemented in the autogen).
+///
+/// If you want to see *why* I didn't manually implement this you can get an
+/// *extremely* abridged look by looking over at [`ComboFailure`]'s manual
+/// implementation and then imagine having to do something like that for
+/// every variant of this enum, for every function of every trait.
+///
 /// [`buffs`]: crate::actions::buffs
 /// [`misc`]: crate::actions::misc
 /// [`progress`]: crate::actions::progress
 /// [`quality`]: crate::actions::quality
+/// [`ComboFailure`]: crate::actions::failure::ComboFailure
 #[ffxiv_action_enum]
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub enum FfxivCraftingActions {
