@@ -211,11 +211,16 @@ impl<T> ActionComponents for T where
 /// and the outcome of taking that action (if any). The only value not encoded by the resulting outcome is the
 /// [`Condition`] value, which is left up to the caller for finer-grained control over the distribution and rng state.
 ///
-/// This is a general `trait` implementation, and is auto-implemented for any type that implements its requirements.
-/// Its implementation reflects the rules of FFXIV crafting, and all actions should be able to be represented by
+/// This is a general `trait` implementation, but must be manually derived so that wrapper types can efficiently override
+/// the default [`act`] implementation (and similar) to defer to the underlying action's [`act`] instead of
+/// making a separate branch for subtrait method call.
+///
+/// The default implementation reflects the rules of FFXIV crafting, and all actions should be able to be represented by
 /// the algorithms implemented by default by this trait. Only overriding the methods on the requirements such as
 /// [`ProgressAction`] should be needed to control the actual behavior (barring FFXIV adding a very crazy ability).
-pub trait Action: Sized {
+///
+/// [`act`]: Action::act
+pub trait Action: Sized + ActionComponents {
     /// Prospectively executes an action. This means that even if the action cannot be executed due to
     /// e.g. not having enough CP or it not being available in that state, it will still compute it as
     /// if it had succeeded, returning the outcome and a marker indicating why it cannot execute.
@@ -226,7 +231,6 @@ pub trait Action: Sized {
     where
         C: Condition,
         M: QualityMap,
-        Self: ActionComponents,
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
@@ -275,7 +279,6 @@ pub trait Action: Sized {
     where
         C: Condition,
         M: QualityMap,
-        Self: ActionComponents,
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
@@ -336,7 +339,7 @@ pub trait Action: Sized {
         state: &CraftingState<C, M>,
     ) -> RollOutcome<ActionOutcome, ActionOutcome>
     where
-        Self: RandomAction + ActionComponents,
+        Self: RandomAction,
     {
         match self.roll(rng, state) {
             RollOutcome::Failure(fail) => RollOutcome::Failure(fail.act(state)),
@@ -353,7 +356,7 @@ pub trait Action: Sized {
         state: &CraftingState<C, M>,
     ) -> RollOutcome<ActionResult, ActionResult>
     where
-        Self: RandomAction + ActionComponents,
+        Self: RandomAction,
     {
         match self.roll(rng, state) {
             RollOutcome::Failure(fail) => RollOutcome::Failure(fail.prospective_act(state)),
@@ -371,7 +374,7 @@ pub trait Action: Sized {
         state: &CraftingState<C, M>,
     ) -> [(u8, RollOutcome<ActionResult, ActionResult>); 2]
     where
-        Self: RandomAction + ActionComponents,
+        Self: RandomAction,
     {
         let fail_rate = self.fail_rate(state);
         [
@@ -396,7 +399,7 @@ pub trait Action: Sized {
         state: &CraftingState<C, M>,
     ) -> [(u8, RollOutcome<ActionOutcome, ActionOutcome>); 2]
     where
-        Self: RandomAction + ActionComponents,
+        Self: RandomAction,
     {
         let fail_rate = self.fail_rate(state);
         [
