@@ -28,7 +28,7 @@ pub trait ProgressAction {
         }
 
         let efficiency = Self::EFFICIENCY + state.buffs.progress.bonus_efficiency();
-        let efficiency_mod = 100. + state.buffs.progress.efficiency_mod() as f64 / 100.;
+        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
 
         efficiency_mod * efficiency as f64
     }

@@ -29,7 +29,7 @@ pub trait QualityAction {
             return 0.;
         }
 
-        let efficiency_mod = 100. + state.buffs.quality.efficiency_mod() as f64 / 100.;
+        let efficiency_mod = (100. + state.buffs.quality.efficiency_mod() as f64) / 100.;
 
         efficiency_mod * Self::EFFICIENCY as f64
     }
