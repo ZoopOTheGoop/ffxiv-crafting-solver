@@ -3,7 +3,7 @@
 
 use super::{buffs::*, misc::*, progress::*, quality::*};
 
-use ffxiv_crafting_derive::ffxiv_action_enum;
+use ffxiv_crafting_derive::PassthroughAction;
 
 /// "A collection of all actions in FFXIV. They're organized by [`buffs`], then
 /// [`misc`], then [`progress`], then [`quality`]. This uses enum-based dispatch
@@ -26,7 +26,7 @@ use ffxiv_crafting_derive::ffxiv_action_enum;
 /// [`progress`]: crate::actions::progress
 /// [`quality`]: crate::actions::quality
 /// [`ComboFailure`]: crate::actions::failure::ComboFailure
-#[ffxiv_action_enum]
+#[derive(PassthroughAction)]
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub enum FfxivCraftingActions {
     /* Buff */

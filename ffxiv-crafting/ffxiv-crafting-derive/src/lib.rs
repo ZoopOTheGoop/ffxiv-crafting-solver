@@ -56,9 +56,9 @@ pub fn action(input: TokenStream) -> TokenStream {
     actions::action(input)
 }
 
-#[proc_macro_attribute]
-pub fn ffxiv_action_enum(attr: TokenStream, input: TokenStream) -> TokenStream {
-    passthrough::magic_action_passthrough(attr, input)
+#[proc_macro_derive(PassthroughAction)]
+pub fn ffxiv_action_enum(input: TokenStream) -> TokenStream {
+    passthrough::magic_action_passthrough(input)
 }
 
 #[proc_macro_derive(Condition, attributes(ffxiv))]

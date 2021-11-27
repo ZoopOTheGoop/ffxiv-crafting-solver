@@ -3,27 +3,14 @@ use std::iter;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    self, parse_macro_input, parse_quote, Arm, Ident, ItemEnum, ItemFn, ItemImpl, Path,
-    TraitItemType,
+    self, parse_macro_input, parse_quote, Arm, FnArg, Ident, ItemEnum, ItemFn, ItemImpl, Path,
+    Receiver, TraitItemType,
 };
 
-pub fn magic_action_passthrough(_attr: TokenStream, input: TokenStream) -> TokenStream {
+pub fn magic_action_passthrough(input: TokenStream) -> TokenStream {
     let target = parse_macro_input!(input as ItemEnum);
 
-    let attrs = target.attrs.into_iter();
-    let (impl_generic, _type_generic, where_clause) = target.generics.split_for_impl();
-    let where_clause = where_clause.into_iter();
-
-    let variants = target.variants.iter();
-    let variants_mirror = variants.clone().cloned().map(|mut v| {
-        v.attrs = vec![
-            parse_quote!(#[doc="The concrete action this defers to. Click it to see the docs for this action."]),
-        ];
-        v
-    });
-
     let ident = target.ident;
-    let vis = target.vis;
 
     let idents = target
         .variants
@@ -37,15 +24,7 @@ pub fn magic_action_passthrough(_attr: TokenStream, input: TokenStream) -> Token
 
     let rand_actions = gen_rand_action(idents.into_iter(), &ident);
 
-    let extensions: ItemEnum = parse_quote!(
-        #(#attrs)*
-        #vis enum #ident #impl_generic #(#where_clause)* {
-            #(#variants(#variants_mirror),)*
-        }
-    );
-
     let traits_enums: TokenStream = quote!(
-        #extensions
         #(#traits)*
         #rand_actions
     )
@@ -362,7 +341,7 @@ fn gen_from<I: Iterator<Item = Ident> + Clone>(variants: I, me: &Ident) -> Token
             #[automatically_derived]
             impl From<#variants> for #me {
                 fn from(other: #variants) -> Self {
-                    Self::#variants(other)
+                    Self::#variants
                 }
             }
         )*
@@ -386,6 +365,7 @@ fn gen_trait<I: Iterator<Item = Ident> + Clone>(
     parse_quote!(
         #(#assoc_type)*
 
+        #[automatically_derived]
         impl #trait_name for #me {
             #(#fn_defs)*
         }
@@ -402,13 +382,23 @@ fn gen_fn<I: Iterator<Item = Ident> + Clone>(
     let name = &sig.ident;
     let args = args.iter();
     let trait_name = trait_name;
+    let self_by_ref = matches!(
+        sig.receiver(),
+        Some(FnArg::Receiver(Receiver {
+            reference: Some(_),
+            ..
+        }))
+    );
 
     // I could not figure out to make this work without manually doing this,
     //it gets mad about args being depleted after the first match, essentially
     let arms = variants.map(|variant| {
         let args = args.clone();
-        let out: Arm =
-            parse_quote!(Self::#variant(val) => <#variant as #trait_name>::#name(val, #(#args,)*));
+        let out: Arm = if self_by_ref {
+            parse_quote!(Self::#variant => <#variant as #trait_name>::#name(&#variant, #(#args,)*))
+        } else {
+            parse_quote!(Self::#variant => <#variant as #trait_name>::#name(#variant, #(#args,)*))
+        };
         out
     });
 
@@ -442,11 +432,11 @@ fn gen_rand_action<I: Iterator<Item = Ident> + Clone>(variants: I, me: &Ident) -
                 use crate::actions::RollOutcome;
 
                 match self {
-                    Self::PatientTouch(touch) => match touch.roll(rng, state) {
+                    Self::PatientTouch => match PatientTouch.roll(rng, state) {
                         RollOutcome::Success(_) => RollOutcome::Success(self),
                         RollOutcome::Failure(_) => RollOutcome::Failure(ComboFailure::PatientFailure)
                     },
-                    #(Self::#variants(action) => match action.roll(rng, state) {
+                    #(Self::#variants => match #variants.roll(rng, state) {
                         RollOutcome::Success(_) => RollOutcome::Success(self),
                         RollOutcome::Failure(_) => RollOutcome::Failure(ComboFailure::NullFailure(NullFailure(self))),
                     },)*
@@ -455,7 +445,7 @@ fn gen_rand_action<I: Iterator<Item = Ident> + Clone>(variants: I, me: &Ident) -
 
             fn fail_rate<C: crate::conditions::Condition, M: crate::quality_map::QualityMap>(&self, state: &crate::CraftingState<C, M>) -> u8 {
                 match self {
-                    #(Self::#all_variants(action) => action.fail_rate(state),)*
+                    #(Self::#all_variants => #all_variants.fail_rate(state),)*
                 }
             }
 
@@ -463,8 +453,8 @@ fn gen_rand_action<I: Iterator<Item = Ident> + Clone>(variants: I, me: &Ident) -
                 use crate::actions::failure::ComboFailure;
                 use crate::actions::failure::NullFailure;
                 match self {
-                    Self::PatientTouch(_) => ComboFailure::PatientFailure,
-                    #(Self::#variants2(_) => ComboFailure::NullFailure(NullFailure(*self)),)*
+                    Self::PatientTouch => ComboFailure::PatientFailure,
+                    #(Self::#variants2 => ComboFailure::NullFailure(NullFailure(*self)),)*
                 }
             }
         }
