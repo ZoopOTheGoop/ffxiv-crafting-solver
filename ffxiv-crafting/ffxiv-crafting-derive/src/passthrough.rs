@@ -140,20 +140,36 @@ fn traits() -> Vec<TraitBlueprint> {
         TraitBlueprint {
             name: parse_quote!(crate::actions::buffs::BuffAction),
             assoc_type: None,
-            funcs: vec![(
-                parse_quote!(
-                    fn buff<C, M>(
-                        &self,
-                        state: &crate::CraftingState<C, M>,
-                        so_far: &mut crate::buffs::BuffState,
-                    ) where
-                        C: crate::conditions::Condition,
-                        M: crate::quality_map::QualityMap,
-                    {
-                    }
+            funcs: vec![
+                (
+                    parse_quote!(
+                        fn buff<C, M>(
+                            &self,
+                            state: &crate::CraftingState<C, M>,
+                            so_far: &mut crate::buffs::BuffState,
+                        ) where
+                            C: crate::conditions::Condition,
+                            M: crate::quality_map::QualityMap,
+                        {
+                        }
+                    ),
+                    vec![parse_quote!(state), parse_quote!(so_far)],
                 ),
-                vec![parse_quote!(state), parse_quote!(so_far)],
-            )],
+                (
+                    parse_quote!(
+                        fn deactivate_buff<C, M>(
+                            &self,
+                            state: &crate::CraftingState<C, M>,
+                            so_far: &mut crate::buffs::BuffState,
+                        ) where
+                            C: crate::conditions::Condition,
+                            M: crate::quality_map::QualityMap,
+                        {
+                        }
+                    ),
+                    vec![parse_quote!(state), parse_quote!(so_far)],
+                ),
+            ],
         },
         TraitBlueprint {
             name: parse_quote!(crate::actions::QualityAction),

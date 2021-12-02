@@ -53,6 +53,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
     const IQ: &str = "touch";
     const MM: &str = "synthesis";
     const ACTIVATE: &str = "activate";
+    const CONSUME: &str = "deactivate";
 
     let class = [
         (IQ, Box::new(attr_literal(IQ)) as Box<FfxivAttrMatcher>),
@@ -61,11 +62,33 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             ACTIVATE,
             Box::new(attr_literal(ACTIVATE)) as Box<FfxivAttrMatcher>,
         ),
+        (
+            CONSUME,
+            Box::new(attr_literal(CONSUME)) as Box<FfxivAttrMatcher>,
+        ),
     ]
     .into_iter()
     .collect();
 
     let val = find_attributes(&ast, TAG, class);
+
+    let deactivate_clause = val.get(CONSUME).into_iter().map(|v| {
+        let parts: ExprField = match v {
+            FfxivAttr::Kind(lit) => {
+                let val = lit.value();
+                syn::parse_str(&*val).expect(
+                    "Invalid format for consume, \
+                            it must be a string describing struct field access",
+                )
+            }
+            _ => panic!(
+                "Invalid format for activate, it must be a string describing struct field access"
+            ),
+        };
+        quote!(
+            so_far.#parts.deactivate();
+        )
+    });
 
     let clause = val
         .get(IQ)
@@ -127,8 +150,19 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             M: crate::quality_map::QualityMap,
         {
             use crate::buffs::{Buff, DurationalBuff, ConsumableBuff};
-            
+
             #(#clause)*
+        }
+    );
+
+    let debuff_impl = quote!(
+        fn deactivate_buff<C,M>(&self, state: &crate::CraftingState<C, M>, so_far: &mut crate::BuffState)
+        where
+            C: crate::conditions::Condition,
+            M: crate::quality_map::QualityMap
+        {
+            use crate::buffs::{Buff, DurationalBuff, ConsumableBuff};
+            #(#deactivate_clause)*
         }
     );
 
@@ -137,6 +171,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::buffs::BuffAction for #ident #type_generic #(#where_clause)* {
             #buff_impl
+            #debuff_impl
         }
     )
     .into()
@@ -465,7 +500,8 @@ pub fn action(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::Action for #ident #type_generic #(#where_clause)* {}
-    ).into()
+    )
+    .into()
 }
 
 #[derive(Debug)]

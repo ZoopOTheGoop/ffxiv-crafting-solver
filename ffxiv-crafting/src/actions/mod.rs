@@ -253,6 +253,8 @@ pub trait Action: Sized + ActionComponents {
         delta.added_quality = self.quality(state);
         delta.action_durability = self.durability(&state.buffs, &state.condition);
 
+        self.deactivate_buff(state, &mut delta.new_buffs);
+
         if self.time_passed(state) {
             delta.new_buffs.decay();
         } else {
@@ -260,7 +262,8 @@ pub trait Action: Sized + ActionComponents {
             // time-agnostic actions
             delta.new_buffs.combo.decay();
 
-            // Repair isn't applied during a "time stop"
+            // Repair isn't applied during a "time stop" so it's in the else rather
+            // than after.
             delta.buff_repair = state.buffs.durability.repair();
         }
         self.buff(state, &mut delta.new_buffs);
@@ -316,6 +319,8 @@ pub trait Action: Sized + ActionComponents {
 
         delta.buff_repair = state.buffs.durability.repair();
 
+        self.deactivate_buff(state, &mut delta.new_buffs);
+
         if self.time_passed(state) {
             delta.new_buffs.decay();
         } else {
@@ -323,7 +328,8 @@ pub trait Action: Sized + ActionComponents {
             // time-agnostic actions
             delta.new_buffs.combo.decay();
 
-            // Repair isn't applied during a "time stop"
+            // Repair isn't applied during a "time stop" so it's in the else rather
+            // than after.
             delta.buff_repair = state.buffs.durability.repair();
         }
         self.buff(state, &mut delta.new_buffs);
