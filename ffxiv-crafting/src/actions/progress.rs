@@ -60,16 +60,36 @@ pub trait ProgressAction {
 
 use ffxiv_crafting_derive::*;
 
-/// The most basic progress-increasing ability. It has 120 efficiency and no cost,
+/// The most basic progress-increasing ability. It has 120 efficiency (after level 31) and no cost,
 /// other than the standard 10 durability taken off.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+#[derive(QualityAction, CpCost, DurabilityFactor)]
 #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 0)]
-#[ffxiv_progress(efficiency = 120)]
 #[ffxiv_act_lvl(level = 1)]
 #[ffxiv_buff_act(synthesis)]
 pub struct BasicSynthesis;
+
+impl ProgressAction for BasicSynthesis {
+    const EFFICIENCY: u16 = 100;
+
+    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        let efficiency = if state.problem_def.character.char_level >= 31 {
+            120
+        } else {
+            Self::EFFICIENCY
+        };
+
+        let efficiency = efficiency + state.buffs.progress.bonus_efficiency();
+        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
+
+        efficiency_mod * efficiency as f64
+    }
+}
 
 /// A risky, CP-free synthesis move that's extremely efficient, with a bit over 4x the amount
 /// of efficiency as [`BasicSynthesis`]. However, it fails 50% of the time, simply damaging the item.
