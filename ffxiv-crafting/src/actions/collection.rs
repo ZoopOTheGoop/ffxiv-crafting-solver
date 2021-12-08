@@ -106,4 +106,6 @@ pub enum FfxivCraftingActions {
     TrainedEye,
     /// [`AdvancedTouch`]
     AdvancedTouch,
+    /// [`TrainedFinesse`]
+    TrainedFinesse,
 }

@@ -392,3 +392,27 @@ impl CpCost for AdvancedTouch {
         (cost as f64 * condition_mod) as i16
     }
 }
+
+// TODO: Find CP cost for TrainedFinesse, it's not listed online yet.
+
+/// A special action that's only as strong as [`BasicTouch`], but has no combo and is only usable
+/// as 10 [`InnerQuiet`] stacks. The tradeoff is it costs no durability.
+///
+/// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
+#[derive(ActionLevel, RandomAction, TimePassing, Action)]
+#[ffxiv_cp(cost = 0)]
+#[ffxiv_quality(efficiency = 100)]
+#[ffxiv_act_lvl(level = 90)]
+pub struct TrainedFinesse;
+
+impl CanExecute for TrainedFinesse {
+    fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        state.buffs.quality.inner_quiet.stacks() == 10
+    }
+}
