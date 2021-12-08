@@ -307,7 +307,7 @@ pub struct FocusedTouch;
 #[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 69)]
-#[ffxiv_cp(cost = 24)]
+#[ffxiv_cp(cost = 6)]
 #[ffxiv_can_exe(class = "first_step")]
 pub struct Reflect;
 

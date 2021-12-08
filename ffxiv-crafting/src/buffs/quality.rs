@@ -52,10 +52,10 @@ pub enum InnerQuietBaseStacks {
     /// [`InnerQuiet`]: crate::actions::buffs::InnerQuiet
     InnerQuiet = 1,
 
-    /// 3 - the number of stacks applied by the [`Reflect`] action.
+    /// 2 - the number of stacks applied by the [`Reflect`] action.
     ///
     /// [`Reflect`]: crate::actions::quality::Reflect
-    Reflection = 3,
+    Reflection = 2,
 }
 
 /// The Inner Quiet buff, when active, provides a 20% quality modifier per stack as
