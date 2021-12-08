@@ -60,6 +60,8 @@ pub enum FfxivCraftingActions {
     DelicateSynthesis,
     /// [`CarefulObservation`]
     CarefulObservation,
+    /// [`HeartAndSoul`]
+    HeartAndSoul,
 
     /* Progress/Synthesis */
     /// [`BasicSynthesis`]

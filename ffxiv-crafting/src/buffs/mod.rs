@@ -3,8 +3,11 @@
 use std::ops::{Sub, SubAssign};
 
 use self::{
-    combo::ComboTriggers, durability::DurabilityBuffs, misc::SpecialistActions,
-    progress::ProgressBuffs, quality::QualityBuffs,
+    combo::ComboTriggers,
+    durability::DurabilityBuffs,
+    misc::{HeartAndSoul, SpecialistActions},
+    progress::ProgressBuffs,
+    quality::QualityBuffs,
 };
 
 pub mod combo;
@@ -116,6 +119,8 @@ pub struct BuffState {
     pub progress: ProgressBuffs,
     pub durability: DurabilityBuffs,
     pub combo: ComboTriggers,
+    pub heart_and_soul: HeartAndSoul,
+
     /// This is honestly only in the buff state because I didn't want to add another
     /// trait just for modifying this. See the type documentation for more info on
     /// what this enum is for.

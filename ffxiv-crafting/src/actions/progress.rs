@@ -1,8 +1,8 @@
 //! Defines the effects on progress that actions have, as well as collects actions whose primary purpose is increasing the progress property.
 
 use crate::{
-    actions::{CanExecute, DurabilityFactor},
-    buffs::Buff,
+    actions::{buffs::BuffAction, CanExecute, DurabilityFactor},
+    buffs::{Buff, ConsumableBuff},
     conditions::Condition,
     quality_map::QualityMap,
     CraftingState,
@@ -255,13 +255,31 @@ impl ProgressAction for Groundwork {
 /// [`Excellent`]: crate::conditions::QARegularConditions::Excellent
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 6)]
 #[ffxiv_progress(efficiency = 400)]
 #[ffxiv_act_lvl(level = 78)]
 #[ffxiv_can_exe(class = "good_excellent")]
-#[ffxiv_buff_act(synthesis)]
 pub struct IntensiveSynthesis;
+
+impl BuffAction for IntensiveSynthesis {
+    fn deactivate_buff<C, M>(
+        &self,
+        state: &crate::CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: crate::conditions::Condition,
+        M: crate::quality_map::QualityMap,
+    {
+        if !(state.condition.is_excellent() || state.condition.is_good()) {
+            so_far.heart_and_soul.deactivate_in_place();
+        }
+
+        if so_far.progress.muscle_memory.is_active() {
+            so_far.progress.muscle_memory.deactivate_in_place();
+        }
+    }
+}
 
 // TODO: Look up CP cost for Prudent Synthesis, not in patch notes or in any wikis yet
 

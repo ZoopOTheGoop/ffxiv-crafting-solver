@@ -53,7 +53,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
     const IQ: &str = "touch";
     const MM: &str = "synthesis";
     const ACTIVATE: &str = "activate";
-    const CONSUME: &str = "deactivate";
+    const CONSUME: &str = "consume";
 
     let class = [
         (IQ, Box::new(attr_literal(IQ)) as Box<FfxivAttrMatcher>),
@@ -339,7 +339,7 @@ pub fn can_execute(input: TokenStream) -> TokenStream {
 
     let can_execute_impl = val.get(CLASS).into_iter().map(|v| v.to_lit_str()).map(|v| {
         let condition = match &*v.value() {
-            "good_excellent" => quote!(state.condition.is_good() || state.condition.is_excellent()),
+            "good_excellent" => quote!(state.condition.is_good() || state.condition.is_excellent() || state.buffs.heart_and_soul.is_active()),
             "first_step" => quote!(state.first_step),
             _ => panic!("Unsupported condition for \"can execute\"."),
         };
@@ -349,6 +349,7 @@ pub fn can_execute(input: TokenStream) -> TokenStream {
                 C: crate::conditions::Condition,
                 M: crate::quality_map::QualityMap,
             {
+                use crate::buffs::Buff;
                 #condition
             }
         )

@@ -4,6 +4,8 @@ use std::ops::{Sub, SubAssign};
 
 use derivative::Derivative;
 
+use super::{Buff, ConsumableBuff};
+
 /// Denotes the number of crafters' delineations the character has left, if any, or
 /// if they're not a specialist. This is solely useful for the [`CarefulObservation`]
 /// action.
@@ -73,5 +75,49 @@ impl Sub<u8> for SpecialistActions {
 impl SubAssign<u8> for SpecialistActions {
     fn sub_assign(&mut self, rhs: u8) {
         *self = self.sub(rhs)
+    }
+}
+
+/// The buff associated with the action [`HeartAndSoul`],
+/// which allows actions such as [`TricksOfTheTrade`] to be executed even when the
+/// condition is not good or excellent.
+///
+/// [`quality`]: crate::actions::quality
+/// [`HeartAndSoul`]: crate::actions::buffs::HeartAndSoul
+/// [`TricksOfTheTrade`]: crate::actions::misc::TricksOfTheTrade
+#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
+#[derivative(Default)]
+pub enum HeartAndSoul {
+    /// This buff is currently not active and gives no benefit.
+    #[derivative(Default)]
+    Inactive,
+    /// This buff is active and will apply its modifier to its
+    /// associated actions.
+    Active,
+}
+
+impl HeartAndSoul {
+    /// Activates this buff. Similar to the variant in [`DurationalBuff`], but this buff
+    /// does not have a duration.
+    pub fn activate(self) -> Self {
+        Self::Active
+    }
+
+    /// Activates this buff and overwrites the current value.
+    /// Similar to the variant in [`DurationalBuff`], but this buff does not have a duration.
+    pub fn activate_in_place(&mut self) {
+        *self = Self::Active
+    }
+}
+
+impl Buff for HeartAndSoul {
+    fn is_active(&self) -> bool {
+        matches!(self, Self::Active)
+    }
+}
+
+impl ConsumableBuff for HeartAndSoul {
+    fn deactivate(self) -> (Self, u8) {
+        (Self::Inactive, 0)
     }
 }

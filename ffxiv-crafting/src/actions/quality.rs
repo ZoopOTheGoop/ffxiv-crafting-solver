@@ -183,20 +183,44 @@ impl BuffAction for ByregotsBlessing {
 
 /// An efficient quality-increasing action that costs as much as [`BasicTouch`], and has
 /// 25 more efficiency than [`StandardTouch`], as well as adding 2 stacks to [`InnerQuiet`]
-/// instead of 1 -- but it can only be used if the [`Condition`] is [`Good`] or [`Excellent`]
+/// instead of 1 -- but it can only be used if the [`Condition`] is [`Good`] or [`Excellent`], or
+/// [`HeartAndSoul`] is active.
 ///
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 /// [`Good`]: crate::conditions::QARegularConditions::Good
 /// [`Excellent`]: crate::conditions::QARegularConditions::Excellent
+/// [`HeartAndSoul`]: crate::buffs:quality::HeartAndSoul
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 53)]
 #[ffxiv_cp(cost = 18)]
-#[ffxiv_buff_act(touch = 2)]
 #[ffxiv_can_exe(class = "good_excellent")]
 pub struct PreciseTouch;
+
+impl BuffAction for PreciseTouch {
+    fn deactivate_buff<C, M>(
+        &self,
+        state: &crate::CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: crate::conditions::Condition,
+        M: crate::quality_map::QualityMap,
+    {
+        if !(state.condition.is_excellent() || state.condition.is_good()) {
+            so_far.heart_and_soul.deactivate_in_place();
+        }
+    }
+
+    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        so_far.quality.inner_quiet += 2;
+    }
+}
 
 /// An CP-efficient action which costs 1/3 that of [`BasicTouch`], with the same efficiency and
 /// will double the number of [`InnerQuiet`] stacks when used, but the downside is it only

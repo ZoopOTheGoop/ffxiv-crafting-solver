@@ -229,3 +229,37 @@ impl BuffAction for WasteNot2 {
     consume = "durability.manipulation"
 )]
 pub struct Manipulation;
+
+/// A strong specialist Endwalker action that is associated with the [`HeartAndSoul`] buff. It
+/// allows actions such as [`TricksOfTheTrade`] to be activated even when the condition is not Good or Excellent.
+///
+/// [`HeartAndSoul`]: crate::buffs::quality::HeartAndSoul
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+#[derive(ActionLevel, RandomAction, TimePassing, Action)]
+#[ffxiv_cp(cost = 0)]
+#[ffxiv_act_lvl(level = 86)]
+#[ffxiv_durability(cost = 0)]
+#[ffxiv_no_time_pass]
+pub struct HeartAndSoul;
+
+impl BuffAction for HeartAndSoul {
+    fn buff<C, M>(&self, _: &crate::CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+    where
+        C: crate::conditions::Condition,
+        M: crate::quality_map::QualityMap,
+    {
+        so_far.specialist_actions -= 1;
+        so_far.heart_and_soul.activate_in_place();
+    }
+}
+
+impl CanExecute for HeartAndSoul {
+    fn can_execute<C, M>(&self, state: &crate::CraftingState<C, M>) -> bool
+    where
+        C: crate::conditions::Condition,
+        M: crate::quality_map::QualityMap,
+    {
+        state.buffs.specialist_actions.actions_available()
+    }
+}
