@@ -2,8 +2,8 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    parse_macro_input, spanned::Spanned, Data, DataEnum, DeriveInput, Generics, Ident, Lit, Meta,
-    NestedMeta, Path, WhereClause,
+    parse_macro_input, parse_quote, spanned::Spanned, Data, DataEnum, DeriveInput, Generics, Ident,
+    Lit, Meta, NestedMeta, Path, WhereClause,
 };
 
 pub(super) fn condition_derive(input: TokenStream) -> TokenStream {
@@ -60,10 +60,22 @@ pub(super) fn condition_derive(input: TokenStream) -> TokenStream {
             }
         };
 
+        let expert = if ast.attrs.contains(&parse_quote!(#[ffxiv(expert)])) {
+            quote!(
+                const EXPERT: bool = true;
+            )
+        } else {
+            quote!(
+                const EXPERT: bool = false;
+            )
+        };
+
         let main_derive: TokenStream = quote! {
             #[automatically_derived]
             #[allow(unused_qualifications)]
             impl #params crate::conditions::Condition for #ident #params #where_clause {
+                #expert
+
                 #(
                 fn #fn_names (self) -> #modifiers {
                     self.into()

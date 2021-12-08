@@ -374,6 +374,7 @@ impl CanExecute for TrainedEye {
         M: QualityMap,
     {
         state.first_step
+            && !C::EXPERT
             && (state.problem_def.character.char_level as i8
                 - state
                     .problem_def

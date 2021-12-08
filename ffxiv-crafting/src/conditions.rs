@@ -203,6 +203,7 @@ impl TryFrom<ConditionBits> for QARegularConditions {
     Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
 )]
 #[derivative(Default)]
+#[ffxiv(expert)]
 pub enum RelicExpertConditions {
     /// Normal condition -- nothing special.
     #[derivative(Default)]
@@ -282,6 +283,7 @@ impl TryFrom<ConditionBits> for RelicExpertConditions {
     Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
 )]
 #[derivative(Default)]
+#[ffxiv(expert)]
 pub enum RestoExpertConditions {
     /// Normal condition -- nothing special.
     #[derivative(Default)]
@@ -369,6 +371,8 @@ impl TryFrom<ConditionBits> for RestoExpertConditions {
 /// variants that affect the given property.
 pub trait Condition: Copy + Sized + Distribution<Self> {
     #![allow(missing_docs)]
+
+    const EXPERT: bool = false;
 
     fn to_quality_modifier(self) -> QualityModifier;
     fn to_progress_modifier(self) -> ProgressModifier;
