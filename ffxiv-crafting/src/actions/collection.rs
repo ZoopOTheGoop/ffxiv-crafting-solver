@@ -30,8 +30,6 @@ use ffxiv_crafting_derive::PassthroughAction;
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub enum FfxivCraftingActions {
     /* Buff */
-    /// [`InnerQuiet`]
-    InnerQuiet,
     /// [`Veneration`]
     Veneration,
     /// [`WasteNot`]

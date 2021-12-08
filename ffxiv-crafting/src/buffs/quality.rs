@@ -30,46 +30,36 @@ impl QualityBuffs {
     }
 
     /// Calculates the efficiency bonuses granted by these buffs.
-    /// This does NOT include the [`InnerQuiet`] buff,
-    /// as it's a heavily special case that has its own effect during the computation
-    /// of [`QualityAction`]s as well as [`ByregotsBlessing`].
-    ///
-    /// [`QualityAction`]: crate::actions::quality::QualityAction
-    /// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
     pub fn efficiency_mod(&self) -> u16 {
         self.great_strides.efficiency_mod() + self.innovation.efficiency_mod()
     }
 }
 
-// We could make `InnerQuiet` a "StackingBuff" and "QualityModBuff", but it's such a special case tbh,
-// maybe if more buffs of that form get added. It wouldn't exactly be a difficult refactor.
+/// A trait that denotes something that affects quality. Largely just a marker trait
+/// to denote intent.
+pub trait QualityEfficiencyMod: DurationalBuff {
+    /// The quality modifier, as internally defined. This is a percentage
+    /// represented as an integer (i.e. 100 = 100% = 2x bonus).
+    const MODIFIER: u16;
 
-/// The number of stacks to initialize [`InnerQuiet`] at, depending on the ability used.
-#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub enum InnerQuietBaseStacks {
-    /// 1 - the number of stacks applied by the actual [`InnerQuiet`] action.
-    ///
-    /// [`InnerQuiet`]: crate::actions::buffs::InnerQuiet
-    InnerQuiet = 1,
-
-    /// 2 - the number of stacks applied by the [`Reflect`] action.
-    ///
-    /// [`Reflect`]: crate::actions::quality::Reflect
-    Reflection = 2,
+    /// Returns the efficiency modifier if the buff is currently active.
+    fn efficiency_mod(&self) -> u16 {
+        if self.is_active() {
+            Self::MODIFIER
+        } else {
+            0
+        }
+    }
 }
 
-/// The Inner Quiet buff, when active, provides a 20% quality modifier per stack as
-/// well as allowing the use of [`ByregotsBlessing`].
+/// The Inner Quiet buff, when active, provides a 10% efficiency modifier per stack as
+/// well as allowing the use of [`ByregotsBlessing`], to which it grants a further 20%
+/// efficiency bonus per stack.
 ///
 /// This implements [`Add`], [`Mul`], and [`Div`] to account for the abilities that have
 /// these effects on Inner Quiet stacks. To have any effect, `activate` must be called
 /// first (so you can safely apply effects to an inactive IQ and get an inactive IQ without
 /// making your logic too ugly).
-///
-/// This is a very unique type of buff in logic, so it doesn't implement many buff traits,
-/// as no other current buffs operate off stacks nor do they have multiple activation
-/// modes ([`Reflect`] vs the action [`InnerQuiet`](crate::actions::buffs::InnerQuiet) itself) that
-/// can't be done if already active.
 ///
 /// [`Reflect`]: crate::actions::quality::Reflect
 /// [`ByregotsBlessing`]: crate::actions::quality::ByregotsBlessing
@@ -83,8 +73,9 @@ pub enum InnerQuiet {
     /// associated actions.
     Active(
         /// The number of stacks of [`InnerQuiet`], up to a max
-        /// of 11. This provides a 20% efficiency bonus per stack as
-        /// well as allowing the use of [`ByregotsBlessing`].
+        /// of 10.
+        ///
+        /// This provides a 20% efficiency bonus to [`ByregotsBlessing`].
         ///
         /// Upon using [`ByregotsBlessing`] this buff will be [consumed],
         /// changing it back to [`Inactive`].
@@ -103,7 +94,7 @@ impl InnerQuiet {
         match self {
             Self::Active(stacks) => {
                 debug_assert_ne!(*stacks, 0);
-                debug_assert!(*stacks <= 11);
+                debug_assert!(*stacks <= 10);
 
                 control as f64 + control as f64 * ((*stacks as f64 - 1.) * 20. / 100.)
             }
@@ -113,31 +104,19 @@ impl InnerQuiet {
         }
     }
 
-    /// Retrieves the number of stacks, panicking in the state is [`Inactive`]
+    /// Retrieves the number of stacks.
     ///
     /// [`Inactive`]: InnerQuiet::Inactive
     pub fn stacks(&self) -> u8 {
         match self {
             Self::Active(val) => *val,
-            Self::Inactive => panic!("Attempt to get stacks of inactive Byregot's"),
+            Self::Inactive => 0,
         }
     }
 
-    /* Arguably these could be `Option` or `Result`, but IMO your program is wrong if you try
-    to activate/deactivate at the wrong time. If you need to switch use `match` or `is_active` */
-
-    /// Activates the [`InnerQuiet`] buff, to the value indicated by `base`.
-    pub fn activate(self, base: InnerQuietBaseStacks) -> Self {
-        match self {
-            Self::Inactive => Self::from(base),
-            Self::Active(_) => panic!("Attempt to activate already active IQ buff, check logic"),
-        }
-    }
-
-    /// Mutates the current value instead of returning a new one for convenience. Essentially the
-    /// equivalent of [`SubAssign`] for `activate`.
-    pub fn activate_in_place(&mut self, base: InnerQuietBaseStacks) {
-        *self = self.activate(base)
+    /// Returns the additive bonus to efficiency granted by inner quiet
+    pub fn efficiency_bonus(&self) -> u16 {
+        (self.stacks() as u16) * 10
     }
 }
 
@@ -151,7 +130,7 @@ impl ConsumableBuff for InnerQuiet {
     fn deactivate(self) -> (Self, u8) {
         match self {
             Self::Active(stacks) => (Self::Inactive, stacks),
-            Self::Inactive => panic!("Attempt to deactivate active IQ buff, check logic"),
+            Self::Inactive => panic!("Attempt to deactivate inactive IQ buff, check logic"),
         }
     }
 }
@@ -208,31 +187,6 @@ impl Div<u8> for InnerQuiet {
 impl DivAssign<u8> for InnerQuiet {
     fn div_assign(&mut self, rhs: u8) {
         *self = self.div(rhs)
-    }
-}
-
-impl From<InnerQuietBaseStacks> for InnerQuiet {
-    fn from(base: InnerQuietBaseStacks) -> Self {
-        Self::Active(base as u8)
-    }
-}
-
-/// A trait that denotes something that affects quality. Largely just a marker trait
-/// to denote intent.
-pub trait QualityEfficiencyMod: DurationalBuff {
-    /// The quality modifier, as internally defined. This is a percentage
-    /// represented as an integer (i.e. 100 = 100% = 2x bonus).
-    const MODIFIER: u16;
-
-    /// Returns the efficiency modifier if the buff is currently active, otherwise 0.
-    ///
-    /// The default impl simply defers to [`Buff::is_active`].
-    fn efficiency_mod(&self) -> u16 {
-        if self.is_active() {
-            Self::MODIFIER
-        } else {
-            0
-        }
     }
 }
 

@@ -150,17 +150,14 @@ where
 {
     /// The base quality that any action operating on `quality` will modify with its `efficiency`.
     pub fn base_quality(&self) -> f64 {
-        let iq = self
-            .buffs
-            .quality
-            .inner_quiet
-            .quality_mod(self.problem_def.character.control);
+        let control = self.problem_def.character.control as f64;
 
         let rlvl = self.problem_def.recipe.recipe_level;
         let clvl = self.problem_def.character.clvl();
 
-        let quality = iq * 35. / 100. + 35.;
-        let quality = quality * (iq + 10_000.) / (rlvl.to_recipe_level_control() as f64 + 10_000.);
+        let quality = control * 35. / 100. + 35.;
+        let quality =
+            quality * (control + 10_000.) / (rlvl.to_recipe_level_control() as f64 + 10_000.);
         quality * rlvl.to_quality_level_mod(clvl) as f64 / 100.
     }
 

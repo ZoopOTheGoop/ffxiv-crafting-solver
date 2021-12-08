@@ -2,9 +2,7 @@
 
 use crate::{
     actions::{buffs::BuffAction, failure::PatientFailure, CanExecute, CpCost, RandomAction},
-    buffs::{
-        combo::BasicTouchCombo, quality::InnerQuietBaseStacks, Buff, ConsumableBuff, DurationalBuff,
-    },
+    buffs::{combo::BasicTouchCombo, Buff, ConsumableBuff, DurationalBuff},
     conditions::Condition,
     quality_map::QualityMap,
     CraftingState,
@@ -33,7 +31,8 @@ pub trait QualityAction {
 
         let efficiency_mod = (100. + state.buffs.quality.efficiency_mod() as f64) / 100.;
 
-        efficiency_mod * Self::EFFICIENCY as f64
+        efficiency_mod
+            * (Self::EFFICIENCY + state.buffs.quality.inner_quiet.efficiency_bonus()) as f64
     }
 
     /// Returns the amount of quality that will be added by executing the given `action` in the current `state`.
@@ -136,7 +135,7 @@ impl BuffAction for StandardTouch {
 }
 
 /// A powerful finishing action which consumes all stacks of [`InnerQuiet`] for a large payout,
-/// 20% per stack on top of the 20% modifier to base quality already granted by IQ.
+/// 20% per stack on top of the 10% modifier to efficiency already granted by IQ.
 ///
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
@@ -165,7 +164,15 @@ impl QualityAction for ByregotsBlessing {
         M: QualityMap,
     {
         let efficiency_mod = 100. + state.buffs.quality.efficiency_mod() as f64 / 100.;
-        let efficiency = 100. + (state.buffs.quality.inner_quiet.stacks() - 1) as f64 * 20.;
+        // This is technically stacks * 30 if you do the math but it's clearer both bonuses are being applied this way
+        //
+        // Further note: the patch notes note that efficiency bonus is limited to 300 but that seems natural.
+        // 200 from the Byregot-specific mechanic, and 100 from normal IQ. Need to verify if perhaps this limit
+        // is enforced somewhere else (e.g. if it applies after applying the mod below, or if this number maxes at
+        // 300 instead of 400).
+        let efficiency = 100.
+            + state.buffs.quality.inner_quiet.stacks() as f64 * 20.
+            + state.buffs.quality.inner_quiet.efficiency_bonus() as f64;
 
         efficiency_mod * efficiency
     }
@@ -303,26 +310,14 @@ pub struct FocusedTouch;
 ///
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+#[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost, BuffAction)]
 #[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 69)]
 #[ffxiv_cp(cost = 6)]
 #[ffxiv_can_exe(class = "first_step")]
+#[ffxiv_buff_act(touch = 2)]
 pub struct Reflect;
-
-impl BuffAction for Reflect {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        so_far
-            .quality
-            .inner_quiet
-            .activate(InnerQuietBaseStacks::Reflection);
-    }
-}
 
 /// A very expensive action with twice as much efficiency as [`BasicTouch`], and gives two [`InnerQuiet`] stacks at once.
 /// Its durability cost is the same as doing two [`BasicTouch`]es in a row, with its CP
