@@ -5,7 +5,7 @@
 
 use ffxiv_crafting_derive::*;
 
-use super::{buffs::BuffAction, Action, ActionComponents, CanExecute, CpCost, DurabilityFactor};
+use super::{Action, ActionComponents, CanExecute, CpCost, DurabilityFactor};
 use crate::{quality_map::QualityMap, Condition, CraftingState};
 
 /// This is what happens when most [`RandomAction`]s fail - they just use their
@@ -51,116 +51,5 @@ impl<A: Action + ActionComponents> CanExecute for NullFailure<A> {
         M: crate::quality_map::QualityMap,
     {
         self.0.can_execute(state)
-    }
-}
-
-/// This failure of the [`PatientTouch`] action, which halves [`InnerQuiet`]
-/// stacks. See the [`PatientTouch`] documentation for more thorough info.
-///
-/// [`PatientTouch`]: crate::actions::quality::PatientTouch
-/// [`act`]: Action::act
-/// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, Action)]
-#[derive(CanExecute, TimePassing)]
-#[ffxiv_cp(cost = 6)]
-pub struct PatientFailure;
-
-impl BuffAction for PatientFailure {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        so_far.quality.inner_quiet /= 2;
-    }
-}
-
-/// The type of failure used for [`FfxivCraftingActions`], it just switches between
-/// [`NullFailure`] and [`PatientFailure`] depending on the circumstances. This has
-/// to be manually handled in the derive so you need to go there if you add another
-/// variant.
-///
-/// [`FfxivCraftingActions`]: crate::actions::collection::FfxivCraftingActions
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
-#[derive(ProgressAction, QualityAction, Action)]
-#[derive(TimePassing)]
-pub enum ComboFailure<A: Action + ActionComponents> {
-    /// The most common variant, for any action except [`PatientTouch`]
-    ///
-    /// [`PatientTouch`]: crate::actions::quality::PatientTouch
-    NullFailure(NullFailure<A>),
-
-    /// The variant for if [`PatientTouch`], specifically, fails.
-    /// Defers to this module's [`PatientFailure`].
-    ///
-    /// [`PatientTouch`]: crate::actions::quality::PatientTouch
-    PatientFailure,
-}
-
-impl<A: Action + ActionComponents> BuffAction for ComboFailure<A> {
-    fn buff<C, M>(&self, state: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        match self {
-            Self::NullFailure(underlying) => underlying.buff(state, so_far),
-            Self::PatientFailure => {
-                let me = PatientFailure;
-                me.buff(state, so_far)
-            }
-        }
-    }
-}
-
-impl<A: Action + ActionComponents> CpCost for ComboFailure<A> {
-    const CP_COST: i16 = 0;
-
-    fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        match self {
-            Self::NullFailure(underlying) => underlying.cp_cost(state),
-            Self::PatientFailure => {
-                let me = PatientFailure;
-                me.cp_cost(state)
-            }
-        }
-    }
-}
-
-impl<A: Action + ActionComponents> DurabilityFactor for ComboFailure<A> {
-    const DURABILITY_USAGE: i8 = 0;
-
-    fn durability<C>(&self, buffs: &crate::buffs::BuffState, condition: &C) -> i8
-    where
-        C: Condition,
-    {
-        match self {
-            Self::NullFailure(underlying) => underlying.durability(buffs, condition),
-            Self::PatientFailure => {
-                let me = PatientFailure;
-                me.durability(buffs, condition)
-            }
-        }
-    }
-}
-
-impl<A: Action + ActionComponents> CanExecute for ComboFailure<A> {
-    fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        match self {
-            Self::NullFailure(underlying) => underlying.can_execute(state),
-            Self::PatientFailure => {
-                let me = PatientFailure;
-                me.can_execute(state)
-            }
-        }
     }
 }

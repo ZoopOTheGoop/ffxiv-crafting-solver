@@ -428,14 +428,13 @@ fn gen_fn<I: Iterator<Item = Ident> + Clone>(
 }
 
 fn gen_rand_action<I: Iterator<Item = Ident> + Clone>(variants: I, me: &Ident) -> ItemImpl {
-    let all_variants = variants.clone();
-    let variants = variants.filter(|v| v != "PatientTouch");
-    let variants2 = variants.clone();
+    let variants_copy = variants.clone();
+    let variants_copy2 = variants.clone();
 
     parse_quote!(
         #[automatically_derived]
         impl crate::actions::RandomAction for #me {
-            type FailAction = crate::actions::failure::ComboFailure<Self>;
+            type FailAction = crate::actions::failure::NullFailure<Self>;
 
             fn roll<R: rand::Rng, C: crate::conditions::Condition, M: crate::quality_map::QualityMap>(
                 self,
@@ -443,34 +442,25 @@ fn gen_rand_action<I: Iterator<Item = Ident> + Clone>(variants: I, me: &Ident) -
                 state: &crate::CraftingState<C, M>,
             ) -> crate::actions::RollOutcome<Self, Self::FailAction> {
 
-                use crate::actions::failure::ComboFailure;
-                use crate::actions::failure::NullFailure;
                 use crate::actions::RollOutcome;
 
                 match self {
-                    Self::PatientTouch => match PatientTouch.roll(rng, state) {
-                        RollOutcome::Success(_) => RollOutcome::Success(self),
-                        RollOutcome::Failure(_) => RollOutcome::Failure(ComboFailure::PatientFailure)
-                    },
                     #(Self::#variants => match #variants.roll(rng, state) {
                         RollOutcome::Success(_) => RollOutcome::Success(self),
-                        RollOutcome::Failure(_) => RollOutcome::Failure(ComboFailure::NullFailure(NullFailure(self))),
+                        RollOutcome::Failure(_) => RollOutcome::Failure(crate::actions::failure::NullFailure(self)),
                     },)*
                 }
             }
 
             fn fail_rate<C: crate::conditions::Condition, M: crate::quality_map::QualityMap>(&self, state: &crate::CraftingState<C, M>) -> u8 {
                 match self {
-                    #(Self::#all_variants => #all_variants.fail_rate(state),)*
+                    #(Self::#variants_copy => #variants_copy.fail_rate(state),)*
                 }
             }
 
             fn fail_action(&self) -> Self::FailAction {
-                use crate::actions::failure::ComboFailure;
-                use crate::actions::failure::NullFailure;
                 match self {
-                    Self::PatientTouch => ComboFailure::PatientFailure,
-                    #(Self::#variants2 => ComboFailure::NullFailure(NullFailure(*self)),)*
+                    #(Self::#variants_copy2 => crate::actions::failure::NullFailure(*self),)*
                 }
             }
         }

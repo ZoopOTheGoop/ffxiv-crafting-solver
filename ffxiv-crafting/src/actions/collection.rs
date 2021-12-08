@@ -88,8 +88,6 @@ pub enum FfxivCraftingActions {
     ByregotsBlessing,
     /// [`PreciseTouch`]
     PreciseTouch,
-    /// [`PatientTouch`]
-    PatientTouch,
     /// [`PrudentTouch`]
     PrudentTouch,
     /// [`FocusedTouch`]

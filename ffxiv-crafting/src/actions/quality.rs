@@ -1,7 +1,7 @@
 //! Defines the effects on quality that actions have, as well as collects actions whose primary purpose is increasing the quality property.
 
 use crate::{
-    actions::{buffs::BuffAction, failure::PatientFailure, CanExecute, CpCost, RandomAction},
+    actions::{buffs::BuffAction, CanExecute, CpCost},
     buffs::{combo::BasicTouchCombo, Buff, ConsumableBuff, DurationalBuff},
     conditions::Condition,
     quality_map::QualityMap,
@@ -226,43 +226,6 @@ impl BuffAction for PreciseTouch {
         M: QualityMap,
     {
         so_far.quality.inner_quiet += 2;
-    }
-}
-
-/// An CP-efficient action which costs 1/3 that of [`BasicTouch`], with the same efficiency and
-/// will double the number of [`InnerQuiet`] stacks when used, but the downside is it only
-/// has a 50% success rate, and on failure will simply damage the item and **halve** the
-/// [`InnerQuiet`] stacks.
-///
-/// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost, TimePassing)]
-#[derive(CanExecute, ActionLevel, Action)]
-#[ffxiv_quality(efficiency = 100)]
-#[ffxiv_act_lvl(level = 53)]
-#[ffxiv_cp(cost = 6)]
-pub struct PatientTouch;
-
-impl RandomAction for PatientTouch {
-    const FAIL_RATE: u8 = 50;
-
-    type FailAction = PatientFailure;
-
-    fn fail_action(&self) -> Self::FailAction {
-        PatientFailure
-    }
-}
-
-impl BuffAction for PatientTouch {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        so_far.quality.inner_quiet *= 2;
-        if so_far.quality.great_strides.is_active() {
-            so_far.quality.great_strides.deactivate_in_place();
-        }
     }
 }
 
