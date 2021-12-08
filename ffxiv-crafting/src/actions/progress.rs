@@ -255,11 +255,17 @@ impl ProgressAction for Groundwork {
         C: Condition,
         M: QualityMap,
     {
-        let durability = self.durability(&state.buffs, &state.condition);
-        let efficiency = if durability < state.curr_durability {
-            Self::EFFICIENCY / 2
+        let efficiency = if state.problem_def.character.char_level >= 86 {
+            360
         } else {
             Self::EFFICIENCY
+        };
+
+        let durability = self.durability(&state.buffs, &state.condition);
+        let efficiency = if durability < state.curr_durability {
+            efficiency / 2
+        } else {
+            efficiency
         };
 
         let efficiency_mod = 100. + state.buffs.progress.efficiency_mod() as f64 / 100.;
