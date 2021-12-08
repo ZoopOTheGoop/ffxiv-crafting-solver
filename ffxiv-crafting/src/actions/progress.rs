@@ -182,13 +182,33 @@ pub struct MuscleMemory;
 /// An action that's only minorly more powerful than [`BasicSynthesis`], but
 /// also doesn't cost very much.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+#[derive(QualityAction, CpCost, DurabilityFactor)]
 #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 7)]
-#[ffxiv_progress(efficiency = 150)]
 #[ffxiv_act_lvl(level = 62)]
 #[ffxiv_buff_act(synthesis)]
 pub struct CarefulSynthesis;
+
+impl ProgressAction for CarefulSynthesis {
+    const EFFICIENCY: u16 = 150;
+
+    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        let efficiency = if state.problem_def.character.char_level >= 82 {
+            180
+        } else {
+            Self::EFFICIENCY
+        };
+
+        let efficiency = efficiency + state.buffs.progress.bonus_efficiency();
+        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
+
+        efficiency_mod * efficiency as f64
+    }
+}
 
 /// An cheap action with 200 efficiency, about ~1.7x that of [`BasicSynthesis`] that costs 5 CP,
 /// (so 50 extra efficiency for 2 less CP than [`CarefulSynthesis`]).
