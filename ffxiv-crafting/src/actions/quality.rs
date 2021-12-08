@@ -189,7 +189,7 @@ impl BuffAction for ByregotsBlessing {
 /// [`InnerQuiet`]: crate::buffs::quality::InnerQuiet
 /// [`Good`]: crate::conditions::QARegularConditions::Good
 /// [`Excellent`]: crate::conditions::QARegularConditions::Excellent
-/// [`HeartAndSoul`]: crate::buffs:quality::HeartAndSoul
+/// [`HeartAndSoul`]: crate::buffs::misc::HeartAndSoul
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
 #[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]

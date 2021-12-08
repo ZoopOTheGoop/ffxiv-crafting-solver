@@ -99,12 +99,16 @@ pub enum HeartAndSoul {
 impl HeartAndSoul {
     /// Activates this buff. Similar to the variant in [`DurationalBuff`], but this buff
     /// does not have a duration.
+    ///
+    /// [`DurationalBuff`]: crate::buffs::DurationalBuff
     pub fn activate(self) -> Self {
         Self::Active
     }
 
     /// Activates this buff and overwrites the current value.
     /// Similar to the variant in [`DurationalBuff`], but this buff does not have a duration.
+    ///
+    /// [`DurationalBuff`]: crate::buffs::DurationalBuff
     pub fn activate_in_place(&mut self) {
         *self = Self::Active
     }

@@ -207,7 +207,8 @@ pub struct Manipulation;
 /// A strong specialist Endwalker action that is associated with the [`HeartAndSoul`] buff. It
 /// allows actions such as [`TricksOfTheTrade`] to be activated even when the condition is not Good or Excellent.
 ///
-/// [`HeartAndSoul`]: crate::buffs::quality::HeartAndSoul
+/// [`HeartAndSoul`]: crate::buffs::misc::HeartAndSoul
+/// [`TricksOfTheTrade`]: crate::actions::misc::TricksOfTheTrade
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
 #[derive(ActionLevel, RandomAction, TimePassing, Action)]
