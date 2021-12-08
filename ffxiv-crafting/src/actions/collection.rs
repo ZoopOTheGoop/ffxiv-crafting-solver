@@ -40,8 +40,6 @@ pub enum FfxivCraftingActions {
     GreatStrides,
     /// [`Innovation`]
     Innovation,
-    /// [`NameOfTheElements`]
-    NameOfTheElements,
     /// [`FinalAppraisal`]
     FinalAppraisal,
     /// [`WasteNot2`]
@@ -68,8 +66,6 @@ pub enum FfxivCraftingActions {
     BasicSynthesis,
     /// [`RapidSynthesis`]
     RapidSynthesis,
-    /// [`BrandOfTheElements`]
-    BrandOfTheElements,
     /// [`MuscleMemory`]
     MuscleMemory,
     /// [`CarefulSynthesis`]

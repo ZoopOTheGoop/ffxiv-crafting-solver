@@ -137,32 +137,6 @@ pub struct GreatStrides;
 #[ffxiv_buff_act(activate = "quality.innovation")]
 pub struct Innovation;
 
-/// Activates the [`NameOfTheElements`] buff for 3 steps, causing [`BrandOfTheElements`] to
-/// increase its efficiency by up to 200 (*after* modifiers are applied), based on the
-/// relative state the progress bar to its max, with more progress making it less
-/// effective.
-///
-/// [`NameOfTheElements`]: crate::buffs::progress::NameOfTheElements
-/// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
-#[ffxiv_cp(cost = 30)]
-#[ffxiv_act_lvl(level = 37)]
-#[ffxiv_durability(cost = 0)]
-#[ffxiv_buff_act(activate = "progress.name_of_the_elements")]
-pub struct NameOfTheElements;
-
-impl CanExecute for NameOfTheElements {
-    fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
-    where
-        C: crate::conditions::Condition,
-        M: crate::quality_map::QualityMap,
-    {
-        state.buffs.progress.name_of_the_elements.can_activate()
-    }
-}
-
 /// Activates the [`FinalAppraisal`] buff for 5 steps, "catching" the first
 /// [synthesis] (progress increasing) action that would cause the recipe to complete
 /// and leaving the recipe with only 1 progress remaining until completing.

@@ -13,7 +13,6 @@ use super::{Buff, BuffState, ConsumableBuff, DurationalBuff};
 #[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
 #[allow(missing_docs)]
 pub struct ProgressBuffs {
-    pub name_of_the_elements: NameOfTheElements,
     pub veneration: Veneration,
     pub muscle_memory: MuscleMemory,
     pub final_appraisal: FinalAppraisal,
@@ -22,17 +21,12 @@ pub struct ProgressBuffs {
 impl ProgressBuffs {
     /// Causes all durational progress buffs to tick down by one.
     pub fn decay(&mut self) {
-        self.name_of_the_elements.decay_in_place();
         self.veneration.decay_in_place();
         self.muscle_memory.decay_in_place();
         self.final_appraisal.decay_in_place();
     }
 
     /// Calculates the efficiency bonuses granted by these buffs.
-    /// This does NOT include the [`NameOfTheElements`] buff,
-    /// as it's overridden specially by its matching action [`BrandOfTheElements`].
-    ///
-    /// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
     pub fn efficiency_mod(&self) -> u16 {
         self.veneration.efficiency_mod()
     }
@@ -44,10 +38,7 @@ impl ProgressBuffs {
 }
 
 /// A trait that denotes something that affects quality. Largely just a marker trait
-/// to denote intent. This doesn't work for [`NameOfTheElements`], as that only has its
-/// efficiency effect when used with [`BrandOfTheElements`] and requires extra information.
-///
-/// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
+/// to denote intent.
 pub trait ProgressEfficiencyMod: DurationalBuff {
     /// The quality modifier, as internally defined. This is a percentage
     /// represented as an integer (i.e. 100 = 100% = 2x bonus).
@@ -62,86 +53,6 @@ pub trait ProgressEfficiencyMod: DurationalBuff {
         } else {
             0
         }
-    }
-}
-
-/// The buff state relating to the action [`NameOfTheElements`],
-/// which increases the efficiency of [`BrandOfTheElements`] up to
-/// `200` based on the current progress relative to the maximum
-/// progress to the recipe.
-///
-/// [`NameOfTheElements`]: crate::actions::buffs::NameOfTheElements
-/// [`BrandOfTheElements`]: crate::actions::progress::BrandOfTheElements
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
-pub enum NameOfTheElements {
-    /// The action [`NameOfTheElements`] has not been used yet.
-    ///
-    /// [`NameOfTheElements`]: crate::actions::buffs::NameOfTheElements
-    #[derivative(Default)]
-    Unused,
-    /// The buff is active.
-    Active(
-        /// The number of turns remaining on this buff, once it hits
-        /// 0 this will become [`Used`].
-        ///
-        /// [`Used`]: NameOfTheElements::Used
-        u8,
-    ),
-    /// This buff has been used, its duration finished, and may not be used again.
-    Used,
-}
-
-impl NameOfTheElements {
-    /// Determines if this can be activated, since this buff can only be used
-    /// once.
-    pub fn can_activate(&self) -> bool {
-        matches!(self, Self::Unused)
-    }
-
-    /// Determines if this has already been activated, since this buff can only be used
-    /// once.
-    pub fn already_activated(&self) -> bool {
-        matches!(self, Self::Active(_) | Self::Used)
-    }
-}
-
-impl Buff for NameOfTheElements {
-    fn is_active(&self) -> bool {
-        matches!(self, Self::Active(_))
-    }
-}
-
-impl DurationalBuff for NameOfTheElements {
-    const BASE_DURATION: u8 = 3;
-
-    fn activate(self, bonus: u8) -> Self {
-        match self {
-            Self::Unused => Self::Active(Self::BASE_DURATION + bonus),
-            Self::Active(_) | Self::Used => {
-                panic!("Cannot activate Name of the Elements twice, check logic.")
-            }
-        }
-    }
-}
-
-impl Sub<u8> for NameOfTheElements {
-    type Output = Self;
-
-    fn sub(self, rhs: u8) -> Self {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
-
-        match self {
-            Self::Active(val) => Self::Active(val - rhs),
-            Self::Unused => Self::Unused,
-            Self::Used => Self::Used,
-        }
-    }
-}
-
-impl SubAssign<u8> for NameOfTheElements {
-    fn sub_assign(&mut self, rhs: u8) {
-        *self = self.sub(rhs)
     }
 }
 

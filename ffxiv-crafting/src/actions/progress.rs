@@ -126,46 +126,6 @@ impl ProgressAction for RapidSynthesis {
     }
 }
 
-/// A complex progress action that appears to be less powerful than [`BasicSynthesis`] while
-/// also cosing 6 CP. However, once per craft you may use the [`NameOfTheElements`] action to activate
-/// its associated [buff][namebuff], and under said buff its efficiency increases to up to 200, attenuated
-/// by the progress remaining in the item (lower = more powerful).
-///
-/// [namebuff]: crate::buffs::progress::NameOfTheElements
-/// [`NameOfTheElements`]: crate::actions::buffs::NameOfTheElements
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
-#[ffxiv_cp(cost = 6)]
-#[ffxiv_act_lvl(level = 37)]
-#[ffxiv_buff_act(synthesis)]
-pub struct BrandOfTheElements;
-
-impl ProgressAction for BrandOfTheElements {
-    const EFFICIENCY: u16 = 100;
-
-    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        let efficiency = Self::EFFICIENCY + state.buffs.progress.bonus_efficiency();
-        let efficiency_mod = 100. + state.buffs.progress.efficiency_mod() as f64 / 100.;
-
-        let efficiency = efficiency_mod * efficiency as f64;
-
-        if state.buffs.progress.name_of_the_elements.is_active() {
-            efficiency
-                + 2. * ((1.
-                    - state.curr_progress as f64 / state.problem_def.recipe.max_progress as f64)
-                    * 100.)
-                    .ceil()
-        } else {
-            efficiency
-        }
-    }
-}
-
 /// A powerful action that can only be used on the first step. It has 2.5x the efficiency of
 /// [`BasicSynthesis`], and adds a buff that will cause the next progress-increasing action
 /// to gain 100 bonus efficiency
