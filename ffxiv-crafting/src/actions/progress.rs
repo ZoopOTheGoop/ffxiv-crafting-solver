@@ -77,14 +77,34 @@ pub struct BasicSynthesis;
 /// That said, its expected value is still twice as efficient as [`BasicSynthesis`], before taking into account
 /// the power of consistently leveraging buffs.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
-#[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
+#[derive(QualityAction, CpCost, DurabilityFactor)]
 #[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_cp(cost = 0)]
-#[ffxiv_progress(efficiency = 500)]
 #[ffxiv_act_lvl(level = 9)]
 #[ffxiv_rand_act(fail_rate = 50)]
 #[ffxiv_buff_act(synthesis)]
 pub struct RapidSynthesis;
+
+impl ProgressAction for RapidSynthesis {
+    const EFFICIENCY: u16 = 250;
+
+    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        let efficiency = if state.problem_def.character.char_level >= 63 {
+            500
+        } else {
+            Self::EFFICIENCY
+        };
+
+        let efficiency = efficiency + state.buffs.progress.bonus_efficiency();
+        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
+
+        efficiency_mod * efficiency as f64
+    }
+}
 
 /// A complex progress action that appears to be less powerful than [`BasicSynthesis`] while
 /// also cosing 6 CP. However, once per craft you may use the [`NameOfTheElements`] action to activate
