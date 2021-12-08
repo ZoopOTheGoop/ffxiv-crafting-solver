@@ -102,4 +102,6 @@ pub enum FfxivCraftingActions {
     PreparatoryTouch,
     /// [`TrainedEye`]
     TrainedEye,
+    /// [`AdvancedTouch`]
+    AdvancedTouch,
 }

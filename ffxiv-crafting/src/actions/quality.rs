@@ -2,7 +2,9 @@
 
 use crate::{
     actions::{buffs::BuffAction, failure::PatientFailure, CanExecute, CpCost, RandomAction},
-    buffs::{quality::InnerQuietBaseStacks, Buff, ConsumableBuff, DurationalBuff},
+    buffs::{
+        combo::BasicTouchCombo, quality::InnerQuietBaseStacks, Buff, ConsumableBuff, DurationalBuff,
+    },
     conditions::Condition,
     quality_map::QualityMap,
     CraftingState,
@@ -94,10 +96,9 @@ pub struct HastyTouch;
 /// with [`BasicTouch`] as it becomes 25 bonus efficiency for the same cost.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 125)]
 #[ffxiv_act_lvl(level = 9)]
-#[ffxiv_buff_act(touch)]
 pub struct StandardTouch;
 
 impl CpCost for StandardTouch {
@@ -108,7 +109,7 @@ impl CpCost for StandardTouch {
         C: Condition,
         M: QualityMap,
     {
-        let cost = if state.buffs.combo.basic_touch.is_active() {
+        let cost = if matches!(state.buffs.combo.basic_touch, BasicTouchCombo::BasicTouch) {
             BasicTouch::CP_COST
         } else {
             Self::CP_COST
@@ -118,6 +119,19 @@ impl CpCost for StandardTouch {
 
         // Todo: verify where floor/ceil might be
         (cost as f64 * condition_mod) as i16
+    }
+}
+
+impl BuffAction for StandardTouch {
+    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        so_far.quality.inner_quiet += 1;
+        if matches!(so_far.combo.basic_touch, BasicTouchCombo::BasicTouch) {
+            so_far.combo.basic_touch = BasicTouchCombo::StandardTouch;
+        }
     }
 }
 
@@ -343,5 +357,38 @@ impl CanExecute for TrainedEye {
                     .recipe_level
                     .to_player_facing_level() as i8)
                 >= 10
+    }
+}
+
+/// A high-efficiency quality action. Combos off of [`StandardTouch`], if it combo'd off [`BasicTouch].
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+#[derive(ProgressAction, QualityAction, DurabilityFactor)]
+#[derive(CanExecute, ActionLevel, RandomAction, TimePassing, Action, BuffAction)]
+#[ffxiv_quality(efficiency = 150)]
+#[ffxiv_act_lvl(level = 84)]
+#[ffxiv_buff_act(touch)]
+pub struct AdvancedTouch;
+
+impl CpCost for AdvancedTouch {
+    const CP_COST: i16 = 32;
+
+    fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        let cost = if matches!(
+            state.buffs.combo.basic_touch,
+            BasicTouchCombo::StandardTouch
+        ) {
+            BasicTouch::CP_COST
+        } else {
+            Self::CP_COST
+        };
+
+        let condition_mod = state.condition.to_cp_usage_modifier() as u64 as f64 / 100.;
+
+        // Todo: verify where floor/ceil might be
+        (cost as f64 * condition_mod) as i16
     }
 }

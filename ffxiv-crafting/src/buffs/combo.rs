@@ -39,11 +39,13 @@ impl ComboTriggers {
 
 /* We may want to profile these to see if they're better off `bool`s. I'm only doing this for uniformity */
 
-/// Denotes that [`BasicTouch`] was used last turn, and thus [`StandardTouch`] gets a CP discount
-/// this turn.
+/// Denotes the combo between [`BasicTouch`], [`StandardTouch`], and [`AdvancedTouch`]. Three moves
+/// that, when used after the previous one in the chain, inherit the low CP cost of [`BasicTouch`], but
+/// with increasing efficiency.
 ///
 /// [`BasicTouch`]: crate::actions::quality::BasicTouch
 /// [`StandardTouch`]: crate::actions::quality::StandardTouch
+/// [`AdvancedTouch`]: crate::actions::quality::StandardTouch
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
 #[derivative(Default)]
 pub enum BasicTouchCombo {
@@ -56,12 +58,18 @@ pub enum BasicTouchCombo {
     /// [`BasicTouch`] was used last turn and its combo is available.
     ///
     /// [`BasicTouch`]: crate::actions::quality::BasicTouch
-    Active,
+    BasicTouch,
+
+    /// [`StandardTouch`] was used last turn after [`BasicTouch`] and its combo is available.
+    ///
+    /// [`BasicTouch`]: crate::actions::quality::BasicTouch
+    /// [`StandardTouch`]: crate::actions::quality::StandardTouch
+    StandardTouch,
 }
 
 impl Buff for BasicTouchCombo {
     fn is_active(&self) -> bool {
-        matches!(self, Self::Active)
+        matches!(self, Self::BasicTouch | Self::StandardTouch)
     }
 }
 
@@ -69,7 +77,7 @@ impl DurationalBuff for BasicTouchCombo {
     const BASE_DURATION: u8 = 1;
 
     fn activate(self, _: u8) -> Self {
-        Self::Active
+        Self::BasicTouch
     }
 }
 
