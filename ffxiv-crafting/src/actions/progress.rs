@@ -1,7 +1,10 @@
 //! Defines the effects on progress that actions have, as well as collects actions whose primary purpose is increasing the progress property.
 
 use crate::{
-    actions::DurabilityFactor, buffs::Buff, conditions::Condition, quality_map::QualityMap,
+    actions::{CanExecute, DurabilityFactor},
+    buffs::Buff,
+    conditions::Condition,
+    quality_map::QualityMap,
     CraftingState,
 };
 
@@ -219,3 +222,27 @@ impl ProgressAction for Groundwork {
 #[ffxiv_can_exe(class = "good_excellent")]
 #[ffxiv_buff_act(synthesis)]
 pub struct IntensiveSynthesis;
+
+// TODO: Look up CP cost for Prudent Synthesis, not in patch notes or in any wikis yet
+
+/// A slightly more expensive progress increasing action that uses half the normal durability, but otherwise
+/// has the same efficiency as [`CarefulSynthesis`] (after its trait buff at level 82).
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
+#[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
+#[derive(BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[ffxiv_quality(efficiency = 180)]
+#[ffxiv_act_lvl(level = 88)]
+#[ffxiv_cp(cost = 0)]
+#[ffxiv_buff_act(synthesis)]
+#[ffxiv_durability(cost = 5)]
+pub struct PrudentSynthesis;
+
+impl CanExecute for PrudentSynthesis {
+    fn can_execute<C, M>(&self, state: &CraftingState<C, M>) -> bool
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        state.buffs.durability.waste_not.is_inactive()
+    }
+}

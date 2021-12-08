@@ -78,6 +78,8 @@ pub enum FfxivCraftingActions {
     Groundwork,
     /// [`IntensiveSynthesis`]
     IntensiveSynthesis,
+    /// [`PrudentSynthesis`]
+    PrudentSynthesis,
 
     /* Quality/Touch */
     /// [`BasicTouch`]
