@@ -267,8 +267,6 @@ impl BuffAction for IntensiveSynthesis {
     }
 }
 
-// TODO: Look up CP cost for Prudent Synthesis, not in patch notes or in any wikis yet
-
 /// A slightly more expensive progress increasing action that uses half the normal durability, but otherwise
 /// has the same efficiency as [`CarefulSynthesis`] (after its trait buff at level 82).
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
@@ -276,7 +274,7 @@ impl BuffAction for IntensiveSynthesis {
 #[derive(BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 180)]
 #[ffxiv_act_lvl(level = 88)]
-#[ffxiv_cp(cost = 0)]
+#[ffxiv_cp(cost = 18)]
 #[ffxiv_buff_act(synthesis)]
 #[ffxiv_durability(cost = 5)]
 pub struct PrudentSynthesis;

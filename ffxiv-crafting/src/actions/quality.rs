@@ -376,8 +376,6 @@ impl CpCost for AdvancedTouch {
     }
 }
 
-// TODO: Find CP cost for TrainedFinesse, it's not listed online yet.
-
 /// A special action that's only as strong as [`BasicTouch`], but has no combo and is only usable
 /// as 10 [`InnerQuiet`] stacks. The tradeoff is it costs no durability.
 ///
@@ -385,7 +383,7 @@ impl CpCost for AdvancedTouch {
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor, BuffAction)]
 #[derive(ActionLevel, RandomAction, TimePassing, Action)]
-#[ffxiv_cp(cost = 0)]
+#[ffxiv_cp(cost = 32)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 90)]
 pub struct TrainedFinesse;
