@@ -5,7 +5,7 @@ use crate::lookups;
 
 /// Maps the `quality` property to either [`HQChance`] or
 /// [`Collectability`], depending on the craft at hand.
-pub trait QualityMap {
+pub trait QualityMap: Copy {
     /// HQ/Collectability
     type Outcome: Sized;
 
@@ -15,6 +15,7 @@ pub trait QualityMap {
 }
 
 /// Maps quality to [`HQChance`].
+#[derive(Clone, Copy, Hash, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HQMap;
 
 impl QualityMap for HQMap {
@@ -30,6 +31,7 @@ impl QualityMap for HQMap {
 
 /// The chance from 1-100 that an item will come out HQ at the current
 /// quality. This can convert into its dual, [`NQChance`].
+#[derive(Clone, Copy, Hash, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HQChance(pub u8);
 
 impl From<NQChance> for HQChance {
@@ -38,9 +40,22 @@ impl From<NQChance> for HQChance {
     }
 }
 
+impl Default for HQChance {
+    fn default() -> Self {
+        HQChance(1)
+    }
+}
+
 /// The chance from 1-100 that an item will come out NQ at the current
 /// quality. This can convert into its dual, [`HQChance`].
+#[derive(Clone, Copy, Hash, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NQChance(pub u8);
+
+impl Default for NQChance {
+    fn default() -> Self {
+        NQChance(99)
+    }
+}
 
 impl From<HQChance> for NQChance {
     fn from(other: HQChance) -> Self {
@@ -50,6 +65,7 @@ impl From<HQChance> for NQChance {
 
 /// Maps quality to the proper collectability rating, this is actually
 /// just division by 10.
+#[derive(Clone, Copy, Hash, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CollectabilityMap;
 
 impl QualityMap for CollectabilityMap {

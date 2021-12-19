@@ -3,7 +3,7 @@
 
 use std::marker::PhantomData;
 
-use actions::StateDelta;
+use actions::{Action, ActionOutcome, RandomAction, StateDelta};
 use buffs::BuffState;
 use conditions::Condition;
 use derivative::Derivative;
@@ -177,10 +177,92 @@ where
     }
 
     /// Generates the next state from the given delta, including sampling the new condition.
-    pub fn gen_succ<R: Rng>(self, delta: StateDelta, rng: &mut R) -> Self {
+    pub fn gen_succ<R: Rng>(self, delta: StateDelta, condition_rng: &mut R) -> Self {
         Self {
-            condition: self.condition.sample(rng),
+            condition: self.condition.sample(condition_rng),
             ..self + delta
         }
     }
+
+    /// Performs an action on the current state, yielding an [`Outcome`] value that corresponds to
+    /// the [`ActionOutcome`]. This uses [`act_random`] under the hood, and thus will panic if the action
+    /// cannot execute due to being out of CP or an action being used in an illegal state.
+    ///
+    /// [`Action`]s and [`Condition`]s use different [`Rng`]s for maximum reproducibility, despite
+    /// the minor inconvenience of managing two.
+    ///
+    /// The [`Condition`] is only rerolled if the [`Outcome`] is [`InProgress`], otherwise the generated successor
+    /// state inherits the [`Condition`] of this state.
+    ///
+    /// [`act_random`]: crate::actions::Action::act_random
+    /// [`InProgress`]: Outcome::InProgress
+    pub fn act<A: Action + RandomAction, R1: Rng, R2: Rng>(
+        self,
+        action: A,
+        action_rng: &mut R1,
+        condition_rng: &mut R2,
+    ) -> Outcome<'a, C, M> {
+        let outcome = action.act_random(action_rng, &self).unwrap();
+
+        match outcome {
+            ActionOutcome::Completed(delta) => Outcome::Completed {
+                state: self + delta,
+                delta,
+                outcome: outcome.map_quality(&self).unwrap(),
+            },
+            ActionOutcome::Failure(delta) => Outcome::Failure {
+                state: self + delta,
+                delta,
+            },
+            ActionOutcome::InProgress(delta) => Outcome::InProgress {
+                state: self.gen_succ(delta, condition_rng),
+                delta,
+            },
+        }
+    }
+}
+
+/// The outcome of executing an [`Action`] on a given [`CraftingState`]. This is analogous to
+/// [`ActionOutcome`]. In each of the variants, `state` is the next state, and `delta`
+/// is the [`StateDelta`] which was applied to the previous state to create it.
+pub enum Outcome<'a, C, M>
+where
+    C: Condition,
+    M: QualityMap,
+{
+    /// This crafting state has neither failed nor completed (i.e. its durability has not hit zero,
+    /// and its progress bar is not full).
+    InProgress {
+        /// The next state in the chain.
+        state: CraftingState<'a, C, M>,
+
+        /// The delta used to create the state.
+        delta: StateDelta,
+    },
+
+    /// This crafting state has successfully completed, i.e. its prograss bar is full. This contains
+    /// an `outcome` denoting either its HQ Chance from 1-100 or its Collectability.
+    Completed {
+        /// The final state. Note that progress may > than the actual progress, and durability may be below zero.
+        /// This allows analyzers to see how much "slack" that actions might have.
+        state: CraftingState<'a, C, M>,
+
+        /// The delta used to create the state.
+        delta: StateDelta,
+
+        /// The HQ chance of the item, or its collectability.
+        outcome: M::Outcome,
+    },
+
+    /// This crafting state failed, i.e. its durability hit zero without its progress bar becoming full.
+    Failure {
+        /// The state encoding the failure.
+        ///
+        /// Note that durability may be below zero instead of zero, to allow analyzers to see how much "slack"
+        /// it may have.
+        state: CraftingState<'a, C, M>,
+
+        /// The delta used to create the state.
+        delta: StateDelta,
+    },
 }

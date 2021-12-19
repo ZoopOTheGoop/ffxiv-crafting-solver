@@ -185,6 +185,14 @@ impl ActionOutcome {
             _ => None,
         }
     }
+
+    /// Unrwaps the `outcome` value, this is not an [`Option`] because all variants contain an
+    /// `outcome`.
+    pub fn outcome(self) -> StateDelta {
+        match self {
+            Self::Completed(delta) | Self::Failure(delta) | Self::InProgress(delta) => delta,
+        }
+    }
 }
 
 /// All the components of an [`Action`] -- this is autoimplemented for the implementors. Doing it
@@ -226,7 +234,7 @@ pub trait Action: Sized + ActionComponents {
     /// e.g. not having enough CP or it not being available in that state, it will still compute it as
     /// if it had succeeded, returning the outcome and a marker indicating why it cannot execute.
     ///
-    /// If you need to take into account an action's rng, use [`Action::propective_act_random`] or
+    /// If you need to take into account an action's rng, use [`Action::prospective_act_random`] or
     /// [`Action::prospective_act_and_fail`].
     fn prospective_act<C, M>(self, state: &CraftingState<C, M>) -> ActionResult
     where
@@ -357,7 +365,7 @@ pub trait Action: Sized + ActionComponents {
     /// Takes into account a [`RandomAction`]'s chance to fail, and does
     /// a roll on the provided [`Rng`], returning a [`RollOutcome`] that either
     /// executed an action, or its failure form with [`Action::prospective_act`].
-    fn propective_act_random<R: Rng, C: Condition, M: QualityMap>(
+    fn prospective_act_random<R: Rng, C: Condition, M: QualityMap>(
         self,
         rng: &mut R,
         state: &CraftingState<C, M>,

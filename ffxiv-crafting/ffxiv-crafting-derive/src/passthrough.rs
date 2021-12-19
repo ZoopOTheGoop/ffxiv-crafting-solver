@@ -282,7 +282,7 @@ fn traits() -> Vec<TraitBlueprint> {
                 ),
                 (
                     parse_quote!(
-                        fn propective_act_random<
+                        fn prospective_act_random<
                             R: rand::Rng,
                             C: crate::conditions::Condition,
                             M: crate::quality_map::QualityMap,

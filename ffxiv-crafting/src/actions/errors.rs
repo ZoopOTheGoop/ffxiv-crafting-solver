@@ -48,6 +48,16 @@ impl ActionError {
             (0..=i16::MAX, false) => Err(Self::ActionInvalid(outcome)),
         }
     }
+
+    /// Unrwaps the `outcome` value, this is not an [`Option`] because all variants contain an
+    /// `outcome`.
+    pub fn outcome(self) -> ActionOutcome {
+        match self {
+            Self::TooLittleCp(outcome)
+            | Self::ActionInvalid(outcome)
+            | Self::NoCpAndInvalid(outcome) => outcome,
+        }
+    }
 }
 
 impl Display for ActionError {
