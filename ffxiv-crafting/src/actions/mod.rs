@@ -523,6 +523,19 @@ pub enum RollOutcome<A, B> {
     Failure(B),
 }
 
+impl<A> RollOutcome<A, A> {
+    /// Returns the outcome regardless of success or failure. Useful for things like
+    /// [`act_random`].
+    ///
+    /// [`act_random`]: crate::actions::Action::act_random
+    pub fn unwrap(self) -> A {
+        match self {
+            Self::Success(outcome) => outcome,
+            Self::Failure(outcome) => outcome,
+        }
+    }
+}
+
 /// An action that has a random chance to fail. Like other action qualities, the
 /// [`FAIL_RATE`](RandomAction::FAIL_RATE) factor shouldn't be relied upon
 /// directly, instead [`fail_rate`](RandomAction::fail_rate) is used to determine if

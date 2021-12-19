@@ -3,6 +3,7 @@
 
 use std::marker::PhantomData;
 
+use actions::StateDelta;
 use buffs::BuffState;
 use conditions::Condition;
 use derivative::Derivative;
@@ -16,6 +17,7 @@ pub mod quality_map;
 #[doc(inline)]
 pub use lookups::RecipeLevelRanges;
 use quality_map::QualityMap;
+use rand::Rng;
 
 /// The overall simulator problem. This is actually just the definition that gives
 /// structure to the problem, such as the recipe used and character stats. It's mostly just
@@ -172,5 +174,13 @@ where
         let progress = progress * (craftsmanship + 10_000.)
             / (rlvl.to_recipe_level_craftsmanship() as f64 / 10_000.);
         progress * rlvl.to_progress_level_mod(clvl) as f64 / 100.
+    }
+
+    /// Generates the next state from the given delta, including sampling the new condition.
+    pub fn gen_succ<R: Rng>(self, delta: StateDelta, rng: &mut R) -> Self {
+        Self {
+            condition: self.condition.sample(rng),
+            ..self + delta
+        }
     }
 }
