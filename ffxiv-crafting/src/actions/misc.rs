@@ -17,11 +17,11 @@ pub struct MastersMend;
 
 /// Uses 7 CP to pass a turn, letting buffs tick down and the current condition cycle.
 ///
-/// Also enables [`FocusedSynthesis`] and [`PatientTouch`] to activate with 100% probability
+/// Also enables [`FocusedSynthesis`] and [`PreciseTouch`] to activate with 100% probability
 /// if they're used as the next action.
 ///
 /// [`FocusedSynthesis`]: crate::actions::progress::FocusedSynthesis
-/// [`PatientTouch`]: crate::actions::quality::PatientTouch
+/// [`PreciseTouch`]: crate::actions::quality::PreciseTouch
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
 #[derive(CanExecute, ActionLevel, RandomAction, TimePassing, BuffAction, Action)]
