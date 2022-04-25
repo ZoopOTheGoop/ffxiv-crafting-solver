@@ -423,19 +423,31 @@ pub(crate) const CONDITION_MODIFIER_TABLE: [u16; 5] = [
     ProgressModifier::Malleable as u16,
 ];
 
+// AKA 15
 pub(crate) const NORMAL_CONDITIONS: u16 = RawConditions::Normal as u16
     | RawConditions::Good as u16
     | RawConditions::Excellent as u16
     | RawConditions::Poor as u16;
 
+// AKA 115
 pub(crate) const EXPERT_CRAFT_1: u16 = RawConditions::Normal as u16
     | RawConditions::Good as u16
     | RawConditions::Centered as u16
     | RawConditions::Pliant as u16
     | RawConditions::Sturdy as u16;
 
+// AKA 483
 pub(crate) const EXPERT_CRAFT_2: u16 = RawConditions::Normal as u16
     | RawConditions::Good as u16
+    | RawConditions::Pliant as u16
+    | RawConditions::Sturdy as u16
+    | RawConditions::Malleable as u16
+    | RawConditions::Primed as u16;
+
+// AKA 499; corresponds only to RLVL 416 which I'm pretty sure isn't an actual in-use RLVL
+pub(crate) const ALL_EXPERT_CONDITIONS_UNUSED: u16 = RawConditions::Normal as u16
+    | RawConditions::Good as u16
+    | RawConditions::Centered as u16
     | RawConditions::Pliant as u16
     | RawConditions::Sturdy as u16
     | RawConditions::Malleable as u16

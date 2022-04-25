@@ -13,6 +13,7 @@ pub mod buffs;
 pub mod conditions;
 pub(crate) mod lookups;
 pub mod quality_map;
+pub mod recipe;
 
 #[doc(inline)]
 pub use lookups::RecipeLevelRanges;
