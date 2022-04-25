@@ -11,9 +11,13 @@ use ffxiv_crafting_derive::Condition;
 use rand::distributions::Distribution;
 
 use crate::lookups::{
-    self, ConditionBits, CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier,
+    self, CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier,
     StatusDurationModifier, SuccessRateModifier,
 };
+
+/// The raw bits that make up a condition, largely used internally but needed for some info so it's exposed here.
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ConditionBits(pub u16);
 
 pub mod raw_conditions {
     //! The raw condition modifiers used by [`Condition`]
@@ -46,6 +50,7 @@ pub mod raw_conditions {
     Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
 )]
 #[derivative(Default)]
+#[ffxiv(condition(bits = "NORMAL_CONDITIONS"))]
 pub enum NoQARegularConditions {
     /// Normal condition -- nothing special.
     #[derivative(Default)]
@@ -56,7 +61,7 @@ pub enum NoQARegularConditions {
     /// after this.
     ///
     /// [`Normal`]: NoQARegularConditions::Normal
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Good,
 
     /// 4% chance to occur, provides a 4x efficiency bonus
@@ -64,7 +69,7 @@ pub enum NoQARegularConditions {
     /// after this
     ///
     /// [`Poor`]: NoQARegularConditions::Poor
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Excellent,
 
     /// Always occurs after [`Excellent`]. Provides a 50%
@@ -73,7 +78,7 @@ pub enum NoQARegularConditions {
     ///
     /// [`Excellent`]: NoQARegularConditions::Excellent
     /// [`Normal`]: NoQARegularConditions::Normal
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Poor,
 }
 
@@ -123,6 +128,7 @@ impl TryFrom<ConditionBits> for NoQARegularConditions {
     Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
 )]
 #[derivative(Default)]
+#[ffxiv(condition(bits = "NORMAL_CONDITIONS"))]
 pub enum QARegularConditions {
     /// Normal condition -- nothing special.
     #[derivative(Default)]
@@ -133,7 +139,7 @@ pub enum QARegularConditions {
     /// after this.
     ///
     /// [`Normal`]: QARegularConditions::Normal
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Good,
 
     /// 4% chance to occur, provides a 4x efficiency bonus
@@ -141,7 +147,7 @@ pub enum QARegularConditions {
     /// after this
     ///
     /// [`Poor`]: QARegularConditions::Poor
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Excellent,
 
     /// Always occurs after [`Excellent`]. Provides a 50%
@@ -150,7 +156,7 @@ pub enum QARegularConditions {
     ///
     /// [`Excellent`]: QARegularConditions::Excellent
     /// [`Normal`]: QARegularConditions::Normal
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Poor,
 }
 
@@ -185,6 +191,13 @@ impl TryFrom<ConditionBits> for QARegularConditions {
     }
 }
 
+#[allow(clippy::from_over_into)]
+impl Into<ConditionBits> for QARegularConditions {
+    fn into(self) -> ConditionBits {
+        ConditionBits(lookups::NORMAL_CONDITIONS)
+    }
+}
+
 // Corresponds to EXPERT_CRAFT_1
 
 /// The set of conditions used in expert crafting for oddly delicate materials for ShB relics.
@@ -203,7 +216,7 @@ impl TryFrom<ConditionBits> for QARegularConditions {
     Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
 )]
 #[derivative(Default)]
-#[ffxiv(expert)]
+#[ffxiv(condition(expert, bits = "EXPERT_CRAFT_1"))]
 pub enum RelicExpertConditions {
     /// Normal condition -- nothing special.
     #[derivative(Default)]
@@ -215,20 +228,20 @@ pub enum RelicExpertConditions {
     /// "no".
     ///
     /// [`Normal`]: RelicExpertConditions::Normal
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Good,
 
     /// 15% chance to occur, provides a 25% success rate
     /// boost to actions taken.
-    #[ffxiv(success)]
+    #[ffxiv(affects = "success")]
     Centered,
 
     /// 12% chance to occur, causes actions to use half CP.
-    #[ffxiv(cp)]
+    #[ffxiv(affects = "cp")]
     Pliant,
 
     /// 15% chance to occur, causes durability usage to be halved.
-    #[ffxiv(durability)]
+    #[ffxiv(affects = "durability")]
     Sturdy,
 }
 
@@ -267,6 +280,13 @@ impl TryFrom<ConditionBits> for RelicExpertConditions {
     }
 }
 
+#[allow(clippy::from_over_into)]
+impl Into<ConditionBits> for RelicExpertConditions {
+    fn into(self) -> ConditionBits {
+        ConditionBits(lookups::EXPERT_CRAFT_1)
+    }
+}
+
 /// The set of conditions used in expert crafting for most Ishgard Resto Expert Crafts.
 ///
 /// Note: there are a couple of questions on the distribution I need to iron out. Specifically if
@@ -283,7 +303,7 @@ impl TryFrom<ConditionBits> for RelicExpertConditions {
     Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
 )]
 #[derivative(Default)]
-#[ffxiv(expert)]
+#[ffxiv(condition(expert, bits = "EXPERT_CRAFT_2"))]
 pub enum RestoExpertConditions {
     /// Normal condition -- nothing special.
     #[derivative(Default)]
@@ -295,15 +315,15 @@ pub enum RestoExpertConditions {
     /// "no".
     ///
     /// [`Normal`]: RestoExpertConditions::Normal
-    #[ffxiv(quality)]
+    #[ffxiv(affects = "quality")]
     Good,
 
     /// 12% chance to occur, causes actions to use half CP.
-    #[ffxiv(cp)]
+    #[ffxiv(affects = "cp")]
     Pliant,
 
     /// 15% chance to occur, causes durability usage to be halved.
-    #[ffxiv(durability)]
+    #[ffxiv(affects = "durability")]
     Sturdy,
 
     /// 12% chance to occur, gives a 50% efficiency boost to progress.
@@ -316,14 +336,14 @@ pub enum RestoExpertConditions {
     /// [synthesis]: crate::actions::progress
     /// [`IntensiveSynthesis`]: crate::actions::progress::IntensiveSynthesis
     /// [`TricksOfTheTrade`]: crate::actions::misc::TricksOfTheTrade
-    #[ffxiv(progress)]
+    #[ffxiv(affects = "progress")]
     Malleable,
 
     /// 12% chance to occur. Causes [`DurationalBuff`]s to gain two
     /// extra free ticks.
     ///
     /// [`DurationalBuff`]: crate::buffs::DurationalBuff
-    #[ffxiv(status)]
+    #[ffxiv(affects = "status")]
     Primed,
 }
 
@@ -362,6 +382,13 @@ impl TryFrom<ConditionBits> for RestoExpertConditions {
     }
 }
 
+#[allow(clippy::from_over_into)]
+impl Into<ConditionBits> for RestoExpertConditions {
+    fn into(self) -> ConditionBits {
+        ConditionBits(lookups::EXPERT_CRAFT_2)
+    }
+}
+
 /// The general trait all conditions implement, this just maps the conditions
 /// to their modifiers in the internal condition tables. This is autoderived with
 /// a proc macro and most of the functions are self explanatory. The modifiers are all
@@ -373,6 +400,7 @@ pub trait Condition: Copy + Sized + Distribution<Self> {
     #![allow(missing_docs)]
 
     const EXPERT: bool = false;
+    const BITS: ConditionBits;
 
     fn to_quality_modifier(self) -> QualityModifier;
     fn to_progress_modifier(self) -> ProgressModifier;
@@ -381,5 +409,7 @@ pub trait Condition: Copy + Sized + Distribution<Self> {
     fn to_status_duration_modifier(self) -> StatusDurationModifier;
     fn to_cp_usage_modifier(self) -> CpUsageModifier;
     fn is_good(self) -> bool;
-    fn is_excellent(self) -> bool;
+    fn is_excellent(self) -> bool {
+        false
+    }
 }
