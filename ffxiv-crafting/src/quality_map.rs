@@ -1,7 +1,25 @@
 //! Contains types that map the crafting state's quality value to [`HQChance`]
 //! or [`Collectability`].
 
-use crate::lookups;
+mod tables {
+    // It's 101 because it goes from [0-100], not [1-100]
+    pub(crate) const HQ: [u8; 101] = [
+        1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8,
+        8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16,
+        16, 17, 17, 17, 18, 18, 18, 19, 19, 20, 20, 21, 22, 23, 24, 26, 28, 31, 34, 38, 42, 47, 52,
+        58, 64, 68, 71, 74, 76, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 94, 96, 98,
+        100,
+    ];
+
+    pub(super) const fn lookup_hq(quality: u32, recipe_quality: u32) -> u8 {
+        // Compute integer percentage without casting -- this gives the same result as going to
+        // float and then truncating from conversion
+        let raw_chance = (quality * 200 + recipe_quality) / (recipe_quality * 2);
+
+        // Can't use `min` in const functions :(
+        HQ[if raw_chance > 100 { 100 } else { raw_chance } as usize]
+    }
+}
 
 /// Maps the `quality` property to either [`HQChance`] or
 /// [`Collectability`], depending on the craft at hand.
@@ -22,7 +40,7 @@ impl QualityMap for HQMap {
     type Outcome = HQChance;
 
     fn convert(quality: u32, recipe_quality: u32) -> HQChance {
-        HQChance(lookups::lookup_hq(
+        HQChance(tables::lookup_hq(
             quality.min(recipe_quality),
             recipe_quality,
         ))

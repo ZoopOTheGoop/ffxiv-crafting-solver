@@ -49,12 +49,12 @@ macro_rules! gen_fun {
     ($it:expr, $condition:path, $fn_name:ident, $modifier:path, $collection:ident) => {
         let filtered = filter_conds!($it, $condition);
         let tt = quote!(
-            fn $fn_name(self) -> crate::lookups::$modifier {
+            fn $fn_name(self) -> crate::conditions::tables::$modifier {
                 match self {
                     #(
-                    Self::#filtered => crate::lookups::$modifier::#filtered,
+                    Self::#filtered => crate::conditions::tables::$modifier::#filtered,
                     )*
-                    _ => crate::lookups::$modifier::Normal,
+                    _ => crate::conditions::tables::$modifier::Normal,
                 }
             }
         );
@@ -169,7 +169,7 @@ pub(super) fn condition_derive(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         impl #impl_generic Condition for #name #type_generic #where_clause {
             const EXPERT: bool = #expert;
-            const BITS: ConditionBits = crate::conditions::ConditionBits(crate::lookups::#bits);
+            const BITS: ConditionBits = crate::conditions::ConditionBits(crate::conditions::tables::#bits);
 
             #functions
         }

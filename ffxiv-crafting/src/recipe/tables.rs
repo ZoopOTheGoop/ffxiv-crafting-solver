@@ -4,9 +4,9 @@
 // I think the first (i.e. 0th) RLVL is actually a placeholder value such as a max field value, since many are unusually high
 // (e.g. RLVL 0's durability is listed as 100, yet no recipe has 100 durability)
 
-use crate::{
-    conditions::ConditionBits,
-    lookups::{ALL_EXPERT_CONDITIONS_UNUSED, EXPERT_CRAFT_1, EXPERT_CRAFT_2, NORMAL_CONDITIONS},
+use crate::conditions::{
+    tables::{ALL_EXPERT_CONDITIONS_UNUSED, EXPERT_CRAFT_1, EXPERT_CRAFT_2, NORMAL_CONDITIONS},
+    ConditionBits,
 };
 
 pub(super) const NUM_RLVLS: usize = 651;

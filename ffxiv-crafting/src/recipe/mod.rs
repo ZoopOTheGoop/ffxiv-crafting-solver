@@ -7,9 +7,9 @@ use std::{
     marker::PhantomData,
 };
 
-use crate::{
-    conditions::{Condition, ConditionBits},
-    lookups::{ALL_EXPERT_CONDITIONS_UNUSED, EXPERT_CRAFT_1, EXPERT_CRAFT_2, NORMAL_CONDITIONS},
+use crate::conditions::{
+    tables::{ALL_EXPERT_CONDITIONS_UNUSED, EXPERT_CRAFT_1, EXPERT_CRAFT_2, NORMAL_CONDITIONS},
+    Condition, ConditionBits,
 };
 
 mod tables;
@@ -96,6 +96,7 @@ impl RLvl {
 /// While all fields are marked `pub` for ease of access, modifying them manually is not recommended unless you're
 /// trying to test weird hypotheticals wrt rlvl differences and strange durability values (or something), since all
 /// these values are calculated off of internal lookup tables.
+#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Recipe<C: Condition> {
     pub rlvl: RLvl,
 
@@ -107,6 +108,12 @@ pub struct Recipe<C: Condition> {
     pub max_durability: i8,
 
     pub control_modifier: u32,
+
+    pub quality_divider: u16,
+    pub progress_divider: u16,
+
+    pub quality_modifier: u16,
+    pub progress_modifier: u16,
 
     _pd: PhantomData<C>,
 }
@@ -140,8 +147,6 @@ impl<C: Condition + fmt::Debug + Default> Recipe<C> {
             });
         }
 
-        let quality_mod: f32 = quality_mod as f32 / 100.;
-        let progress_mod: f32 = progress_mod as f32 / 100.;
         let durability_mod: f32 = durability_mod as f32 / 100.;
 
         todo!()
@@ -152,12 +157,10 @@ const fn bits_to_condition_error_msg(bits: ConditionBits) -> &'static str {
     match bits.0 {
         NORMAL_CONDITIONS => "the standard set of conditions (normal/good/poor/excellent); \
         use NoQARegularConditions or QARegularConditions",
-        EXPERT_CRAFT_1 =>"the non-relic Ishgard Restoration expert conditions;
-        use RestoExpertConditions",
-        EXPERT_CRAFT_2 => "the Shadowbringers crafting relic expert conditions;
-        use RelicExpertConditions",
-        ALL_EXPERT_CONDITIONS_UNUSED => "an unused set of conditions; this isn't actually an in-use RLVL and no; \
-        condition is implemented that uses it. If you want to implement it yourself, if consists of all existing conditions EXCEPT \
+        EXPERT_CRAFT_1 =>"the non-relic Ishgard Restoration expert conditions; use RestoExpertConditions",
+        EXPERT_CRAFT_2 => "the Shadowbringers crafting relic expert conditions; use RelicExpertConditions",
+        ALL_EXPERT_CONDITIONS_UNUSED => "an unused set of conditions; this isn't actually an in-use RLVL and no \
+        condition is implemented that uses it. If you want to implement it yourself, it consists of all existing conditions EXCEPT \
         excellent/poor",
         // Want to use `unreachable` here, but it's not allowed in const functions atm
         _ => panic!("Got invalid condition in error that shouldn't even be in the table")

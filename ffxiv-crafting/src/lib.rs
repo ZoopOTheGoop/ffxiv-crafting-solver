@@ -11,14 +11,22 @@ use derivative::Derivative;
 pub mod actions;
 pub mod buffs;
 pub mod conditions;
-pub(crate) mod lookups;
 pub mod quality_map;
 pub mod recipe;
 
-#[doc(inline)]
-pub use lookups::RecipeLevelRanges;
 use quality_map::QualityMap;
 use rand::Rng;
+
+use crate::recipe::Recipe;
+
+mod tables {
+    pub(crate) const CLVL: [u16; 80] = [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+        49, 50, 120, 125, 130, 133, 136, 139, 142, 145, 148, 150, 260, 265, 270, 273, 276, 279,
+        282, 285, 288, 290, 390, 395, 400, 403, 406, 409, 412, 415, 418, 420,
+    ];
+}
 
 /// The overall simulator problem. This is actually just the definition that gives
 /// structure to the problem, such as the recipe used and character stats. It's mostly just
@@ -28,18 +36,14 @@ use rand::Rng;
 pub struct CraftingSimulator<C, M>
 where
     M: QualityMap,
+    C: Condition + Copy,
 {
     /// Stats of the character making this recipe.
     pub character: CharacterStats,
 
     /// The stats of the Recipe - *after* applying things like
     /// internal modifiers.
-    pub recipe: RecipeStats,
-
-    /// The conditions this recipe can take on - essentially either
-    /// the typical Normal/Good/Excellent/Poor distribution or else
-    /// one of the expert recipes.
-    pub conditions: C,
+    pub recipe: Recipe<C>,
 
     quality_map: PhantomData<M>,
 }
@@ -65,30 +69,8 @@ impl CharacterStats {
     ///
     /// This is entirely based on actual character level.
     const fn clvl(&self) -> u16 {
-        lookups::CLVL[self.char_level as usize]
+        tables::CLVL[self.char_level as usize]
     }
-}
-
-/// The stats of a recipe, containing both its level as well as the
-/// three states that govern a recipe's status.
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RecipeStats {
-    /// The recipe "level" taking into account level cap recipes
-    /// and stars, as well as the subtle distinctions between them.
-    ///
-    /// Can look up a great number of things related to the internal
-    /// `rlvl`.
-    pub recipe_level: RecipeLevelRanges,
-
-    /// The durability this recipe starts at and cannot go above.
-    max_durability: i8,
-
-    /// The maximum quality of the recipe for determining HQ/collectability.
-    max_quality: u32,
-
-    /// The maximum progress of a recipe, when the state hits this value
-    /// the recipe is completed.
-    max_progress: u32,
 }
 
 /// The current state of the crafting simulation. The vast majority of types
@@ -155,26 +137,25 @@ where
     pub fn base_quality(&self) -> f64 {
         let control = self.problem_def.character.control as f64;
 
-        let rlvl = self.problem_def.recipe.recipe_level;
-        let clvl = self.problem_def.character.clvl();
-
-        let quality = control * 35. / 100. + 35.;
-        let quality =
-            quality * (control + 10_000.) / (rlvl.to_recipe_level_control() as f64 + 10_000.);
-        quality * rlvl.to_quality_level_mod(clvl) as f64 / 100.
+        let quality = (control * 10.) / (self.problem_def.recipe.quality_divider as f64) + 35.;
+        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl.0 {
+            quality * self.problem_def.recipe.quality_modifier as f64 * 0.01
+        } else {
+            quality
+        }
     }
 
     /// The base progress that any action operating on `progress` will modify with its `efficiency`.
     pub fn base_progress(&self) -> f64 {
         let craftsmanship = self.problem_def.character.craftsmanship as f64;
 
-        let rlvl = self.problem_def.recipe.recipe_level;
-        let clvl = self.problem_def.character.clvl();
-
-        let progress = craftsmanship * 21. / 100. + 2.;
-        let progress = progress * (craftsmanship + 10_000.)
-            / (rlvl.to_recipe_level_craftsmanship() as f64 / 10_000.);
-        progress * rlvl.to_progress_level_mod(clvl) as f64 / 100.
+        let progress =
+            (craftsmanship * 10.) / (self.problem_def.recipe.progress_divider as f64) + 2.;
+        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl.0 {
+            progress * self.problem_def.recipe.progress_modifier as f64 * 0.01
+        } else {
+            progress
+        }
     }
 
     /// Generates the next state from the given delta, including sampling the new condition.

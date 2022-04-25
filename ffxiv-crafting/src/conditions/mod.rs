@@ -10,9 +10,11 @@ use derivative::Derivative;
 use ffxiv_crafting_derive::Condition;
 use rand::distributions::Distribution;
 
-use crate::lookups::{
-    self, CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier,
-    StatusDurationModifier, SuccessRateModifier,
+pub(crate) mod tables;
+
+use tables::{
+    CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier, StatusDurationModifier,
+    SuccessRateModifier,
 };
 
 /// The raw bits that make up a condition, largely used internally but needed for some info so it's exposed here.
@@ -25,7 +27,7 @@ pub mod raw_conditions {
     //! [`Condition`]: super::Condition
 
     #[doc(inline)]
-    pub use crate::lookups::{
+    pub use super::tables::{
         CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier,
         StatusDurationModifier, SuccessRateModifier,
     };
@@ -105,7 +107,7 @@ impl TryFrom<ConditionBits> for NoQARegularConditions {
     type Error = Box<dyn Error>;
 
     fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
-        if value.0 == lookups::NORMAL_CONDITIONS {
+        if value.0 == tables::NORMAL_CONDITIONS {
             Ok(Self::default())
         } else {
             Err("Bits don't match this condition pattern".into())
@@ -183,7 +185,7 @@ impl TryFrom<ConditionBits> for QARegularConditions {
     type Error = Box<dyn Error>;
 
     fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
-        if value.0 == lookups::NORMAL_CONDITIONS {
+        if value.0 == tables::NORMAL_CONDITIONS {
             Ok(Self::default())
         } else {
             Err("Bits don't match this condition pattern".into())
@@ -194,7 +196,7 @@ impl TryFrom<ConditionBits> for QARegularConditions {
 #[allow(clippy::from_over_into)]
 impl Into<ConditionBits> for QARegularConditions {
     fn into(self) -> ConditionBits {
-        ConditionBits(lookups::NORMAL_CONDITIONS)
+        ConditionBits(tables::NORMAL_CONDITIONS)
     }
 }
 
@@ -272,7 +274,7 @@ impl TryFrom<ConditionBits> for RelicExpertConditions {
     type Error = Box<dyn Error>;
 
     fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
-        if value.0 == lookups::EXPERT_CRAFT_1 {
+        if value.0 == tables::EXPERT_CRAFT_1 {
             Ok(Self::default())
         } else {
             Err("Bits don't match this condition pattern".into())
@@ -283,7 +285,7 @@ impl TryFrom<ConditionBits> for RelicExpertConditions {
 #[allow(clippy::from_over_into)]
 impl Into<ConditionBits> for RelicExpertConditions {
     fn into(self) -> ConditionBits {
-        ConditionBits(lookups::EXPERT_CRAFT_1)
+        ConditionBits(tables::EXPERT_CRAFT_1)
     }
 }
 
@@ -374,7 +376,7 @@ impl TryFrom<ConditionBits> for RestoExpertConditions {
     type Error = Box<dyn Error>;
 
     fn try_from(value: ConditionBits) -> Result<Self, Self::Error> {
-        if value.0 == lookups::EXPERT_CRAFT_2 {
+        if value.0 == tables::EXPERT_CRAFT_2 {
             Ok(Self::default())
         } else {
             Err("Bits don't match this condition pattern".into())
@@ -385,7 +387,7 @@ impl TryFrom<ConditionBits> for RestoExpertConditions {
 #[allow(clippy::from_over_into)]
 impl Into<ConditionBits> for RestoExpertConditions {
     fn into(self) -> ConditionBits {
-        ConditionBits(lookups::EXPERT_CRAFT_2)
+        ConditionBits(tables::EXPERT_CRAFT_2)
     }
 }
 
