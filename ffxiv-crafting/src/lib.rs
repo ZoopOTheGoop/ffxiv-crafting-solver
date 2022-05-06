@@ -174,7 +174,11 @@ where
     /// Generates the next state from the given delta, including sampling the new condition.
     pub fn gen_succ<R: Rng>(self, delta: StateDelta, condition_rng: &mut R) -> Self {
         Self {
-            condition: self.condition.sample(condition_rng),
+            condition: if delta.time_passed {
+                self.condition.sample(condition_rng)
+            } else {
+                self.condition
+            },
             ..self + delta
         }
     }
