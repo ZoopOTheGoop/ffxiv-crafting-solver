@@ -246,6 +246,26 @@ where
     }
 }
 
+impl<'a, C, M> CraftingState<'a, C, M>
+where
+    C: Condition + Default,
+    M: QualityMap,
+{
+    /// Creates a new default crafting attempt for the recipe and character defined by `problem_def`.
+    pub fn new_simulation(problem_def: &'a CraftingSimulator<C, M>) -> Self {
+        CraftingState {
+            problem_def,
+            condition: C::default(),
+            curr_quality: 0,
+            curr_progress: 0,
+            curr_durability: problem_def.recipe.max_durability,
+            curr_cp: problem_def.character.max_cp,
+            buffs: BuffState::default(),
+            first_step: false,
+        }
+    }
+}
+
 /// The outcome of executing an [`Action`] on a given [`CraftingState`]. This is analogous to
 /// [`ActionOutcome`]. In each of the variants, `state` is the next state, and `delta`
 /// is the [`StateDelta`] which was applied to the previous state to create it.
