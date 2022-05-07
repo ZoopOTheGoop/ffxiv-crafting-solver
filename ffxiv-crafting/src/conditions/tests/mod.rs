@@ -7,6 +7,7 @@ use std::collections::HashMap;
 mod no_qa;
 mod qa;
 mod relic_conds;
+mod resto_conds;
 
 const RAND_ANALYSIS_STEPS: usize = 10_000_000;
 // 0.1% error allowed

@@ -353,10 +353,11 @@ pub enum RestoExpertConditions {
 
 impl Distribution<Self> for RestoExpertConditions {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Self {
-        const WEIGHTS: [u8; 4] = [12, 12, 12, 12];
-        const RESULTS: [RestoExpertConditions; 4] = [
+        const WEIGHTS: [u8; 5] = [12, 12, 15, 12, 12];
+        const RESULTS: [RestoExpertConditions; 5] = [
             RestoExpertConditions::Good,
             RestoExpertConditions::Pliant,
+            RestoExpertConditions::Sturdy,
             RestoExpertConditions::Malleable,
             RestoExpertConditions::Primed,
         ];
