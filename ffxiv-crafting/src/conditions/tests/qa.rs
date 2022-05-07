@@ -25,8 +25,18 @@ mod codegen {
     }
 
     #[test]
-    fn is_expert() {
-        assert!(!QARegularConditions::Normal.is_excellent())
+    fn is_excellent() {
+        let truth = CONDITIONS
+            .into_iter()
+            .map(|cond| (cond, matches!(cond, QARegularConditions::Excellent)))
+            .collect::<Vec<_>>();
+
+        let reality = CONDITIONS
+            .into_iter()
+            .map(|cond| (cond, cond.is_excellent()))
+            .collect::<Vec<_>>();
+
+        assert_eq!(truth, reality);
     }
 
     /* There's probably some way to clean this up and reuse this code but it's more annoying than atrocious */
