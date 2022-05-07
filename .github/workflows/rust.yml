@@ -23,3 +23,5 @@ jobs:
       env:
         RUSTFLAGS: "-D warnings"
       run: cargo check
+    - name: Clippy warnings
+      run: cargo clippy -- -D warnings
