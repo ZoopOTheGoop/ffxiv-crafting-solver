@@ -47,8 +47,11 @@ pub struct StateDelta {
     action_durability: i8,
     buff_repair: i8,
     added_cp: i16,
+
+    /// Whether the step count increased/we should redo conditions/decay buffs
     #[derivative(Default(value = "true"))]
-    time_passed: bool,
+    pub time_passed: bool,
+
     final_appraisal_triggered: bool,
 }
 

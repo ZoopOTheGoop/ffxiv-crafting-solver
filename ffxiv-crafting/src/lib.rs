@@ -11,13 +11,31 @@ use derivative::Derivative;
 pub mod actions;
 pub mod buffs;
 pub mod conditions;
-pub(crate) mod lookups;
 pub mod quality_map;
+pub mod recipe;
 
-#[doc(inline)]
-pub use lookups::RecipeLevelRanges;
 use quality_map::QualityMap;
 use rand::Rng;
+
+use crate::recipe::Recipe;
+
+mod tables {
+    /// This is the entire CLVL table which apparently goes all the way to level 201, as with most tables this has
+    /// a dummy level 0 as well
+    pub(crate) const CLVL: [u16; 202] = [
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+        40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
+        63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
+        86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106,
+        107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124,
+        125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142,
+        143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
+        161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178,
+        179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196,
+        197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
+        215, 216, 217, 218,
+    ];
+}
 
 /// The overall simulator problem. This is actually just the definition that gives
 /// structure to the problem, such as the recipe used and character stats. It's mostly just
@@ -27,20 +45,31 @@ use rand::Rng;
 pub struct CraftingSimulator<C, M>
 where
     M: QualityMap,
+    C: Condition + Copy,
 {
     /// Stats of the character making this recipe.
     pub character: CharacterStats,
 
     /// The stats of the Recipe - *after* applying things like
     /// internal modifiers.
-    pub recipe: RecipeStats,
-
-    /// The conditions this recipe can take on - essentially either
-    /// the typical Normal/Good/Excellent/Poor distribution or else
-    /// one of the expert recipes.
-    pub conditions: C,
+    pub recipe: Recipe<C>,
 
     quality_map: PhantomData<M>,
+}
+
+impl<C, M> CraftingSimulator<C, M>
+where
+    C: Condition + Copy,
+    M: QualityMap,
+{
+    /// Builds a new simulation for a given character making a given recipe.
+    pub fn from_character_recipe(character: CharacterStats, recipe: Recipe<C>) -> Self {
+        CraftingSimulator {
+            character,
+            recipe,
+            quality_map: PhantomData {},
+        }
+    }
 }
 
 /// The stats of the a FFXIV character - these are *after* any buffs
@@ -55,7 +84,7 @@ pub struct CharacterStats {
     #[allow(missing_docs)]
     pub max_cp: i16,
 
-    /// Actual level, 1..<max_char_lvl> (80 in Shb, 90 in EW etc)
+    /// Actual level, 1..90 in Endwalker
     pub char_level: u8,
 }
 
@@ -64,30 +93,12 @@ impl CharacterStats {
     ///
     /// This is entirely based on actual character level.
     const fn clvl(&self) -> u16 {
-        lookups::CLVL[self.char_level as usize]
+        #[cfg(debug_assertions)]
+        if self.char_level < 1 || self.char_level > 90 {
+            panic!("While the table goes higher, this is out of bounds for EW so we're not allowing it");
+        }
+        tables::CLVL[self.char_level as usize]
     }
-}
-
-/// The stats of a recipe, containing both its level as well as the
-/// three states that govern a recipe's status.
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RecipeStats {
-    /// The recipe "level" taking into account level cap recipes
-    /// and stars, as well as the subtle distinctions between them.
-    ///
-    /// Can look up a great number of things related to the internal
-    /// `rlvl`.
-    pub recipe_level: RecipeLevelRanges,
-
-    /// The durability this recipe starts at and cannot go above.
-    max_durability: i8,
-
-    /// The maximum quality of the recipe for determining HQ/collectability.
-    max_quality: u32,
-
-    /// The maximum progress of a recipe, when the state hits this value
-    /// the recipe is completed.
-    max_progress: u32,
 }
 
 /// The current state of the crafting simulation. The vast majority of types
@@ -154,32 +165,35 @@ where
     pub fn base_quality(&self) -> f64 {
         let control = self.problem_def.character.control as f64;
 
-        let rlvl = self.problem_def.recipe.recipe_level;
-        let clvl = self.problem_def.character.clvl();
-
-        let quality = control * 35. / 100. + 35.;
-        let quality =
-            quality * (control + 10_000.) / (rlvl.to_recipe_level_control() as f64 + 10_000.);
-        quality * rlvl.to_quality_level_mod(clvl) as f64 / 100.
+        let quality = (control * 10.) / (self.problem_def.recipe.quality_divider as f64) + 35.;
+        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl().0 {
+            quality * self.problem_def.recipe.quality_modifier as f64 * 0.01
+        } else {
+            quality
+        }
     }
 
     /// The base progress that any action operating on `progress` will modify with its `efficiency`.
     pub fn base_progress(&self) -> f64 {
         let craftsmanship = self.problem_def.character.craftsmanship as f64;
 
-        let rlvl = self.problem_def.recipe.recipe_level;
-        let clvl = self.problem_def.character.clvl();
-
-        let progress = craftsmanship * 21. / 100. + 2.;
-        let progress = progress * (craftsmanship + 10_000.)
-            / (rlvl.to_recipe_level_craftsmanship() as f64 / 10_000.);
-        progress * rlvl.to_progress_level_mod(clvl) as f64 / 100.
+        let progress =
+            (craftsmanship * 10.) / (self.problem_def.recipe.progress_divider as f64) + 2.;
+        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl().0 {
+            progress * self.problem_def.recipe.progress_modifier as f64 * 0.01
+        } else {
+            progress
+        }
     }
 
     /// Generates the next state from the given delta, including sampling the new condition.
     pub fn gen_succ<R: Rng>(self, delta: StateDelta, condition_rng: &mut R) -> Self {
         Self {
-            condition: self.condition.sample(condition_rng),
+            condition: if delta.time_passed {
+                self.condition.sample(condition_rng)
+            } else {
+                self.condition
+            },
             ..self + delta
         }
     }

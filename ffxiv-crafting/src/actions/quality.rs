@@ -334,11 +334,7 @@ impl CanExecute for TrainedEye {
         state.first_step
             && !C::EXPERT
             && (state.problem_def.character.char_level as i8
-                - state
-                    .problem_def
-                    .recipe
-                    .recipe_level
-                    .to_player_facing_level() as i8)
+                - state.problem_def.recipe.required_character_level as i8)
                 >= 10
     }
 }
