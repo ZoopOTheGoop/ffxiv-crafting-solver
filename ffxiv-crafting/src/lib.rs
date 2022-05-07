@@ -234,6 +234,16 @@ where
             },
         }
     }
+
+    /// Clamps durability, quality, and progress into their possible ranges, and returns a variant of the state
+    /// with the clamped values.
+    pub fn clamp_maxes(mut self) -> Self {
+        self.curr_quality = self.curr_quality.min(self.problem_def.recipe.max_quality);
+        self.curr_durability = self.curr_durability.max(0);
+        self.curr_progress = self.curr_progress.min(self.problem_def.recipe.max_progress);
+
+        self
+    }
 }
 
 /// The outcome of executing an [`Action`] on a given [`CraftingState`]. This is analogous to
