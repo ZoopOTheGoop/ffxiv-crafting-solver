@@ -4,7 +4,6 @@ on:
   push:
     branches: [ canary ]
   pull_request:
-    branches: [ canary ]
 
 env:
   CARGO_TERM_COLOR: always
