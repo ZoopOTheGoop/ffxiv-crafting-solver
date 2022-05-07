@@ -96,4 +96,5 @@ impl QualityMap for CollectabilityMap {
 
 /// The collectability of an item, for turnins. The tiers
 /// are recipe (or at least rlvl) specific and should be mapped by the user.
+#[derive(Clone, Copy, Hash, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct Collectability(pub u32);
