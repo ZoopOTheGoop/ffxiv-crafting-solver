@@ -11,6 +11,8 @@ use ffxiv_crafting_derive::Condition;
 use rand::distributions::Distribution;
 
 pub(crate) mod tables;
+#[cfg(test)]
+mod tests;
 
 use tables::{
     CpUsageModifier, DurabilityModifier, ProgressModifier, QualityModifier, StatusDurationModifier,
