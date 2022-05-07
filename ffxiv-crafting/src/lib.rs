@@ -57,6 +57,21 @@ where
     quality_map: PhantomData<M>,
 }
 
+impl<C, M> CraftingSimulator<C, M>
+where
+    C: Condition + Copy,
+    M: QualityMap,
+{
+    /// Builds a new simulation for a given character making a given recipe.
+    pub fn from_character_recipe(character: CharacterStats, recipe: Recipe<C>) -> Self {
+        CraftingSimulator {
+            character,
+            recipe,
+            quality_map: PhantomData {},
+        }
+    }
+}
+
 /// The stats of the a FFXIV character - these are *after* any buffs
 /// or food. It can look up `clvl` based on your character level.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -151,7 +166,7 @@ where
         let control = self.problem_def.character.control as f64;
 
         let quality = (control * 10.) / (self.problem_def.recipe.quality_divider as f64) + 35.;
-        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl.0 {
+        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl().0 {
             quality * self.problem_def.recipe.quality_modifier as f64 * 0.01
         } else {
             quality
@@ -164,7 +179,7 @@ where
 
         let progress =
             (craftsmanship * 10.) / (self.problem_def.recipe.progress_divider as f64) + 2.;
-        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl.0 {
+        if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl().0 {
             progress * self.problem_def.recipe.progress_modifier as f64 * 0.01
         } else {
             progress

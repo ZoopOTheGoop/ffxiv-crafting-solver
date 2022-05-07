@@ -18,6 +18,12 @@ mod tables;
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord, Debug)]
 pub struct RLvl(pub u16);
 
+impl Default for RLvl {
+    fn default() -> Self {
+        RLvl(1)
+    }
+}
+
 impl RLvl {
     /// The minimum RLvl value. The internal tables are zero-indexed, but 0 contains a dummy value so this is 1
     pub const MIN_RLVL: u16 = 1;
@@ -88,6 +94,11 @@ impl RLvl {
     pub const fn base_durability(self) -> u16 {
         tables::BASE_DURABILITY[self.0 as usize]
     }
+
+    /// The number of stars in the recipe descriptor, e.g. an 80** recipe would return 2.
+    pub const fn recipe_stars(self) -> u8 {
+        tables::RECIPE_STARS[self.0 as usize]
+    }
 }
 
 /// Represents all the parameters of an FFXIV recipe needed for simulation. This looks up table values
@@ -98,24 +109,76 @@ impl RLvl {
 /// these values are calculated off of internal lookup tables.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Recipe<C: Condition> {
-    pub rlvl: RLvl,
+    /// The RLvl that defines most of the properties of this recipe.
+    rlvl: RLvl,
 
+    /// The minimum level a crafter must be to make this recipe.
     pub required_character_level: u8,
+    /// The number of stars on the recipe, e.g. 80**.
     pub stars: u8,
 
+    /// The size of the quality bar.
     pub max_quality: u32,
+    /// The size of the progress bar.
     pub max_progress: u32,
+    /// The size of the durability bar.
     pub max_durability: i8,
 
-    pub control_modifier: u32,
-
+    /// Pairs with `quality_modifier` in computation of the base effects
+    /// of synthesis actions before ability modifiers are applied.
     pub quality_divider: u16,
+    /// Pairs with `progress_divider` in computation of the base effects
+    /// of synthesis actions before ability modifiers are applied.
     pub progress_divider: u16,
 
+    /// Pairs with `quality_divider` in computation of the base effects
+    /// of synthesis actions before ability modifiers are applied.
     pub quality_modifier: u16,
+    /// Pairs with `progress_modifier` in computation of the base effects
+    /// of synthesis actions before ability modifiers are applied.
     pub progress_modifier: u16,
 
+    /// The recipe-specific modifier that determines this recipe's max durability. An integer-valued percentage.
+    max_durability_mod: u16,
+    /// The recipe-specific modifier that determines this recipe's max durability. An integer-valued percentage.
+    max_quality_mod: u16,
+    /// The recipe-specific modifier that determines this recipe's max durability. An integer-valued percentage.
+    max_progress_mod: u16,
+
     _pd: PhantomData<C>,
+}
+
+impl<C: Condition> Recipe<C> {
+    /// The underlying rlvl, this is not modifiable because it's needed for
+    /// computing other values.
+    pub fn rlvl(self) -> RLvl {
+        self.rlvl
+    }
+
+    /// Recomputes the public struct values from the underlying `RLvl` and recipe-derived max
+    /// value modifiers. These fields are hidden to prevent potential corruption. All these values
+    /// are verified during construction, but are not re-verified here as they cannot change.
+    pub fn compute_rlvl_values(&mut self) {
+        self.required_character_level = self.rlvl.character_level();
+        self.stars = self.rlvl.recipe_stars();
+
+        // We need to verify this is right, durability has to be a rounding unless there's a weird order of operations
+        // because truncation results in 34 durability for some recipes. Not sure about the rest, though.
+
+        let durability_mod = self.max_durability_mod as f32 / 100.;
+        let quality_mod = self.max_quality_mod as f32 / 100.;
+        let progress_mod = self.max_progress as f32 / 100.;
+
+        self.max_quality = (self.rlvl.base_quality() as f32 * quality_mod).round() as u32;
+        self.max_durability = (self.rlvl.base_durability() as f32 * durability_mod).round() as i8;
+        self.max_progress = (self.rlvl.base_progress() as f32 * progress_mod).round() as u32;
+
+        self.quality_divider = self.rlvl.quality_divider();
+        self.progress_divider = self.rlvl.progress_divider();
+
+        self.quality_modifier = self.rlvl.quality_modifier();
+        self.progress_modifier = self.rlvl.progress_modifier();
+    }
 }
 
 impl<C: Condition + fmt::Debug + Default> Recipe<C> {
@@ -129,9 +192,9 @@ impl<C: Condition + fmt::Debug + Default> Recipe<C> {
     /// durability modifier columns in the recipe file, and I've seen references to the `RLVL_PROGRESS` before during ShB-times.
     pub fn try_from_rlvl_modifiers(
         rlvl: RLvl,
-        quality_mod: u16,
-        progress_mod: u16,
-        durability_mod: u16,
+        max_quality_mod: u16,
+        max_progress_mod: u16,
+        max_durability_mod: u16,
     ) -> Result<Self, RecipeError<C>> {
         if !rlvl.verify_bounds() {
             return Err(RecipeError::RLvlOutOfBounds(rlvl));
@@ -147,9 +210,28 @@ impl<C: Condition + fmt::Debug + Default> Recipe<C> {
             });
         }
 
-        let durability_mod: f32 = durability_mod as f32 / 100.;
+        let mut me = Recipe {
+            rlvl,
+            max_quality_mod,
+            max_progress_mod,
+            max_durability_mod,
 
-        todo!()
+            required_character_level: 0,
+            stars: 0,
+
+            max_quality: 0,
+            max_progress: 0,
+            max_durability: 0,
+            quality_divider: 0,
+            progress_divider: 0,
+            quality_modifier: 0,
+            progress_modifier: 0,
+            _pd: PhantomData {},
+        };
+
+        me.compute_rlvl_values();
+
+        Ok(me)
     }
 }
 
