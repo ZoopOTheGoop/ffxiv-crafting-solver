@@ -127,6 +127,11 @@ impl Buff for HeartAndSoul {
 
 impl ConsumableBuff for HeartAndSoul {
     fn deactivate(self) -> (Self, u8) {
-        (Self::Inactive, 0)
+        debug_assert_eq!(
+            self,
+            HeartAndSoul::Active,
+            "Attempted to deactivate deactivated HeartAndSoul"
+        );
+        (Self::Inactive, u8::MAX)
     }
 }

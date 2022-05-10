@@ -387,3 +387,143 @@ mod durability {
         }
     }
 }
+
+mod misc {
+    use super::*;
+
+    mod specialist {
+        use crate::buffs::misc::SpecialistActions;
+
+        #[cfg(debug_assertions)]
+        #[test]
+        #[should_panic(expected = "Too many delineations")]
+        fn too_many() {
+            SpecialistActions::Availalble(5).actions_available();
+        }
+
+        #[cfg(debug_assertions)]
+        #[test]
+        #[should_panic(expected = "Shouldn't be marked as available with 0 delineations")]
+        fn bad_zero() {
+            SpecialistActions::Availalble(0).actions_available();
+        }
+
+        #[test]
+        fn should_be_available() {
+            assert!(SpecialistActions::Availalble(3).actions_available());
+        }
+
+        #[test]
+        fn shouldnt_be_available_out() {
+            assert!(!SpecialistActions::Unavailable.actions_available());
+        }
+
+        #[test]
+        fn shouldnt_be_available_no_specialist() {
+            assert!(!SpecialistActions::NotSpecialist.actions_available());
+        }
+
+        #[test]
+        fn shouldnt_be_unavailable() {
+            assert!(!SpecialistActions::Availalble(3).actions_unavailable());
+        }
+
+        #[test]
+        fn should_be_unavailable_out() {
+            assert!(SpecialistActions::Unavailable.actions_unavailable());
+        }
+
+        #[test]
+        fn should_be_unavailable_no_specialist() {
+            assert!(SpecialistActions::NotSpecialist.actions_unavailable());
+        }
+
+        #[test]
+        fn run_out() {
+            assert_eq!(
+                SpecialistActions::Availalble(1) - 1,
+                SpecialistActions::Unavailable
+            );
+        }
+
+        #[test]
+        fn still_available() {
+            assert_eq!(
+                SpecialistActions::Availalble(2) - 1,
+                SpecialistActions::Availalble(1)
+            );
+        }
+
+        #[cfg(debug_assertions)]
+        #[test]
+        #[should_panic(expected = "Action should only use one delineation at a time")]
+        fn bad_subtract() {
+            let _ = SpecialistActions::Availalble(2) - 2;
+        }
+    }
+
+    mod heart_and_soul {
+        use super::*;
+        use crate::buffs::misc::HeartAndSoul;
+
+        // Since Heart and Soul has no duration (it lasts until used up), it's not a durational buff
+        // so we have to reimplement some of the tests
+
+        #[test]
+        fn activate() {
+            assert_eq!(HeartAndSoul::Inactive.activate(), HeartAndSoul::Active);
+        }
+
+        #[test]
+        fn activate_in_place() {
+            let mut has = HeartAndSoul::Inactive;
+            has.activate_in_place();
+
+            assert!(has.is_active());
+        }
+
+        #[test]
+        fn is_active() {
+            assert!(HeartAndSoul::Active.is_active());
+        }
+
+        #[test]
+        fn is_not_active() {
+            assert!(!HeartAndSoul::Inactive.is_active());
+        }
+
+        #[test]
+        fn is_inactive() {
+            assert!(HeartAndSoul::Inactive.is_inactive());
+        }
+
+        #[test]
+        fn is_not_inactive() {
+            assert!(!HeartAndSoul::Active.is_inactive());
+        }
+
+        #[test]
+        fn deactivate() {
+            test_deactivate(HeartAndSoul::Active, u8::MAX);
+        }
+
+        #[test]
+        fn deactivate_in_place() {
+            test_deactivate_in_place(HeartAndSoul::Active, u8::MAX);
+        }
+
+        #[cfg(debug_assertions)]
+        #[test]
+        #[should_panic(expected = "Attempted to deactivate deactivated HeartAndSoul")]
+        fn deactivate_panic() {
+            test_deactivate_panic(HeartAndSoul::Inactive);
+        }
+
+        #[cfg(debug_assertions)]
+        #[test]
+        #[should_panic(expected = "Attempted to deactivate deactivated HeartAndSoul")]
+        fn deactivate_in_place_panic() {
+            test_deactivate_in_place_panic(HeartAndSoul::Inactive);
+        }
+    }
+}
