@@ -101,7 +101,9 @@ impl Sub<u8> for Veneration {
         debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
 
         match self {
-            Self::Active(val) => Self::Active(val - rhs),
+            Self::Active(0) => unreachable!(),
+            Self::Active(1) => Self::Inactive,
+            Self::Active(val @ 2..) => Self::Active(val - rhs),
             Self::Inactive => Self::Inactive,
         }
     }
@@ -153,7 +155,7 @@ impl MuscleMemory {
     /// synthesis action. 100 if active and 0 otherwise.
     fn bonus_efficiency(&self) -> u16 {
         if self.is_active() {
-            100
+            Self::BONUS
         } else {
             0
         }
@@ -190,7 +192,9 @@ impl Sub<u8> for MuscleMemory {
         debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
 
         match self {
-            Self::Active(val) => Self::Active(val - rhs),
+            Self::Active(0) => unreachable!(),
+            Self::Active(1) => Self::Inactive,
+            Self::Active(val @ 2..) => Self::Active(val - rhs),
             Self::Inactive => Self::Inactive,
         }
     }
@@ -285,7 +289,9 @@ impl Sub<u8> for FinalAppraisal {
         debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
 
         match self {
-            Self::Active(val) => Self::Active(val - rhs),
+            Self::Active(0) => unreachable!(),
+            Self::Active(1) => Self::Inactive,
+            Self::Active(val @ 2..) => Self::Active(val - rhs),
             Self::Inactive => Self::Inactive,
         }
     }

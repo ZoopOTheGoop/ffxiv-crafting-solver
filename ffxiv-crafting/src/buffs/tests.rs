@@ -527,3 +527,131 @@ mod misc {
         }
     }
 }
+
+mod progress {
+    use super::*;
+
+    mod veneration {
+        use super::*;
+        use crate::buffs::progress::Veneration;
+
+        #[test]
+        fn activate() {
+            test_activate(Veneration::Inactive);
+        }
+
+        #[test]
+        fn activate_in_place() {
+            test_activate_in_place(Veneration::Inactive);
+        }
+
+        #[test]
+        fn decay() {
+            test_decay(Veneration::Inactive, true)
+        }
+
+        #[test]
+        fn decay_in_place() {
+            test_decay_in_place(Veneration::Inactive, true)
+        }
+
+        #[test]
+        fn reactivate() {
+            test_reactivate(Veneration::Active(1), true);
+        }
+    }
+
+    mod muscle_memory {
+        use super::*;
+        use crate::buffs::progress::MuscleMemory;
+
+        #[test]
+        fn activate() {
+            test_activate(MuscleMemory::Inactive);
+        }
+
+        #[test]
+        fn activate_in_place() {
+            test_activate_in_place(MuscleMemory::Inactive);
+        }
+
+        #[test]
+        fn decay() {
+            test_decay(MuscleMemory::Inactive, true)
+        }
+
+        #[test]
+        fn decay_in_place() {
+            test_decay_in_place(MuscleMemory::Inactive, true)
+        }
+
+        #[test]
+        fn deactivate() {
+            test_deactivate_helper(MuscleMemory::Inactive);
+        }
+
+        #[test]
+        fn deactivate_in_place() {
+            test_deactivate_in_place_helper(MuscleMemory::Inactive);
+        }
+
+        #[test]
+        #[should_panic(expected = "Attempt to deactivate inactive Muscle Memory")]
+        fn deactivate_panic() {
+            test_deactivate_panic(MuscleMemory::Inactive);
+        }
+
+        #[test]
+        #[should_panic(expected = "Attempt to deactivate inactive Muscle Memory")]
+        fn deactivate_in_place_panic() {
+            test_deactivate_in_place_panic(MuscleMemory::Inactive);
+        }
+    }
+
+    mod final_appraisal {
+        use super::*;
+        use crate::buffs::progress::FinalAppraisal;
+
+        #[test]
+        fn activate() {
+            test_activate(FinalAppraisal::Inactive);
+        }
+
+        #[test]
+        fn activate_in_place() {
+            test_activate_in_place(FinalAppraisal::Inactive);
+        }
+
+        #[test]
+        fn decay() {
+            test_decay(FinalAppraisal::Inactive, true)
+        }
+
+        #[test]
+        fn decay_in_place() {
+            test_decay_in_place(FinalAppraisal::Inactive, true)
+        }
+
+        #[test]
+        fn deactivate() {
+            test_deactivate_helper(FinalAppraisal::Inactive);
+        }
+
+        #[test]
+        fn deactivate_in_place() {
+            test_deactivate_in_place_helper(FinalAppraisal::Inactive);
+        }
+
+        #[test]
+        #[should_panic(expected = "Attempt to deactivate inactive Final Appraisal")]
+        fn deactivate_panic() {
+            test_deactivate_panic(FinalAppraisal::Inactive);
+        }
+
+        #[test]
+        #[should_panic(expected = "Attempt to deactivate inactive Final Appraisal")]
+        fn deactivate_in_place_panic() {
+            test_deactivate_in_place_panic(FinalAppraisal::Inactive);
+        }
+    }
+}
