@@ -655,3 +655,83 @@ mod progress {
         }
     }
 }
+
+mod quality {
+    use super::*;
+
+    mod great_strides {
+        use super::*;
+        use crate::buffs::quality::GreatStrides;
+
+        #[test]
+        fn activate() {
+            test_activate(GreatStrides::Inactive);
+        }
+
+        #[test]
+        fn activate_in_place() {
+            test_activate_in_place(GreatStrides::Inactive);
+        }
+
+        #[test]
+        fn decay() {
+            test_decay(GreatStrides::Inactive, true)
+        }
+
+        #[test]
+        fn decay_in_place() {
+            test_decay_in_place(GreatStrides::Inactive, true)
+        }
+
+        #[test]
+        fn deactivate() {
+            test_deactivate_helper(GreatStrides::Inactive);
+        }
+
+        #[test]
+        fn deactivate_in_place() {
+            test_deactivate_in_place_helper(GreatStrides::Inactive);
+        }
+
+        #[test]
+        #[should_panic(expected = "Attempt to consume Great Strides when it's not active")]
+        fn deactivate_panic() {
+            test_deactivate_panic(GreatStrides::Inactive);
+        }
+
+        #[test]
+        #[should_panic(expected = "Attempt to consume Great Strides when it's not active")]
+        fn deactivate_in_place_panic() {
+            test_deactivate_in_place_panic(GreatStrides::Inactive);
+        }
+    }
+
+    mod innovation {
+        use super::*;
+        use crate::buffs::quality::Innovation;
+
+        #[test]
+        fn activate() {
+            test_activate(Innovation::Inactive);
+        }
+
+        #[test]
+        fn activate_in_place() {
+            test_activate_in_place(Innovation::Inactive);
+        }
+
+        #[test]
+        fn decay() {
+            test_decay(Innovation::Inactive, true)
+        }
+
+        #[test]
+        fn decay_in_place() {
+            test_decay_in_place(Innovation::Inactive, true)
+        }
+    }
+
+    mod inner_quiet {
+        /* Left blank, it makes more sense for now to test this under actions since the observable effect is in context */
+    }
+}
