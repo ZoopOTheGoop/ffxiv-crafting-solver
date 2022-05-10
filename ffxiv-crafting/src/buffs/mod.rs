@@ -16,6 +16,9 @@ pub mod misc;
 pub mod progress;
 pub mod quality;
 
+#[cfg(test)]
+mod tests;
+
 /// The basic form of a crafting buff. Since buffs can be a lot of different forms, the only
 /// thing they really have in common is the fact that they can be inactive or active.
 ///

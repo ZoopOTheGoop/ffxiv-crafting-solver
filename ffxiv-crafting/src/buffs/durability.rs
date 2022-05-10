@@ -92,7 +92,9 @@ impl Sub<u8> for Manipulation {
         debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
 
         match self {
-            Self::Active(val) => Self::Active(val - rhs),
+            Self::Active(0) => unreachable!(),
+            Self::Active(1) => Self::Inactive,
+            Self::Active(val @ 2..) => Self::Active(val - rhs),
             Self::Inactive => Self::Inactive,
         }
     }
@@ -190,7 +192,9 @@ impl Sub<u8> for WasteNot {
         debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
 
         match self {
-            Self::WasteNot(ref mut val) | Self::WasteNot2(ref mut val) => {
+            Self::WasteNot(0) | Self::WasteNot2(0) => unreachable!(),
+            Self::WasteNot(1) | Self::WasteNot2(1) => Self::Inactive,
+            Self::WasteNot(ref mut val @ 2..) | Self::WasteNot2(ref mut val @ 2..) => {
                 *val -= 1;
                 self
             }
@@ -201,13 +205,6 @@ impl Sub<u8> for WasteNot {
 
 impl SubAssign<u8> for WasteNot {
     fn sub_assign(&mut self, rhs: u8) {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
-
-        match self {
-            Self::WasteNot(ref mut val) | Self::WasteNot2(ref mut val) => {
-                *val -= 1;
-            }
-            _ => {}
-        }
+        *self = self.sub(rhs);
     }
 }
