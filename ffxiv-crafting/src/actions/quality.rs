@@ -77,6 +77,19 @@ impl BuffAction for BasicTouch {
         so_far.combo.basic_touch.activate(0);
         so_far.quality.inner_quiet += 1;
     }
+
+    fn deactivate_buff<C, M>(
+        &self,
+        _state: &CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: Condition,
+        M: QualityMap,
+    {
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        }
+    }
 }
 
 /// A risky, costless quality increasing move. Will do nothing but consume
@@ -130,6 +143,19 @@ impl BuffAction for StandardTouch {
         so_far.quality.inner_quiet += 1;
         if matches!(so_far.combo.basic_touch, BasicTouchCombo::BasicTouch) {
             so_far.combo.basic_touch = BasicTouchCombo::StandardTouch;
+        }
+    }
+
+    fn deactivate_buff<C, M>(
+        &self,
+        _state: &CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: Condition,
+        M: QualityMap,
+    {
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
         }
     }
 }
@@ -186,6 +212,19 @@ impl BuffAction for ByregotsBlessing {
     {
         so_far.quality.inner_quiet.deactivate();
     }
+
+    fn deactivate_buff<C, M>(
+        &self,
+        _state: &CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: Condition,
+        M: QualityMap,
+    {
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        }
+    }
 }
 
 /// An efficient quality-increasing action that costs as much as [`BasicTouch`], and has
@@ -217,6 +256,10 @@ impl BuffAction for PreciseTouch {
     {
         if !(state.condition.is_excellent() || state.condition.is_good()) {
             so_far.heart_and_soul.deactivate_in_place();
+        }
+
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
         }
     }
 

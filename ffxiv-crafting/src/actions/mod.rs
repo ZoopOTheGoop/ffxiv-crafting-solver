@@ -16,6 +16,9 @@ pub mod misc;
 pub mod progress;
 pub mod quality;
 
+#[cfg(test)]
+mod tests;
+
 use self::{
     buffs::BuffAction,
     errors::{ActionError, ActionResult},
