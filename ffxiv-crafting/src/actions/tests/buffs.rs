@@ -6,14 +6,12 @@
 use std::num::NonZeroU8;
 
 use crate::{
-    actions::{Action, ActionOutcome, CpCost},
+    actions::{buffs::*, Action, ActionOutcome, CpCost},
     buffs::{self, DurationalBuff},
     CraftingState,
 };
 
 use super::CLASSICAL_SIMULATOR;
-
-use crate::actions::buffs::*;
 
 #[test]
 fn veneration() {
