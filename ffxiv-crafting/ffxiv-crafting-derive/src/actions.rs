@@ -477,13 +477,14 @@ pub fn time_passed(input: TokenStream) -> TokenStream {
         .iter()
         .filter_map(|v| v.parse_meta().ok())
         .filter_map(|v| {
-            if let Meta::List(list) = v {
-                Some(list)
+            if let Meta::Path(path) = v {
+                Some(path)
             } else {
                 None
             }
         })
-        .any(|v| v.path.is_ident(TAG));
+        .any(|v| v.is_ident(TAG));
+    
 
     quote!(
         #[automatically_derived]

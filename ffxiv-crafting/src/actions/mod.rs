@@ -250,7 +250,7 @@ pub trait Action: Sized + ActionComponents {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
         // Don't check CP or viability yet, prospectively execute
-        delta.added_cp = self.cp_cost(state);
+        delta.added_cp = -self.cp_cost(state);
 
         delta.added_progress = self.progress(state);
         let appraised = state.buffs.progress.final_appraisal.handle_progress(
@@ -269,7 +269,8 @@ pub trait Action: Sized + ActionComponents {
 
         self.deactivate_buff(state, &mut delta.new_buffs);
 
-        if self.time_passed(state) {
+        delta.time_passed = self.time_passed(state);
+        if delta.time_passed {
             delta.new_buffs.decay();
         } else {
             // Combo actions still fail to trigger after using
@@ -300,7 +301,7 @@ pub trait Action: Sized + ActionComponents {
     {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
-        delta.added_cp = self.cp_cost(state);
+        delta.added_cp = -self.cp_cost(state);
 
         #[cfg(debug_assertions)]
         let can_act = self.can_execute(state);
@@ -335,7 +336,8 @@ pub trait Action: Sized + ActionComponents {
 
         self.deactivate_buff(state, &mut delta.new_buffs);
 
-        if self.time_passed(state) {
+        delta.time_passed = self.time_passed(state);
+        if delta.time_passed {
             delta.new_buffs.decay();
         } else {
             // Combo actions still fail to trigger after using
@@ -513,7 +515,8 @@ pub trait CpCost {
             return 0;
         }
 
-        if Self::CP_COST > 0 {
+        // This is here for Tricks of the Trade, the only CP-giving action, and will compile out otherwise.
+        if Self::CP_COST < 0 {
             return if state.condition.is_good() || state.condition.is_excellent() {
                 Self::CP_COST
             } else {
