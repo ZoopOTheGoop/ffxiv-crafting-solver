@@ -2,8 +2,6 @@
 
 use std::ops::{Sub, SubAssign};
 
-use derivative::Derivative;
-
 use super::{Buff, ConsumableBuff};
 
 /// Denotes the number of crafters' delineations the character has left, if any, or
@@ -14,11 +12,10 @@ use super::{Buff, ConsumableBuff};
 ///
 /// [`CarefulObservation`]: crate::actions::misc::CarefulObservation
 /// [`HeartAndSoul`]: crate::actions::buffs::HeartAndSoul
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 pub enum SpecialistActions {
     /// The crafter is not a specialist.
-    #[derivative(Default)]
+    #[default]
     NotSpecialist,
     /// The crafter is a specialist, but has no delineations (or
     /// has used all 3 allowed charges already).
@@ -90,11 +87,10 @@ impl SubAssign<u8> for SpecialistActions {
 /// [`quality`]: crate::actions::quality
 /// [`HeartAndSoul`]: crate::actions::buffs::HeartAndSoul
 /// [`TricksOfTheTrade`]: crate::actions::misc::TricksOfTheTrade
-#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
 pub enum HeartAndSoul {
     /// This buff is currently not active and gives no benefit.
-    #[derivative(Default)]
+    #[default]
     Inactive,
     /// This buff is active and will apply its modifier to its
     /// associated actions.

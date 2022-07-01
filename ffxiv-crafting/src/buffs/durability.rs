@@ -2,8 +2,6 @@
 
 use std::num::NonZeroU8;
 
-use derivative::Derivative;
-
 use super::{Buff, DurationalBuff};
 use ffxiv_crafting_derive::{Buff, DurationalBuff};
 
@@ -83,11 +81,10 @@ impl Manipulation {
 ///
 /// [`WasteNot`]: crate::actions::buffs::WasteNot
 /// [`WasteNot2`]: crate::actions::buffs::WasteNot2
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum WasteNot {
     /// This buff is currently not active and gives no benefit.
-    #[derivative(Default)]
+    #[default]
     Inactive,
     /// This buff was activated by the action [`WasteNot`] and is giving
     /// its benefit.

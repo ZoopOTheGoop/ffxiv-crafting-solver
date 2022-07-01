@@ -177,10 +177,9 @@ where
     }
 }
 
-#[derive(Derivative, PartialEq, PartialOrd, Debug, Copy, Clone)]
-#[derivative(Default)]
+#[derive(Default, PartialEq, PartialOrd, Debug, Copy, Clone)]
 pub enum RandomTransition {
-    #[derivative(Default)]
+    #[default]
     None,
     RealAction {
         action: GridAction,

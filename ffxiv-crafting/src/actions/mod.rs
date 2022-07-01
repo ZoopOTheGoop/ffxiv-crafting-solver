@@ -3,7 +3,6 @@
 
 use std::ops::{Add, AddAssign};
 
-use derivative::Derivative;
 use rand::Rng;
 
 use crate::{buffs::BuffState, conditions::Condition, quality_map::QualityMap, CraftingState};
@@ -41,8 +40,7 @@ mod prelude {
 ///
 /// This does not check if the state it's being added to matches the state it was generated from,
 /// so it's up to the user to keep these values together.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct StateDelta {
     added_quality: u32,
     added_progress: u32,
@@ -52,7 +50,6 @@ pub struct StateDelta {
     added_cp: i16,
 
     /// Whether the step count increased/we should redo conditions/decay buffs
-    #[derivative(Default(value = "true"))]
     pub time_passed: bool,
 
     final_appraisal_triggered: bool,

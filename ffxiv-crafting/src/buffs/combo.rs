@@ -4,8 +4,6 @@
 //! [`MuscleMemory`]: crate::buffs::progress::MuscleMemory
 //! [`progress`]: crate::buffs::progress
 
-use derivative::Derivative;
-
 use super::{Buff, DurationalBuff};
 
 /// A collection of miscellaneous combo triggers that don't fit elsewhere.
@@ -42,13 +40,12 @@ impl ComboTriggers {
 /// [`BasicTouch`]: crate::actions::quality::BasicTouch
 /// [`StandardTouch`]: crate::actions::quality::StandardTouch
 /// [`AdvancedTouch`]: crate::actions::quality::StandardTouch
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum BasicTouchCombo {
     /// [`BasicTouch`] was not used last turn and its combo is unavailable.
     ///
     /// [`BasicTouch`]: crate::actions::quality::BasicTouch
-    #[derivative(Default)]
+    #[default]
     Inactive,
 
     /// [`BasicTouch`] was used last turn and its combo is available.
@@ -94,13 +91,12 @@ impl DurationalBuff for BasicTouchCombo {
 /// [`Observe`]: crate::actions::misc::Observe
 /// [`PatientTouch`]: crate::actions::quality::PatientTouch
 /// [`FocusedSynthesis`]: crate::actions::progress::FocusedSynthesis
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum ObserveCombo {
     /// [`Observe`] was not used last turn and its combo is unavailable.
     ///
     /// [`Observe`]: crate::actions::misc::Observe
-    #[derivative(Default)]
+    #[default]
     Inactive,
 
     /// [`Observe`] was used last turn and its combo is available.

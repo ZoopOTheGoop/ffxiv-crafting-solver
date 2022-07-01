@@ -6,7 +6,6 @@
 
 use std::error::Error;
 
-use derivative::Derivative;
 use ffxiv_crafting_derive::Condition;
 use rand::distributions::Distribution;
 
@@ -51,13 +50,12 @@ pub mod raw_conditions {
 /// [`exhaustive_patterns`]: https://github.com/rust-lang/rust/issues/51085
 /// [`PhantomData`]: std::marker::PhantomData
 #[derive(
-    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Default
 )]
-#[derivative(Default)]
 #[ffxiv(condition(bits = "NORMAL_CONDITIONS"))]
 pub enum NoQARegularConditions {
     /// Normal condition -- nothing special.
-    #[derivative(Default)]
+    #[default]
     Normal,
 
     /// 20% chance to occur, provides a 50% efficiency bonus
@@ -129,13 +127,12 @@ impl TryFrom<ConditionBits> for NoQARegularConditions {
 /// [`exhaustive_patterns`]: https://github.com/rust-lang/rust/issues/51085
 /// [`PhantomData`]: std::marker::PhantomData
 #[derive(
-    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Default
 )]
-#[derivative(Default)]
 #[ffxiv(condition(bits = "NORMAL_CONDITIONS"))]
 pub enum QARegularConditions {
     /// Normal condition -- nothing special.
-    #[derivative(Default)]
+    #[default]
     Normal,
 
     /// 25% chance to occur, provides a 50% efficiency bonus
@@ -217,13 +214,12 @@ impl Into<ConditionBits> for QARegularConditions {
 /// [`Good`]: RelicExpertConditions::Good
 /// [`Normal`]: RelicExpertConditions::Normal
 #[derive(
-    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Default
 )]
-#[derivative(Default)]
 #[ffxiv(condition(expert, bits = "EXPERT_CRAFT_1"))]
 pub enum RelicExpertConditions {
     /// Normal condition -- nothing special.
-    #[derivative(Default)]
+    #[default]
     Normal,
 
     /// 12% chance to occur, provides a 50% efficiency bonus
@@ -304,13 +300,12 @@ impl Into<ConditionBits> for RelicExpertConditions {
 /// [`Good`]: RestoExpertConditions::Good
 /// [`Normal`]: RestoExpertConditions::Normal
 #[derive(
-    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Derivative
+    Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Condition, Default
 )]
-#[derivative(Default)]
 #[ffxiv(condition(expert, bits = "EXPERT_CRAFT_2"))]
 pub enum RestoExpertConditions {
     /// Normal condition -- nothing special.
-    #[derivative(Default)]
+    #[default]
     Normal,
 
     /// 12% chance to occur, provides a 50% efficiency bonus
