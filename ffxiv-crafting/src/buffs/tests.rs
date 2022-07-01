@@ -597,12 +597,14 @@ mod progress {
             test_deactivate_in_place_helper(MuscleMemory(0));
         }
 
+        #[cfg(debug_assertions)]
         #[test]
         #[should_panic(expected = "Attempt to deactivate inactive MuscleMemory")]
         fn deactivate_panic() {
             test_deactivate_panic(MuscleMemory(0));
         }
 
+        #[cfg(debug_assertions)]
         #[test]
         #[should_panic(expected = "Attempt to deactivate inactive MuscleMemory")]
         fn deactivate_in_place_panic() {
@@ -644,12 +646,14 @@ mod progress {
             test_deactivate_in_place_helper(FinalAppraisal(0));
         }
 
+        #[cfg(debug_assertions)]
         #[test]
         #[should_panic(expected = "Attempt to deactivate inactive FinalAppraisal")]
         fn deactivate_panic() {
             test_deactivate_panic(FinalAppraisal(0));
         }
 
+        #[cfg(debug_assertions)]
         #[test]
         #[should_panic(expected = "Attempt to deactivate inactive FinalAppraisal")]
         fn deactivate_in_place_panic() {
@@ -695,12 +699,14 @@ mod quality {
             test_deactivate_in_place_helper(GreatStrides(0));
         }
 
+        #[cfg(debug_assertions)]
         #[test]
         #[should_panic(expected = "Attempt to deactivate inactive GreatStrides")]
         fn deactivate_panic() {
             test_deactivate_panic(GreatStrides(0));
         }
 
+        #[cfg(debug_assertions)]
         #[test]
         #[should_panic(expected = "Attempt to deactivate inactive GreatStrides")]
         fn deactivate_in_place_panic() {
