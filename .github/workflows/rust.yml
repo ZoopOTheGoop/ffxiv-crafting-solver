@@ -18,13 +18,16 @@ jobs:
         with:
           rust-version: stable
           components: clippy
-      - name: Build | Lint
+      - name: Build | Check
+        env:
+          RUSTFLAGS: -D warnings
+        run: cargo check
+      - name: Build | Clippy
         run: cargo clippy -- -D warnings
   compile:
     name: Compile
     runs-on: ubuntu-latest
-    env: 
-      RUSTFLAGS: -D warnings
+      
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v2
@@ -54,4 +57,6 @@ jobs:
         with:
           rust-version: stable
       - name: Build | Compile
+        run: cargo build --profile test
+      - name: Run | Tests
         run: cargo test
