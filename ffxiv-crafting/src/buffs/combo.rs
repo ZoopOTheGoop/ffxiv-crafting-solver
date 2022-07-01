@@ -4,8 +4,6 @@
 //! [`MuscleMemory`]: crate::buffs::progress::MuscleMemory
 //! [`progress`]: crate::buffs::progress
 
-use std::ops::{Sub, SubAssign};
-
 use derivative::Derivative;
 
 use super::{Buff, DurationalBuff};
@@ -36,8 +34,6 @@ impl ComboTriggers {
         self.observation.decay_in_place();
     }
 }
-
-/* We may want to profile these to see if they're better off `bool`s. I'm only doing this for uniformity */
 
 /// Denotes the combo between [`BasicTouch`], [`StandardTouch`], and [`AdvancedTouch`]. Three moves
 /// that, when used after the previous one in the chain, inherit the low CP cost of [`BasicTouch`], but
@@ -79,20 +75,16 @@ impl DurationalBuff for BasicTouchCombo {
     fn activate(self, _: u8) -> Self {
         Self::BasicTouch
     }
-}
 
-impl Sub<u8> for BasicTouchCombo {
-    type Output = Self;
-
-    fn sub(self, rhs: u8) -> Self {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
+    fn decay(self) -> Self {
         Self::Inactive
     }
-}
 
-impl SubAssign<u8> for BasicTouchCombo {
-    fn sub_assign(&mut self, rhs: u8) {
-        *self = self.sub(rhs)
+    fn remaining_duration(&self) -> Option<u8> {
+        match *self {
+            Self::Inactive => None,
+            _ => Some(1),
+        }
     }
 }
 
@@ -129,19 +121,15 @@ impl DurationalBuff for ObserveCombo {
     fn activate(self, _: u8) -> Self {
         Self::Active
     }
-}
 
-impl Sub<u8> for ObserveCombo {
-    type Output = Self;
-
-    fn sub(self, rhs: u8) -> Self {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
+    fn decay(self) -> Self {
         Self::Inactive
     }
-}
 
-impl SubAssign<u8> for ObserveCombo {
-    fn sub_assign(&mut self, rhs: u8) {
-        *self = self.sub(rhs)
+    fn remaining_duration(&self) -> Option<u8> {
+        match *self {
+            Self::Inactive => None,
+            _ => Some(1),
+        }
     }
 }

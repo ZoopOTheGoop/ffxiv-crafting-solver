@@ -282,41 +282,43 @@ mod durability {
 
         #[test]
         fn repair_inactive() {
-            assert_eq!(Manipulation::Inactive.repair(), 0);
+            assert_eq!(Manipulation(0).repair(), 0);
         }
 
         #[test]
         fn repair_active() {
-            assert_eq!(Manipulation::Active(0).repair(), Manipulation::REPAIR_VALUE);
+            assert_eq!(Manipulation(1).repair(), Manipulation::REPAIR_VALUE);
         }
 
         #[test]
         fn activate() {
-            test_activate(Manipulation::Inactive);
+            test_activate(Manipulation(0));
         }
 
         #[test]
         fn activate_in_place() {
-            test_activate_in_place(Manipulation::Inactive);
+            test_activate_in_place(Manipulation(0));
         }
 
         #[test]
         fn decay() {
-            test_decay(Manipulation::Inactive, true)
+            test_decay(Manipulation(0), true)
         }
 
         #[test]
         fn decay_in_place() {
-            test_decay_in_place(Manipulation::Inactive, true)
+            test_decay_in_place(Manipulation(0), true)
         }
 
         #[test]
         fn reactivate() {
-            test_reactivate(Manipulation::Active(0), true);
+            test_reactivate(Manipulation(1), true);
         }
     }
 
     mod waste_not {
+        use std::num::NonZeroU8;
+
         use super::*;
         use crate::buffs::durability::WasteNot;
 
@@ -328,7 +330,7 @@ mod durability {
         #[test]
         fn cost_mod_active() {
             assert_eq!(
-                WasteNot::WasteNot(2).durability_cost_mod(),
+                WasteNot::WasteNot(NonZeroU8::new(2).unwrap()).durability_cost_mod(),
                 WasteNot::DISCOUNT
             );
         }
@@ -336,7 +338,7 @@ mod durability {
         #[test]
         fn cost_mod_active_2() {
             assert_eq!(
-                WasteNot::WasteNot2(2).durability_cost_mod(),
+                WasteNot::WasteNot2(NonZeroU8::new(2).unwrap()).durability_cost_mod(),
                 WasteNot::DISCOUNT
             );
         }
@@ -363,26 +365,26 @@ mod durability {
 
         #[test]
         fn reactivate() {
-            test_reactivate(WasteNot::WasteNot(0), true);
+            test_reactivate(WasteNot::WasteNot(NonZeroU8::new(1).unwrap()), true);
         }
 
         #[test]
         fn waste_not_2_logic() {
             assert_eq!(
                 WasteNot::Inactive.activate(0),
-                WasteNot::WasteNot(WasteNot::BASE_DURATION)
+                WasteNot::WasteNot(NonZeroU8::new(WasteNot::BASE_DURATION).unwrap())
             );
             assert_eq!(
                 WasteNot::Inactive.activate(2),
-                WasteNot::WasteNot(WasteNot::BASE_DURATION + 2)
+                WasteNot::WasteNot(NonZeroU8::new(WasteNot::BASE_DURATION + 2).unwrap())
             );
             assert_eq!(
                 WasteNot::Inactive.activate(4),
-                WasteNot::WasteNot2(WasteNot::BASE_DURATION + 4)
+                WasteNot::WasteNot2(NonZeroU8::new(WasteNot::BASE_DURATION + 4).unwrap())
             );
             assert_eq!(
                 WasteNot::Inactive.activate(6),
-                WasteNot::WasteNot2(WasteNot::BASE_DURATION + 6)
+                WasteNot::WasteNot2(NonZeroU8::new(WasteNot::BASE_DURATION + 6).unwrap())
             );
         }
     }
@@ -537,27 +539,27 @@ mod progress {
 
         #[test]
         fn activate() {
-            test_activate(Veneration::Inactive);
+            test_activate(Veneration(0));
         }
 
         #[test]
         fn activate_in_place() {
-            test_activate_in_place(Veneration::Inactive);
+            test_activate_in_place(Veneration(0));
         }
 
         #[test]
         fn decay() {
-            test_decay(Veneration::Inactive, true)
+            test_decay(Veneration(0), true)
         }
 
         #[test]
         fn decay_in_place() {
-            test_decay_in_place(Veneration::Inactive, true)
+            test_decay_in_place(Veneration(0), true)
         }
 
         #[test]
         fn reactivate() {
-            test_reactivate(Veneration::Active(1), true);
+            test_reactivate(Veneration(1), true);
         }
     }
 
@@ -567,44 +569,44 @@ mod progress {
 
         #[test]
         fn activate() {
-            test_activate(MuscleMemory::Inactive);
+            test_activate(MuscleMemory(0));
         }
 
         #[test]
         fn activate_in_place() {
-            test_activate_in_place(MuscleMemory::Inactive);
+            test_activate_in_place(MuscleMemory(0));
         }
 
         #[test]
         fn decay() {
-            test_decay(MuscleMemory::Inactive, true)
+            test_decay(MuscleMemory(0), true)
         }
 
         #[test]
         fn decay_in_place() {
-            test_decay_in_place(MuscleMemory::Inactive, true)
+            test_decay_in_place(MuscleMemory(0), true)
         }
 
         #[test]
         fn deactivate() {
-            test_deactivate_helper(MuscleMemory::Inactive);
+            test_deactivate_helper(MuscleMemory(0));
         }
 
         #[test]
         fn deactivate_in_place() {
-            test_deactivate_in_place_helper(MuscleMemory::Inactive);
+            test_deactivate_in_place_helper(MuscleMemory(0));
         }
 
         #[test]
-        #[should_panic(expected = "Attempt to deactivate inactive Muscle Memory")]
+        #[should_panic(expected = "Attempt to deactivate inactive MuscleMemory")]
         fn deactivate_panic() {
-            test_deactivate_panic(MuscleMemory::Inactive);
+            test_deactivate_panic(MuscleMemory(0));
         }
 
         #[test]
-        #[should_panic(expected = "Attempt to deactivate inactive Muscle Memory")]
+        #[should_panic(expected = "Attempt to deactivate inactive MuscleMemory")]
         fn deactivate_in_place_panic() {
-            test_deactivate_in_place_panic(MuscleMemory::Inactive);
+            test_deactivate_in_place_panic(MuscleMemory(0));
         }
     }
 
@@ -614,44 +616,44 @@ mod progress {
 
         #[test]
         fn activate() {
-            test_activate(FinalAppraisal::Inactive);
+            test_activate(FinalAppraisal(0));
         }
 
         #[test]
         fn activate_in_place() {
-            test_activate_in_place(FinalAppraisal::Inactive);
+            test_activate_in_place(FinalAppraisal(0));
         }
 
         #[test]
         fn decay() {
-            test_decay(FinalAppraisal::Inactive, true)
+            test_decay(FinalAppraisal(0), true)
         }
 
         #[test]
         fn decay_in_place() {
-            test_decay_in_place(FinalAppraisal::Inactive, true)
+            test_decay_in_place(FinalAppraisal(0), true)
         }
 
         #[test]
         fn deactivate() {
-            test_deactivate_helper(FinalAppraisal::Inactive);
+            test_deactivate_helper(FinalAppraisal(0));
         }
 
         #[test]
         fn deactivate_in_place() {
-            test_deactivate_in_place_helper(FinalAppraisal::Inactive);
+            test_deactivate_in_place_helper(FinalAppraisal(0));
         }
 
         #[test]
-        #[should_panic(expected = "Attempt to deactivate inactive Final Appraisal")]
+        #[should_panic(expected = "Attempt to deactivate inactive FinalAppraisal")]
         fn deactivate_panic() {
-            test_deactivate_panic(FinalAppraisal::Inactive);
+            test_deactivate_panic(FinalAppraisal(0));
         }
 
         #[test]
-        #[should_panic(expected = "Attempt to deactivate inactive Final Appraisal")]
+        #[should_panic(expected = "Attempt to deactivate inactive FinalAppraisal")]
         fn deactivate_in_place_panic() {
-            test_deactivate_in_place_panic(FinalAppraisal::Inactive);
+            test_deactivate_in_place_panic(FinalAppraisal(0));
         }
     }
 }
@@ -665,44 +667,44 @@ mod quality {
 
         #[test]
         fn activate() {
-            test_activate(GreatStrides::Inactive);
+            test_activate(GreatStrides(0));
         }
 
         #[test]
         fn activate_in_place() {
-            test_activate_in_place(GreatStrides::Inactive);
+            test_activate_in_place(GreatStrides(0));
         }
 
         #[test]
         fn decay() {
-            test_decay(GreatStrides::Inactive, true)
+            test_decay(GreatStrides(0), true)
         }
 
         #[test]
         fn decay_in_place() {
-            test_decay_in_place(GreatStrides::Inactive, true)
+            test_decay_in_place(GreatStrides(0), true)
         }
 
         #[test]
         fn deactivate() {
-            test_deactivate_helper(GreatStrides::Inactive);
+            test_deactivate_helper(GreatStrides(0));
         }
 
         #[test]
         fn deactivate_in_place() {
-            test_deactivate_in_place_helper(GreatStrides::Inactive);
+            test_deactivate_in_place_helper(GreatStrides(0));
         }
 
         #[test]
-        #[should_panic(expected = "Attempt to consume Great Strides when it's not active")]
+        #[should_panic(expected = "Attempt to deactivate inactive GreatStrides")]
         fn deactivate_panic() {
-            test_deactivate_panic(GreatStrides::Inactive);
+            test_deactivate_panic(GreatStrides(0));
         }
 
         #[test]
-        #[should_panic(expected = "Attempt to consume Great Strides when it's not active")]
+        #[should_panic(expected = "Attempt to deactivate inactive GreatStrides")]
         fn deactivate_in_place_panic() {
-            test_deactivate_in_place_panic(GreatStrides::Inactive);
+            test_deactivate_in_place_panic(GreatStrides(0));
         }
     }
 
@@ -712,22 +714,22 @@ mod quality {
 
         #[test]
         fn activate() {
-            test_activate(Innovation::Inactive);
+            test_activate(Innovation(0));
         }
 
         #[test]
         fn activate_in_place() {
-            test_activate_in_place(Innovation::Inactive);
+            test_activate_in_place(Innovation(0));
         }
 
         #[test]
         fn decay() {
-            test_decay(Innovation::Inactive, true)
+            test_decay(Innovation(0), true)
         }
 
         #[test]
         fn decay_in_place() {
-            test_decay_in_place(Innovation::Inactive, true)
+            test_decay_in_place(Innovation(0), true)
         }
     }
 
