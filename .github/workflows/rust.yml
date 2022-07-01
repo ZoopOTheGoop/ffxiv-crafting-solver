@@ -23,6 +23,8 @@ jobs:
   compile:
     name: Compile
     runs-on: ubuntu-latest
+    env: 
+      RUSTFLAGS: -D warnings
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v2
@@ -31,7 +33,7 @@ jobs:
         with:
           rust-version: stable
       - name: Build | Compile
-        run: cargo check -- -D warnings
+        run: cargo check
   test:
     name: Test
     strategy:
