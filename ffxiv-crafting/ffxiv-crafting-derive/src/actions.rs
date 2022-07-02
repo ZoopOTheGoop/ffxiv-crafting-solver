@@ -101,7 +101,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             };
             quote!(
                 so_far.quality.inner_quiet += #magnitude;
-                
+
                 if so_far.quality.great_strides.is_active(){
                     so_far.quality.great_strides.deactivate_in_place();
                 }
@@ -484,7 +484,6 @@ pub fn time_passed(input: TokenStream) -> TokenStream {
             }
         })
         .any(|v| v.is_ident(TAG));
-    
 
     quote!(
         #[automatically_derived]

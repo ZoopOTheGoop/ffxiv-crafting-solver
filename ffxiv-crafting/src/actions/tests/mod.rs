@@ -9,10 +9,11 @@ use rand::RngCore;
 
 use crate::{
     actions::Action,
+    buffs::{Buff, BuffState},
     conditions::QARegularConditions,
     quality_map::HQMap,
     recipe::{RLvl, Recipe},
-    CharacterStats, CraftingSimulator, CraftingState, buffs::{BuffState, Buff},
+    CharacterStats, CraftingSimulator, CraftingState,
 };
 
 use super::{ActionOutcome, StateDelta};
@@ -107,7 +108,8 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         let result = self.state + self.delta;
 
         assert_eq!(
-            result.curr_cp, self.state.curr_cp - amount,
+            result.curr_cp,
+            self.state.curr_cp - amount,
             "Applying {} does not cost/give {} CP;\n\tstate: {:?}\n\tresult: {:?}\n\tdelta: {:?}",
             self.name,
             amount,
@@ -125,11 +127,17 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         let result = self.state + self.delta;
 
         let expected = match self.state.buffs.specialist_actions {
-            SpecialistActions::Availalble(n @ 2..=u8::MAX) => SpecialistActions::Availalble(n-1),
+            SpecialistActions::Availalble(n @ 2..=u8::MAX) => SpecialistActions::Availalble(n - 1),
             SpecialistActions::Availalble(1) => SpecialistActions::Unavailable,
             SpecialistActions::Availalble(0) => unreachable!(),
-            SpecialistActions::NotSpecialist => panic!("Action {} should not execute - character is not specialist", self.name),
-            SpecialistActions::Unavailable => panic!("Action {} should not execute - out of specialist actions", self.name),
+            SpecialistActions::NotSpecialist => panic!(
+                "Action {} should not execute - character is not specialist",
+                self.name
+            ),
+            SpecialistActions::Unavailable => panic!(
+                "Action {} should not execute - out of specialist actions",
+                self.name
+            ),
         };
 
         assert_eq!(
@@ -156,8 +164,11 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
 
         assert_eq!(
             result, expected,
-            "Applying {} did not change the correct things\n\texpected: {:?}\n\tresult: {:?}\n\tdelta: {:?}", 
-            self.name, expected, result, self.delta, 
+            "Applying {} did not change the correct things\n\texpected: {:?}\n\tresult: {:?}\n\tdelta: {:?}",
+            self.name,
+            expected,
+            result,
+            self.delta,
         );
 
         self
@@ -176,22 +187,28 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
 
     fn passed_time(self, should_pass_time: bool) -> Self {
         if self.delta.time_passed && !should_pass_time {
-            panic!("Applying {} causes time to pass when it shouldn't;\n\tstate:{:?}, delta: {:?}", self.name, self.state, self.delta);
+            panic!(
+                "Applying {} causes time to pass when it shouldn't;\n\tstate:{:?}, delta: {:?}",
+                self.name, self.state, self.delta
+            );
         } else if !self.delta.time_passed && should_pass_time {
-            panic!("Applying {} doesn't cause time to pass when it should;\n\tstate:{:?}, delta: {:?}", self.name, self.state, self.delta);
+            panic!(
+                "Applying {} doesn't cause time to pass when it should;\n\tstate:{:?}, delta: {:?}",
+                self.name, self.state, self.delta
+            );
         }
 
         self
     }
 
-    fn triggered_buff<B, F1>(self, buff: B, get_buff: F1) -> Self 
+    fn triggered_buff<B, F1>(self, buff: B, get_buff: F1) -> Self
     where
-         B: Buff+Eq+Debug,
+        B: Buff + Eq + Debug,
         F1: Fn(BuffState) -> B,
     {
         let result = self.state + self.delta;
-        assert_eq!(get_buff(result.buffs), buff, 
-            "Applying {} does not cause buff {:?} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}", 
+        assert_eq!(get_buff(result.buffs), buff,
+            "Applying {} does not cause buff {:?} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}",
             self.name, buff, self.state, result, self.delta
         );
 
@@ -201,11 +218,10 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
     fn changed_durability(self, change: i8) -> Self {
         let result = self.state + self.delta;
 
-        assert_eq!(self.state.curr_durability + change, result.curr_durability, 
-            "Applying {} does not cause durability {} of {} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}", 
+        assert_eq!(self.state.curr_durability + change, result.curr_durability,
+            "Applying {} does not cause durability {} of {} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}",
         self.name, if change <= 0 { "loss" } else { "gain" }, change, self.state, result, self.delta);
 
         self
     }
-
 }
