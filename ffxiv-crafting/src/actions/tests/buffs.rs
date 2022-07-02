@@ -22,7 +22,8 @@ fn veneration() {
         .triggered_buff(
             buffs::progress::Veneration::default().activate(0),
             |buffs| buffs.progress.veneration,
-        );
+        )
+        .changed_durability(0);
 }
 
 #[test]
@@ -35,7 +36,8 @@ fn waste_not() {
             // Be explicit on this one to check the right variant
             buffs::durability::WasteNot::WasteNot(NonZeroU8::new(4).unwrap()),
             |buffs| buffs.durability.waste_not,
-        );
+        )
+        .changed_durability(0);
 }
 
 #[test]
@@ -47,7 +49,8 @@ fn great_strides() {
         .triggered_buff(
             buffs::quality::GreatStrides::default().activate(0),
             |buffs| buffs.quality.great_strides,
-        );
+        )
+        .changed_durability(0);
 }
 
 #[test]
@@ -58,7 +61,8 @@ fn innovation() {
         .passed_time(true)
         .triggered_buff(buffs::quality::Innovation::default().activate(0), |buffs| {
             buffs.quality.innovation
-        });
+        })
+        .changed_durability(0);
 }
 
 #[test]
@@ -70,7 +74,8 @@ fn final_appraisal() {
         .triggered_buff(
             buffs::progress::FinalAppraisal::default().activate(0),
             |buffs| buffs.progress.final_appraisal,
-        );
+        )
+        .changed_durability(0);
 }
 
 #[test]
@@ -83,7 +88,8 @@ fn waste_not_2() {
             // Be explicit on this one to check the right variant
             buffs::durability::WasteNot::WasteNot2(NonZeroU8::new(8).unwrap()),
             |buffs| buffs.durability.waste_not,
-        );
+        )
+        .changed_durability(0);
 }
 
 #[test]
@@ -96,7 +102,8 @@ fn manipulation() {
             // Be explicit on this one to check the right variant
             buffs::durability::Manipulation::default().activate(0),
             |buffs| buffs.durability.manipulation,
-        );
+        )
+        .changed_durability(0);
 }
 
 #[test]
@@ -112,5 +119,6 @@ fn heart_and_soul() {
         .passed_time(false)
         .triggered_buff(buffs::misc::HeartAndSoul::Active, |buffs| {
             buffs.heart_and_soul
-        });
+        })
+        .changed_durability(0);
 }

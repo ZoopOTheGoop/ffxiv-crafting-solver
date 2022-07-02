@@ -186,13 +186,26 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
 
     fn triggered_buff<B, F1>(self, buff: B, get_buff: F1) -> Self 
     where
-        B: Buff+Eq+Debug,
+         B: Buff+Eq+Debug,
         F1: Fn(BuffState) -> B,
     {
         let result = self.state + self.delta;
-        assert_eq!(get_buff(result.buffs), buff, "Applying {} does not cause buff {:?} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}", 
-        self.name, buff, self.state, result, self.delta);
+        assert_eq!(get_buff(result.buffs), buff, 
+            "Applying {} does not cause buff {:?} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}", 
+            self.name, buff, self.state, result, self.delta
+        );
 
         self
     }
+
+    fn changed_durability(self, change: i8) -> Self {
+        let result = self.state + self.delta;
+
+        assert_eq!(self.state.curr_durability + change, result.curr_durability, 
+            "Applying {} does not cause durability {} of {} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}", 
+        self.name, if change <= 0 { "loss" } else { "gain" }, change, self.state, result, self.delta);
+
+        self
+    }
+
 }
