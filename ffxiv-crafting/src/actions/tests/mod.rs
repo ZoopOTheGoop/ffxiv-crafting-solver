@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 mod buffs;
+mod quality;
 
 use std::fmt::Debug;
 
@@ -221,6 +222,19 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         assert_eq!(self.state.curr_durability + change, result.curr_durability,
             "Applying {} does not cause durability {} of {} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}",
         self.name, if change <= 0 { "loss" } else { "gain" }, change, self.state, result, self.delta);
+
+        self
+    }
+
+    fn added_quality(self, quality: u32) -> Self {
+        let result = self.state + self.delta;
+
+        assert_eq!(
+            self.state.curr_quality, result.curr_quality,
+            "Applying {} does not cause quality \
+            to be increased by {};\n\tstate:{:?}, result: {:?}, delta: {:?}",
+            self.name, quality, self.state, result, self.delta
+        );
 
         self
     }

@@ -30,7 +30,8 @@ impl QualityBuffs {
 
     /// Calculates the efficiency bonuses granted by these buffs.
     pub fn efficiency_mod(&self) -> u16 {
-        self.great_strides.efficiency_mod() + self.innovation.efficiency_mod()
+        self.inner_quiet.efficiency_bonus()
+            * (100 + self.great_strides.efficiency_mod() + self.innovation.efficiency_mod())
     }
 }
 
@@ -75,28 +76,9 @@ pub trait QualityEfficiencyMod: DurationalBuff {
     Buff,
     ConsumableBuff
 )]
-pub struct InnerQuiet(pub(super) u8);
+pub struct InnerQuiet(u8);
 
 impl InnerQuiet {
-    /// Returns the [`InnerQuiet`] quality modifier, which is 20% per stack added on to
-    /// the character's current `control`.
-    pub fn quality_mod(&self, control: u16) -> f64 {
-        match *self {
-            Self(stacks @ 1..=u8::MAX) => {
-                debug_assert!(
-                    stacks <= MAX_IQ,
-                    "IQ stacks somehow exceeded max; {} > {}",
-                    stacks,
-                    MAX_IQ
-                );
-                control as f64 + control as f64 * ((stacks as f64 - 1.) * 20. / 100.)
-            }
-            // Needs testing, hard to tell if this should be 0, `control`, or -20% from
-            // the doc
-            Self(0) => control as f64,
-        }
-    }
-
     /// Retrieves the number of stacks.
     ///
     /// [`Inactive`]: InnerQuiet::Inactive
@@ -106,7 +88,14 @@ impl InnerQuiet {
 
     /// Returns the additive bonus to efficiency granted by inner quiet
     pub fn efficiency_bonus(&self) -> u16 {
-        (self.stacks() as u16) * 10
+        debug_assert!(
+            self.0 <= MAX_IQ,
+            "IQ stacks somehow exceeded max; {} > {}",
+            self.0,
+            MAX_IQ
+        );
+
+        (self.stacks() as u16) * 100
     }
 }
 

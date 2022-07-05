@@ -26,13 +26,10 @@ pub trait QualityAction {
         M: QualityMap,
     {
         if Self::EFFICIENCY == 0 {
-            return 0.;
+            0.
+        } else {
+            (Self::EFFICIENCY * state.buffs.quality.efficiency_mod()) as f64 / 100.
         }
-
-        let efficiency_mod = (100. + state.buffs.quality.efficiency_mod() as f64) / 100.;
-
-        efficiency_mod
-            * (Self::EFFICIENCY + state.buffs.quality.inner_quiet.efficiency_bonus()) as f64
     }
 
     /// Returns the amount of quality that will be added by executing the given `action` in the current `state`.
@@ -53,7 +50,7 @@ pub trait QualityAction {
         let condition_mod = state.condition.to_quality_modifier() as u64 as f64 / 100.;
         let efficiency = self.efficiency(state);
 
-        ((quality * condition_mod).floor() * efficiency) as u32
+        ((quality * condition_mod * efficiency) / 100.) as u32
     }
 }
 
@@ -74,7 +71,7 @@ impl BuffAction for BasicTouch {
         C: Condition,
         M: QualityMap,
     {
-        so_far.combo.basic_touch.activate(0);
+        so_far.combo.basic_touch.activate_in_place(0);
         so_far.quality.inner_quiet += 1;
     }
 
