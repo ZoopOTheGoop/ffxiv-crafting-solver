@@ -56,6 +56,8 @@ pub trait QualityAction {
 
 use ffxiv_crafting_derive::*;
 
+use super::{failure::NullFailure, RandomAction};
+
 /// The most basic quality increasing action. Combos with [`StandardTouch`].
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
@@ -290,13 +292,30 @@ impl CanExecute for PrudentTouch {
 /// [`Observe`]: crate::actions::misc::Observe
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[derive(CanExecute, BuffAction, ActionLevel, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 68)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_buff_act(touch)]
-#[ffxiv_rand_act(chance = 50, class = "combo_observe")]
 pub struct FocusedTouch;
+
+impl RandomAction for FocusedTouch {
+    const FAIL_RATE: u8 = 50;
+
+    type FailAction = NullFailure<Self>;
+
+    fn fail_rate<C: Condition, M: QualityMap>(&self, state: &CraftingState<C, M>) -> u8 {
+        if !state.buffs.combo.observation.is_active() {
+            Self::FAIL_RATE
+        } else {
+            0
+        }
+    }
+
+    fn fail_action(&self) -> Self::FailAction {
+        NullFailure(*self)
+    }
+}
 
 /// A starter action that can only be used on the first turn. It raises quality as much as a
 /// [`BasicTouch`], for a little extra CP. However, it starts your [`InnerQuiet`] stacks off

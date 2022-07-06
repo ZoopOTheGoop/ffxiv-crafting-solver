@@ -74,6 +74,8 @@ pub trait ProgressAction {
 
 use ffxiv_crafting_derive::*;
 
+use super::{failure::NullFailure, RandomAction};
+
 /// The most basic progress-increasing ability. It has 120 efficiency (after level 31) and no cost,
 /// other than the standard 10 durability taken off.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
@@ -179,13 +181,30 @@ impl ProgressAction for CarefulSynthesis {
 /// [`Observe`]: crate::actions::misc::Observe
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, CpCost, DurabilityFactor)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[derive(CanExecute, BuffAction, ActionLevel, TimePassing, Action)]
 #[ffxiv_cp(cost = 5)]
 #[ffxiv_progress(efficiency = 200)]
 #[ffxiv_act_lvl(level = 67)]
-#[ffxiv_rand_act(fail_rate = 50, class = "combo_observe")]
 #[ffxiv_buff_act(synthesis)]
 pub struct FocusedSynthesis;
+
+impl RandomAction for FocusedSynthesis {
+    const FAIL_RATE: u8 = 50;
+
+    type FailAction = NullFailure<Self>;
+
+    fn fail_rate<C: Condition, M: QualityMap>(&self, state: &CraftingState<C, M>) -> u8 {
+        if !state.buffs.combo.observation.is_active() {
+            Self::FAIL_RATE
+        } else {
+            0
+        }
+    }
+
+    fn fail_action(&self) -> Self::FailAction {
+        NullFailure(*self)
+    }
+}
 
 /// An action with as much efficiency as [`MuscleMemory`] that can be used at any time.
 /// However, it costs twice the normal amount of durability and 18 CP, and only uses

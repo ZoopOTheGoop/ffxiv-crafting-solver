@@ -407,41 +407,15 @@ pub fn random_action(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_rand_act";
 
-    let attrs = [
-        (
-            CHANCE,
-            Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
-        ),
-        (
-            CLASS,
-            Box::new(attr_literal(CLASS)) as Box<FfxivAttrMatcher>,
-        ),
-    ]
+    let attrs = [(
+        CHANCE,
+        Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
+    )]
     .into_iter()
     .collect();
 
     let attrs = find_attributes(&ast, TAG, attrs);
     let chance = attrs.get(CHANCE).into_iter().map(|v| v.to_lit_int());
-
-    let fail_rate_class = attrs
-        .get(CLASS)
-        .into_iter()
-        .map(|v| v.to_lit_str())
-        .filter(|v| &*v.value() == "combo_observe")
-        .map(|_| {
-            quote!(
-                fn fail_rate<C: Condition, M: QualityMap>(
-                    &self,
-                    state: &CraftingState<C, M>,
-                ) -> u8 {
-                    if !state.buffs.combo.observation.is_active() {
-                        Self::FAIL_RATE
-                    } else {
-                        0
-                    }
-                }
-            )
-        });
 
     quote!(
         #[automatically_derived]
@@ -450,7 +424,6 @@ pub fn random_action(input: TokenStream) -> TokenStream {
             #(const FAIL_RATE: u8 = #chance;)*
             type FailAction = crate::actions::failure::NullFailure<Self>;
 
-            #(#fail_rate_class)*
 
             fn fail_action(&self) -> Self::FailAction {
                 if Self::FAIL_RATE == 0 {

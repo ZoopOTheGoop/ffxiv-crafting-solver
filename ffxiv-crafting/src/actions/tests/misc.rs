@@ -1,5 +1,10 @@
 use crate::{
-    actions::{misc::*, quality::BasicTouch, Action},
+    actions::{
+        misc::*,
+        progress::FocusedSynthesis,
+        quality::{BasicTouch, FocusedTouch},
+        Action, RandomAction,
+    },
     buffs::{self, DurationalBuff},
     conditions::QARegularConditions,
     CraftingState,
@@ -44,6 +49,35 @@ fn observe() {
         .triggered_buff(buffs::combo::ObserveCombo::Active, |buffs| {
             buffs.combo.observation
         });
+}
+
+#[test]
+fn observe_combo() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    assert_eq!(
+        FocusedSynthesis.fail_rate(&state),
+        50,
+        "Focused Synthesis fail rate wrong",
+    );
+    assert_eq!(
+        FocusedTouch.fail_rate(&state),
+        50,
+        "Focused Touch fail rate wrong"
+    );
+
+    let state = state + Observe.act(&state).outcome();
+    println!("{:?}", state);
+
+    assert_eq!(
+        FocusedSynthesis.fail_rate(&state),
+        0,
+        "Focused Synthesis does not alter fail rate on observation combo"
+    );
+    assert_eq!(
+        FocusedTouch.fail_rate(&state),
+        0,
+        "Focused Touch does not alter fail rate on observation combo"
+    );
 }
 
 #[test]
