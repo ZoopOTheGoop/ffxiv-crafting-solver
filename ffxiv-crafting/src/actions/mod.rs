@@ -269,14 +269,14 @@ pub trait Action: Sized + ActionComponents {
         delta.time_passed = self.time_passed(state);
         if delta.time_passed {
             delta.new_buffs.decay();
+
+            // Repair isn't applied during a "time stop" so it's in the branch rather
+            // than after.
+            delta.buff_repair = state.buffs.durability.repair();
         } else {
             // Combo actions still fail to trigger after using
             // time-agnostic actions
             delta.new_buffs.combo.decay();
-
-            // Repair isn't applied during a "time stop" so it's in the else rather
-            // than after.
-            delta.buff_repair = state.buffs.durability.repair();
         }
         self.buff(state, &mut delta.new_buffs);
 
