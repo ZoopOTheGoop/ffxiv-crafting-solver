@@ -18,6 +18,20 @@ pub trait ProgressAction {
     /// [`efficiency`]: ProgressAction::efficiency
     const EFFICIENCY: u16 = 0;
 
+    /// Calculates the base efficiency for this action. While theoretically this is
+    /// covered by the [`EFFICIENCY`] constant, a surprising number of synthesis actions
+    /// modify this based on level or context, but not the overall calculation.
+    ///
+    /// [`EFFICIENCY`]: ProgressAction::EFFICIENCY
+    #[allow(unused_variables)]
+    fn base_efficiency<C, M>(&self, state: &CraftingState<C, M>) -> u16
+    where
+        C: Condition,
+        M: QualityMap,
+    {
+        Self::EFFICIENCY
+    }
+
     /// Calculates the efficiency of the current action on the crafting state.
     /// By default this is simply the efficiency bonus granted buffs,
     /// multiplied by the action's efficiency.
@@ -30,10 +44,10 @@ pub trait ProgressAction {
             return 0.;
         }
 
-        let efficiency = Self::EFFICIENCY + state.buffs.progress.bonus_efficiency();
+        let efficiency = self.base_efficiency(state) + state.buffs.progress.bonus_efficiency();
         let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
 
-        efficiency_mod * efficiency as f64
+        (efficiency_mod * efficiency as f64) / 100.
     }
 
     /// Returns the amount of progress that will be added by executing the given `action` in the current `state`.
@@ -54,7 +68,7 @@ pub trait ProgressAction {
         let condition_mod = state.condition.to_progress_modifier() as u64 as f64 / 100.;
         let efficiency = self.efficiency(state);
 
-        (progress.floor() * condition_mod * efficiency) as u32
+        (progress * condition_mod * efficiency) as u32
     }
 }
 
@@ -73,21 +87,16 @@ pub struct BasicSynthesis;
 impl ProgressAction for BasicSynthesis {
     const EFFICIENCY: u16 = 100;
 
-    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    fn base_efficiency<C, M>(&self, state: &CraftingState<C, M>) -> u16
     where
         C: Condition,
         M: QualityMap,
     {
-        let efficiency = if state.problem_def.character.char_level >= 31 {
+        if state.problem_def.character.char_level >= 31 {
             120
         } else {
             Self::EFFICIENCY
-        };
-
-        let efficiency = efficiency + state.buffs.progress.bonus_efficiency();
-        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
-
-        efficiency_mod * efficiency as f64
+        }
     }
 }
 
@@ -108,21 +117,16 @@ pub struct RapidSynthesis;
 impl ProgressAction for RapidSynthesis {
     const EFFICIENCY: u16 = 250;
 
-    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    fn base_efficiency<C, M>(&self, state: &CraftingState<C, M>) -> u16
     where
         C: Condition,
         M: QualityMap,
     {
-        let efficiency = if state.problem_def.character.char_level >= 63 {
+        if state.problem_def.character.char_level >= 63 {
             500
         } else {
             Self::EFFICIENCY
-        };
-
-        let efficiency = efficiency + state.buffs.progress.bonus_efficiency();
-        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
-
-        efficiency_mod * efficiency as f64
+        }
     }
 }
 
@@ -152,21 +156,16 @@ pub struct CarefulSynthesis;
 impl ProgressAction for CarefulSynthesis {
     const EFFICIENCY: u16 = 150;
 
-    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    fn base_efficiency<C, M>(&self, state: &CraftingState<C, M>) -> u16
     where
         C: Condition,
         M: QualityMap,
     {
-        let efficiency = if state.problem_def.character.char_level >= 82 {
+        if state.problem_def.character.char_level >= 82 {
             180
         } else {
             Self::EFFICIENCY
-        };
-
-        let efficiency = efficiency + state.buffs.progress.bonus_efficiency();
-        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
-
-        efficiency_mod * efficiency as f64
+        }
     }
 }
 
@@ -210,7 +209,7 @@ pub struct Groundwork;
 impl ProgressAction for Groundwork {
     const EFFICIENCY: u16 = 300;
 
-    fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
+    fn base_efficiency<C, M>(&self, state: &CraftingState<C, M>) -> u16
     where
         C: Condition,
         M: QualityMap,
@@ -222,15 +221,11 @@ impl ProgressAction for Groundwork {
         };
 
         let durability = self.durability(&state.buffs, &state.condition);
-        let efficiency = if durability < state.curr_durability {
+        if state.curr_durability + durability < 0 {
             efficiency / 2
         } else {
             efficiency
-        };
-
-        let efficiency_mod = 100. + state.buffs.progress.efficiency_mod() as f64 / 100.;
-
-        efficiency_mod * efficiency as f64
+        }
     }
 }
 

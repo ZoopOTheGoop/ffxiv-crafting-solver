@@ -186,6 +186,7 @@ where
         } else {
             progress
         }
+        .floor()
     }
 
     /// Generates the next state from the given delta, including sampling the new condition.

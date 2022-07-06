@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 mod buffs;
+mod progress;
 mod quality;
 
 use std::fmt::Debug;
@@ -240,6 +241,24 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
             to be increased by {};\n\tstate:{:?},\n\tresult: {:?},\n\tdelta: {:?}",
             self.name,
             quality,
+            self.state,
+            result,
+            self.delta
+        );
+
+        self
+    }
+
+    fn added_progress(self, progress: u32) -> Self {
+        let result = self.state + self.delta;
+
+        assert_eq!(
+            progress,
+            result.curr_progress - self.state.curr_progress,
+            "Applying {} does not cause progress \
+            to be increased by {};\n\tstate:{:?},\n\tresult: {:?},\n\tdelta: {:?}",
+            self.name,
+            progress,
             self.state,
             result,
             self.delta
