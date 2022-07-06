@@ -50,7 +50,7 @@ fn pactmaker_pactmaker_rotation_with_hq_start() {
     let pactmaker = Recipe::try_from_rlvl_modifiers(RLvl(590), 160, 100, 100).unwrap();
     let sim = CraftingSimulator::from_character_recipe(TEST_STATS, pactmaker);
     let mut state = CraftingState::new_simulation(&sim);
-    state.curr_quality = 1791; // HQ Eblan Danburite
+    state.curr_quality = 1791; // HQ Eblan Danburite + Ophiotauros Leather
     let state = state;
 
     use FfxivCraftingActions::*;
