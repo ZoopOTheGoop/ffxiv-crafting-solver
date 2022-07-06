@@ -6,7 +6,7 @@
 use std::num::NonZeroU8;
 
 use crate::{
-    actions::buffs::*,
+    actions::{buffs::*, quality::BasicTouch, Action},
     buffs::{self, DurationalBuff},
     CraftingState,
 };
@@ -121,4 +121,18 @@ fn heart_and_soul() {
             buffs.heart_and_soul
         })
         .changed_durability(0);
+}
+
+#[test]
+fn verify_buff_tick() {
+    let mut state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    state.buffs.quality.innovation = buffs::quality::Innovation::default().activate(0);
+    let state = state;
+
+    let result = state + BasicTouch.act(&state).outcome();
+    assert_eq!(
+        result.buffs.quality.innovation,
+        state.buffs.quality.innovation.decay(),
+        "Buff duration did not decay down"
+    );
 }

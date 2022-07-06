@@ -42,6 +42,7 @@ pub struct Observe;
 #[ffxiv_cp(bonus = 20)]
 #[ffxiv_act_lvl(level = 13)]
 #[ffxiv_can_exe(class = "good_excellent")]
+#[ffxiv_durability(cost = 0)]
 pub struct TricksOfTheTrade;
 
 impl BuffAction for TricksOfTheTrade {

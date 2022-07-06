@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 mod buffs;
+mod misc;
 mod progress;
 mod quality;
 
@@ -225,7 +226,7 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         let result = self.state + self.delta;
 
         assert_eq!(self.state.curr_durability + change, result.curr_durability,
-            "Applying {} does not cause durability {} of {} to be applied;\n\tstate:{:?}, result: {:?}, delta: {:?}",
+            "Applying {} does not cause durability {} of {} to be applied;\n\tstate:{:?},\n\tresult: {:?},\n\tdelta: {:?}",
         self.name, if change <= 0 { "loss" } else { "gain" }, change, self.state, result, self.delta);
 
         self
