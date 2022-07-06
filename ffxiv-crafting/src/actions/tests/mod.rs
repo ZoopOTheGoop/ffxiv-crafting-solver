@@ -31,6 +31,9 @@ lazy_static! {
     /// This is for any Classical gear as of 6.1
     static ref TEST_RECIPE_CLASSICAL: Recipe<QARegularConditions> = Recipe::<QARegularConditions>::try_from_rlvl_modifiers(RLvl(580), 140, 100, 100).unwrap();
     static ref CLASSICAL_SIMULATOR: CraftingSimulator<QARegularConditions, HQMap> = CraftingSimulator::from_character_recipe(TEST_STATS, *TEST_RECIPE_CLASSICAL);
+
+    static ref LEVEL_ONE_RECIPE: Recipe<QARegularConditions> = Recipe::<QARegularConditions>::try_from_rlvl_modifiers(RLvl(1), 100, 100, 100).unwrap();
+    static ref LEVEL_ONE_SIMULATOR: CraftingSimulator<QARegularConditions, HQMap> = CraftingSimulator::from_character_recipe(TEST_STATS, *LEVEL_ONE_RECIPE);
 }
 
 struct NoUseRng;
@@ -113,8 +116,8 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
             self.state.curr_cp + amount,
             "Applying {} does not {} {} CP;\n\tstate: {:?}\n\tresult: {:?}\n\tdelta: {:?}",
             self.name,
-            amount,
             if amount <= 0 { "cost" } else { "give" },
+            amount,
             self.state,
             result,
             self.delta

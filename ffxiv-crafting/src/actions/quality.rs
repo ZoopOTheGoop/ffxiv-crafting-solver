@@ -380,7 +380,7 @@ impl CanExecute for TrainedEye {
 pub struct AdvancedTouch;
 
 impl CpCost for AdvancedTouch {
-    const CP_COST: i16 = 32;
+    const CP_COST: i16 = 46;
 
     fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
     where
@@ -413,6 +413,7 @@ impl CpCost for AdvancedTouch {
 #[ffxiv_cp(cost = 32)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 90)]
+#[ffxiv_durability(cost = 0)]
 pub struct TrainedFinesse;
 
 impl CanExecute for TrainedFinesse {

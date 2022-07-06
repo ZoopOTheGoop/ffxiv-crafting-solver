@@ -5,7 +5,7 @@ use crate::{
     CraftingState,
 };
 
-use super::{ActionTester, CLASSICAL_SIMULATOR};
+use super::{ActionTester, CLASSICAL_SIMULATOR, LEVEL_ONE_SIMULATOR};
 
 #[test]
 fn basic_touch() {
@@ -65,7 +65,7 @@ fn byregots_blessing() {
         .had_effect()
         .modified_cp(-24)
         .passed_time(true)
-        // Should consume IQ
+        // Consume IQ
         .triggered_buff(buffs::quality::InnerQuiet::default(), |buffs| {
             buffs.quality.inner_quiet
         })
@@ -83,7 +83,6 @@ fn precise_touch() {
         .had_effect()
         .modified_cp(-18)
         .passed_time(true)
-        // Should consume IQ
         .triggered_buff(buffs::quality::InnerQuiet::default() + 2, |buffs| {
             buffs.quality.inner_quiet
         })
@@ -103,7 +102,6 @@ fn prudent_touch() {
         .had_effect()
         .modified_cp(-25)
         .passed_time(true)
-        // Should consume IQ
         .triggered_buff(buffs::quality::InnerQuiet::default() + 1, |buffs| {
             buffs.quality.inner_quiet
         })
@@ -117,7 +115,6 @@ fn focused_touch() {
         .had_effect()
         .modified_cp(-18)
         .passed_time(true)
-        // Should consume IQ
         .triggered_buff(buffs::quality::InnerQuiet::default() + 1, |buffs| {
             buffs.quality.inner_quiet
         })
@@ -131,10 +128,105 @@ fn reflect() {
         .had_effect()
         .modified_cp(-6)
         .passed_time(true)
-        // Should consume IQ
         .triggered_buff(buffs::quality::InnerQuiet::default() + 2, |buffs| {
             buffs.quality.inner_quiet
         })
         .changed_durability(-10)
         .added_quality(252);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn reflect_second_step() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    // sets up an IQ stack in a real scenario, we can't get a valid number otherwise
+    let state = state + BasicTouch.prospective_act(&state).unwrap().outcome();
+
+    ActionTester::make(Reflect, "Reflect", Some(state));
+}
+
+#[test]
+fn preparatory_touch() {
+    ActionTester::make(PreparatoryTouch, "Preparatory Touch", None)
+        .had_effect()
+        .modified_cp(-40)
+        .passed_time(true)
+        .triggered_buff(buffs::quality::InnerQuiet::default() + 2, |buffs| {
+            buffs.quality.inner_quiet
+        })
+        .changed_durability(-20)
+        .added_quality(504);
+}
+
+#[test]
+fn trained_eye() {
+    let state = CraftingState::new_simulation(&LEVEL_ONE_SIMULATOR);
+
+    ActionTester::make(TrainedEye, "Trained Eye", Some(state))
+        .had_effect()
+        .modified_cp(-250)
+        .passed_time(true)
+        // Should not trigger IQ
+        .triggered_buff(buffs::quality::InnerQuiet::default(), |buffs| {
+            buffs.quality.inner_quiet
+        })
+        .changed_durability(0)
+        .added_quality(state.problem_def.recipe.max_quality);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn trained_eye_high_level() {
+    ActionTester::make(TrainedEye, "Trained Eye", None);
+}
+
+#[test]
+fn advanced_touch() {
+    ActionTester::make(AdvancedTouch, "Advanced Touch", None)
+        .had_effect()
+        .modified_cp(-46)
+        .passed_time(true)
+        // No combo trigger should be done
+        .triggered_buff(buffs::combo::BasicTouchCombo::Inactive, |buffs| {
+            buffs.combo.basic_touch
+        })
+        .triggered_buff(buffs::quality::InnerQuiet::default() + 1, |buffs| {
+            buffs.quality.inner_quiet
+        })
+        .changed_durability(-10)
+        .added_quality(378);
+}
+
+#[test]
+fn trained_finesse() {
+    // Normally I like to test in context, but generating 10 IQ stacks is annoying enough we'll just magic IQ to 10
+    let mut state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    state.buffs.quality.inner_quiet += 10;
+    let state = state;
+
+    ActionTester::make(TrainedFinesse, "Trained Finesse", Some(state))
+        .had_effect()
+        .modified_cp(-32)
+        .passed_time(true)
+        .triggered_buff(buffs::quality::InnerQuiet::default() + 10, |buffs| {
+            buffs.quality.inner_quiet
+        })
+        .changed_durability(0)
+        .added_quality(504);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn trained_finesse_bad_iq() {
+    ActionTester::make(TrainedFinesse, "Trained Finesse", None);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn trained_finesse_bad_iq_off_by_one() {
+    let mut state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    state.buffs.quality.inner_quiet += 9;
+    let state = state;
+
+    ActionTester::make(TrainedFinesse, "Trained Finesse", Some(state));
 }
