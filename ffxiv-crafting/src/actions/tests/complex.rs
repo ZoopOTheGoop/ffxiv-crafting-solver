@@ -1,10 +1,12 @@
 //! For complex sequences of actions, e.g. testing entire crafts
 
-use super::CLASSICAL_SIMULATOR;
+use super::{CLASSICAL_SIMULATOR, TEST_STATS};
 use crate::{
     actions::{collection::FfxivCraftingActions, Action, ActionOutcome},
-    quality_map::HQChance,
-    CraftingState,
+    conditions::QARegularConditions,
+    quality_map::{HQChance, HQMap},
+    recipe::{RLvl, Recipe},
+    CraftingSimulator, CraftingState,
 };
 
 #[test]
@@ -40,9 +42,58 @@ fn pactmaker_classical_rotation() {
         BasicSynthesis,
     ];
 
-    let mut state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    test_action_sequence(None, &ACTIONS);
+}
 
-    for (i, action) in ACTIONS.iter().take(ACTIONS.len() - 1).enumerate() {
+#[test]
+fn pactmaker_pactmaker_rotation_with_hq_start() {
+    let pactmaker = Recipe::try_from_rlvl_modifiers(RLvl(590), 160, 100, 100).unwrap();
+    let sim = CraftingSimulator::from_character_recipe(TEST_STATS, pactmaker);
+    let mut state = CraftingState::new_simulation(&sim);
+    state.curr_quality = 1791; // HQ Eblan Danburite
+    let state = state;
+
+    use FfxivCraftingActions::*;
+    const ACTIONS: [FfxivCraftingActions; 26] = [
+        MuscleMemory,
+        Veneration,
+        WasteNot,
+        Groundwork,
+        CarefulSynthesis,
+        CarefulSynthesis,
+        PreparatoryTouch,
+        Manipulation,
+        Innovation,
+        PrudentTouch,
+        PrudentTouch,
+        PrudentTouch,
+        PrudentTouch,
+        Innovation,
+        PrudentTouch,
+        BasicTouch,
+        StandardTouch,
+        AdvancedTouch,
+        Innovation,
+        TrainedFinesse,
+        TrainedFinesse,
+        TrainedFinesse,
+        Innovation,
+        GreatStrides,
+        ByregotsBlessing,
+        CarefulSynthesis,
+    ];
+
+    test_action_sequence(Some(state), &ACTIONS);
+}
+
+fn test_action_sequence(
+    initial_state: Option<CraftingState<QARegularConditions, HQMap>>,
+    actions: &[FfxivCraftingActions],
+) {
+    let mut state =
+        initial_state.unwrap_or_else(|| CraftingState::new_simulation(&CLASSICAL_SIMULATOR));
+
+    for (i, action) in actions.iter().take(actions.len() - 1).enumerate() {
         let outcome = action.act(&state);
         assert!(
             matches!(outcome, ActionOutcome::InProgress(_)),
@@ -55,7 +106,7 @@ fn pactmaker_classical_rotation() {
         state += outcome.outcome();
     }
 
-    let outcome = ACTIONS[ACTIONS.len() - 1].act(&state);
+    let outcome = actions[actions.len() - 1].act(&state);
 
     assert!(
         matches!(outcome, ActionOutcome::Completed(_)),
