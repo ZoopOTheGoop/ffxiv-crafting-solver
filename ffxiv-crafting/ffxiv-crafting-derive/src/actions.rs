@@ -314,7 +314,7 @@ pub fn durability(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::DurabilityFactor for #ident #type_generic #(#where_clause)* {
-            #(const DURABILITY_USAGE: i8 = -#val;)*
+            #(const DURABILITY_USAGE: i8 = #val;)*
         }
     )
     .into()

@@ -105,15 +105,16 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         }
     }
 
-    fn used_cp(self, amount: i16) -> Self {
+    fn modified_cp(self, amount: i16) -> Self {
         let result = self.state + self.delta;
 
         assert_eq!(
             result.curr_cp,
-            self.state.curr_cp - amount,
-            "Applying {} does not cost/give {} CP;\n\tstate: {:?}\n\tresult: {:?}\n\tdelta: {:?}",
+            self.state.curr_cp + amount,
+            "Applying {} does not {} {} CP;\n\tstate: {:?}\n\tresult: {:?}\n\tdelta: {:?}",
             self.name,
             amount,
+            if amount <= 0 { "cost" } else { "give" },
             self.state,
             result,
             self.delta

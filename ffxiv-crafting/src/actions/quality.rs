@@ -240,7 +240,9 @@ impl BuffAction for PreciseTouch {
         C: crate::conditions::Condition,
         M: crate::quality_map::QualityMap,
     {
-        if !(state.condition.is_excellent() || state.condition.is_good()) {
+        if !(state.condition.is_excellent() || state.condition.is_good())
+            && so_far.heart_and_soul.is_active()
+        {
             so_far.heart_and_soul.deactivate_in_place();
         }
 

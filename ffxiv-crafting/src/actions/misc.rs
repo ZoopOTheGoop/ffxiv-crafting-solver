@@ -2,7 +2,7 @@
 
 use ffxiv_crafting_derive::*;
 
-use crate::buffs::ConsumableBuff;
+use crate::buffs::{Buff, ConsumableBuff};
 
 use super::{buffs::BuffAction, CanExecute};
 
@@ -53,7 +53,9 @@ impl BuffAction for TricksOfTheTrade {
         C: crate::conditions::Condition,
         M: crate::quality_map::QualityMap,
     {
-        if !(state.condition.is_excellent() || state.condition.is_good()) {
+        if !(state.condition.is_excellent() || state.condition.is_good())
+            && so_far.heart_and_soul.is_active()
+        {
             so_far.heart_and_soul.deactivate_in_place();
         }
     }

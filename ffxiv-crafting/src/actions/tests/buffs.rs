@@ -6,7 +6,7 @@
 use std::num::NonZeroU8;
 
 use crate::{
-    actions::{buffs::*, CpCost},
+    actions::buffs::*,
     buffs::{self, DurationalBuff},
     CraftingState,
 };
@@ -17,7 +17,7 @@ use super::{ActionTester, CLASSICAL_SIMULATOR};
 fn veneration() {
     ActionTester::make(Veneration, "Veneration", None)
         .had_effect()
-        .used_cp(Veneration::CP_COST)
+        .modified_cp(-18)
         .passed_time(true)
         .triggered_buff(
             buffs::progress::Veneration::default().activate(0),
@@ -30,7 +30,7 @@ fn veneration() {
 fn waste_not() {
     ActionTester::make(WasteNot, "Waste Not", None)
         .had_effect()
-        .used_cp(WasteNot::CP_COST)
+        .modified_cp(-56)
         .passed_time(true)
         .triggered_buff(
             // Be explicit on this one to check the right variant
@@ -44,7 +44,7 @@ fn waste_not() {
 fn great_strides() {
     ActionTester::make(GreatStrides, "Great Strides", None)
         .had_effect()
-        .used_cp(GreatStrides::CP_COST)
+        .modified_cp(-32)
         .passed_time(true)
         .triggered_buff(
             buffs::quality::GreatStrides::default().activate(0),
@@ -57,7 +57,7 @@ fn great_strides() {
 fn innovation() {
     ActionTester::make(Innovation, "Innovation", None)
         .had_effect()
-        .used_cp(Innovation::CP_COST)
+        .modified_cp(-18)
         .passed_time(true)
         .triggered_buff(buffs::quality::Innovation::default().activate(0), |buffs| {
             buffs.quality.innovation
@@ -69,7 +69,7 @@ fn innovation() {
 fn final_appraisal() {
     ActionTester::make(FinalAppraisal, "Final Appraisal", None)
         .had_effect()
-        .used_cp(FinalAppraisal::CP_COST)
+        .modified_cp(-1)
         .passed_time(false)
         .triggered_buff(
             buffs::progress::FinalAppraisal::default().activate(0),
@@ -82,7 +82,7 @@ fn final_appraisal() {
 fn waste_not_2() {
     ActionTester::make(WasteNot2, "Waste Not 2", None)
         .had_effect()
-        .used_cp(WasteNot2::CP_COST)
+        .modified_cp(-98)
         .passed_time(true)
         .triggered_buff(
             // Be explicit on this one to check the right variant
@@ -96,7 +96,7 @@ fn waste_not_2() {
 fn manipulation() {
     ActionTester::make(Manipulation, "Manipulation", None)
         .had_effect()
-        .used_cp(Manipulation::CP_COST)
+        .modified_cp(-96)
         .passed_time(true)
         .triggered_buff(
             // Be explicit on this one to check the right variant
@@ -114,7 +114,7 @@ fn heart_and_soul() {
 
     ActionTester::make(HeartAndSoul, "Heart And Soul", Some(state))
         .had_effect()
-        .used_cp(0)
+        .modified_cp(0)
         .used_delineation()
         .passed_time(false)
         .triggered_buff(buffs::misc::HeartAndSoul::Active, |buffs| {
