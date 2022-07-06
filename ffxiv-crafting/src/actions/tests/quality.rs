@@ -1,5 +1,5 @@
 use crate::{
-    actions::{buffs::WasteNot, quality::*, Action},
+    actions::{buffs::WasteNot, quality::*, Action, RandomAction},
     buffs::{self},
     conditions::QARegularConditions,
     CraftingState,
@@ -25,7 +25,7 @@ fn basic_touch() {
 
 #[test]
 fn hasty_touch() {
-    // Note, this is assuming it succeeds, we'll test probability stuff elsewhere and the probability in codegen tests
+    assert_eq!(HastyTouch::FAIL_RATE, 40, "Hasty Touch has wrong fail rate");
 
     ActionTester::make(HastyTouch, "Hasty Touch", None)
         .had_effect()
@@ -53,6 +53,18 @@ fn standard_touch() {
         })
         .changed_durability(-10)
         .added_quality(315);
+}
+
+#[test]
+fn standard_touch_continues_combo() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + BasicTouch.act(&state).outcome();
+
+    ActionTester::make(StandardTouch, "Standard Touch", Some(state))
+        .modified_cp(-18)
+        .triggered_buff(buffs::combo::BasicTouchCombo::StandardTouch, |buffs| {
+            buffs.combo.basic_touch
+        });
 }
 
 #[test]
@@ -213,6 +225,35 @@ fn advanced_touch() {
         })
         .changed_durability(-10)
         .added_quality(378);
+}
+
+#[test]
+fn basic_touch_combo() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + BasicTouch.act(&state).outcome();
+
+    ActionTester::make(StandardTouch, "Standard Touch", Some(state))
+        .modified_cp(-18)
+        .triggered_buff(buffs::combo::BasicTouchCombo::StandardTouch, |buffs| {
+            buffs.combo.basic_touch
+        });
+    ActionTester::make(AdvancedTouch, "Advanced Touch", Some(state))
+        .modified_cp(-46)
+        .triggered_buff(buffs::combo::BasicTouchCombo::Inactive, |buffs| {
+            buffs.combo.basic_touch
+        });
+
+    let state = state + StandardTouch.act(&state).outcome();
+    ActionTester::make(StandardTouch, "Standard Touch", Some(state))
+        .modified_cp(-32)
+        .triggered_buff(buffs::combo::BasicTouchCombo::Inactive, |buffs| {
+            buffs.combo.basic_touch
+        });
+    ActionTester::make(AdvancedTouch, "Advanced Touch", Some(state))
+        .modified_cp(-18)
+        .triggered_buff(buffs::combo::BasicTouchCombo::Inactive, |buffs| {
+            buffs.combo.basic_touch
+        });
 }
 
 #[test]

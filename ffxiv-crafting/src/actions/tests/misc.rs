@@ -1,7 +1,8 @@
 use crate::{
     actions::{
+        buffs::GreatStrides,
         misc::*,
-        progress::FocusedSynthesis,
+        progress::{FocusedSynthesis, MuscleMemory},
         quality::{BasicTouch, FocusedTouch},
         Action, RandomAction,
     },
@@ -109,6 +110,31 @@ fn tricks_of_the_trade_unsaturated() {
 }
 
 #[test]
+fn tricks_of_the_trade_works_excellent() {
+    let mut state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    state.curr_cp -= 30;
+    state.condition = QARegularConditions::Excellent;
+    let state = state;
+
+    ActionTester::make(TricksOfTheTrade, "Tricks of the Trade", Some(state));
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn tricks_of_the_trade_failure_normal() {
+    ActionTester::make(TricksOfTheTrade, "Tricks of the Trade", None);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn tricks_of_the_trade_failure_poor() {
+    let mut state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    state.condition = QARegularConditions::Poor;
+    let state = state;
+    ActionTester::make(TricksOfTheTrade, "Tricks of the Trade", Some(state));
+}
+
+#[test]
 fn delicate_synthesis() {
     ActionTester::make(DelicateSynthesis, "Delicate Synthesis", None)
         .had_effect()
@@ -120,6 +146,32 @@ fn delicate_synthesis() {
         })
         .added_progress(228)
         .added_quality(252);
+}
+
+#[test]
+fn delicate_synthesis_removes_great_strides() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + GreatStrides.act(&state).outcome();
+
+    ActionTester::make(DelicateSynthesis, "Delicate Synthesis", Some(state))
+        .triggered_buff(buffs::quality::GreatStrides::default(), |buffs| {
+            buffs.quality.great_strides
+        })
+        .added_quality(504)
+        .added_progress(228);
+}
+
+#[test]
+fn delicate_synthesis_removes_muscle_memory() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + MuscleMemory.act(&state).outcome();
+
+    ActionTester::make(DelicateSynthesis, "Delicate Synthesis", Some(state))
+        .triggered_buff(buffs::progress::MuscleMemory::default(), |buffs| {
+            buffs.progress.muscle_memory
+        })
+        .added_quality(252)
+        .added_progress(456);
 }
 
 #[test]

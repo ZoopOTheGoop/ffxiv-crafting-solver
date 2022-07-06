@@ -134,13 +134,13 @@ impl CpCost for StandardTouch {
 }
 
 impl BuffAction for StandardTouch {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+    fn buff<C, M>(&self, state: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
     where
         C: Condition,
         M: QualityMap,
     {
         so_far.quality.inner_quiet += 1;
-        if matches!(so_far.combo.basic_touch, BasicTouchCombo::BasicTouch) {
+        if matches!(state.buffs.combo.basic_touch, BasicTouchCombo::BasicTouch) {
             so_far.combo.basic_touch = BasicTouchCombo::StandardTouch;
         }
     }

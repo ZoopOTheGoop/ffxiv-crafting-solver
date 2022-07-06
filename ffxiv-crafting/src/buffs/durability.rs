@@ -2,8 +2,8 @@
 
 use std::num::NonZeroU8;
 
-use super::{Buff, DurationalBuff};
-use ffxiv_crafting_derive::{Buff, DurationalBuff};
+use super::{Buff, ConsumableBuff, DurationalBuff};
+use ffxiv_crafting_derive::{Buff, ConsumableBuff, DurationalBuff};
 
 /// A simple collection of all the durability buffs, for cleaner fields on simulation
 /// structs.
@@ -50,7 +50,9 @@ impl DurabilityBuffs {
     Ord,
     Default,
     Buff,
-    DurationalBuff
+    DurationalBuff,
+    // Not really normally one, but we use this functionality to prevent recasting manipulation from restoring durability
+    ConsumableBuff
 )]
 #[ffxiv(duration = 8)]
 pub struct Manipulation(pub(super) u8);

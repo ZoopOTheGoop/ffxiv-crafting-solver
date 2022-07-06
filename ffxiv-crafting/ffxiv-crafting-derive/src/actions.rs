@@ -86,7 +86,9 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             ),
         };
         quote!(
-            so_far.#parts.deactivate_in_place();
+            if so_far.#parts.is_active() {
+                so_far.#parts.deactivate_in_place();
+            }
         )
     });
 
@@ -101,10 +103,6 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             };
             quote!(
                 so_far.quality.inner_quiet += #magnitude;
-
-                if so_far.quality.great_strides.is_active(){
-                    so_far.quality.great_strides.deactivate_in_place();
-                }
             )
         });
 
@@ -123,6 +121,17 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
                 }
             )
         }));
+
+    let deactivate_clause = deactivate_clause.chain(val.get(IQ).into_iter().map(|v| {
+        match v {
+            FfxivAttr::Found | FfxivAttr::Constant(_) => {}
+            _ => panic!("Invalid format for touch on BuffAction derive."),
+        }
+
+        quote!(if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        })
+    }));
 
     let clause = clause.chain(val.get(ACTIVATE).into_iter().map(|v| {
         let parts: ExprField = match v {
@@ -526,7 +535,7 @@ fn find_attributes(
                         }
                     }
 
-                    criteria.retain(|k, _| removed.contains(k));
+                    criteria.retain(|k, _| !removed.contains(k));
                     removed.clear();
 
                     if criteria.is_empty() {

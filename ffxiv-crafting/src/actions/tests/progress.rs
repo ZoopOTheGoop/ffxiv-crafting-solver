@@ -1,5 +1,7 @@
 use crate::{
-    actions::{buffs::WasteNot, progress::*, quality::BasicTouch, Action, ActionOutcome},
+    actions::{
+        buffs::WasteNot, progress::*, quality::BasicTouch, Action, ActionOutcome, RandomAction,
+    },
     buffs::{self, DurationalBuff},
     conditions::QARegularConditions,
     CraftingState,
@@ -25,6 +27,12 @@ fn basic_synthesis() {
 
 #[test]
 fn rapid_synthesis() {
+    assert_eq!(
+        RapidSynthesis::FAIL_RATE,
+        50,
+        "Rapid Synthesis has the wrong fail rate"
+    );
+
     ActionTester::make(RapidSynthesis, "Rapid Synthesis", None)
         .had_effect()
         .modified_cp(0)
@@ -54,6 +62,17 @@ fn muscle_memory_first_step() {
     let state = state + BasicTouch.prospective_act(&state).unwrap().outcome();
 
     ActionTester::make(MuscleMemory, "Muscle Memory", Some(state));
+}
+
+#[test]
+fn muscle_memory_consumed() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + MuscleMemory.act(&state).outcome();
+
+    ActionTester::make(BasicSynthesis, "Basic Synthesis", Some(state))
+        .triggered_buff(buffs::progress::MuscleMemory::default(), |buffs| {
+            buffs.progress.muscle_memory
+        });
 }
 
 #[test]
