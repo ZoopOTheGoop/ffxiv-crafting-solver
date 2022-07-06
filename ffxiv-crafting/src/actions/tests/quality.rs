@@ -181,6 +181,15 @@ fn trained_eye_high_level() {
 }
 
 #[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn trained_eye_first_step() {
+    let state = CraftingState::new_simulation(&LEVEL_ONE_SIMULATOR);
+    let state = state + BasicTouch.prospective_act(&state).unwrap().outcome();
+
+    ActionTester::make(TrainedEye, "Trained Eye", Some(state));
+}
+
+#[test]
 fn advanced_touch() {
     ActionTester::make(AdvancedTouch, "Advanced Touch", None)
         .had_effect()
