@@ -230,7 +230,7 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         let result = self.state + self.delta;
 
         assert_eq!(
-            self.state.curr_quality, result.curr_quality,
+            quality, result.curr_quality,
             "Applying {} does not cause quality \
             to be increased by {};\n\tstate:{:?}, result: {:?}, delta: {:?}",
             self.name, quality, self.state, result, self.delta
