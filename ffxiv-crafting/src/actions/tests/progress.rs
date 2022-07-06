@@ -1,5 +1,5 @@
 use crate::{
-    actions::{progress::*, quality::BasicTouch, Action, ActionOutcome},
+    actions::{buffs::WasteNot, progress::*, quality::BasicTouch, Action, ActionOutcome},
     buffs::{self, DurationalBuff},
     conditions::QARegularConditions,
     CraftingState,
@@ -133,4 +133,13 @@ fn prudent_synthesis() {
         .passed_time(true)
         .changed_durability(-5)
         .added_progress(410);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn prudent_synthesis_waste_not() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + WasteNot.prospective_act(&state).unwrap().outcome();
+
+    ActionTester::make(PrudentSynthesis, "Prudent Synthesis", Some(state));
 }

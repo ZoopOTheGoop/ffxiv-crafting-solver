@@ -1,5 +1,5 @@
 use crate::{
-    actions::{quality::*, Action},
+    actions::{buffs::WasteNot, quality::*, Action},
     buffs::{self},
     conditions::QARegularConditions,
     CraftingState,
@@ -107,6 +107,15 @@ fn prudent_touch() {
         })
         .changed_durability(-5)
         .added_quality(252);
+}
+
+#[test]
+#[should_panic(expected = "Cannot execute this action in the current state")]
+fn prudent_touch_waste_not() {
+    let state = CraftingState::new_simulation(&CLASSICAL_SIMULATOR);
+    let state = state + WasteNot.prospective_act(&state).unwrap().outcome();
+
+    ActionTester::make(PrudentTouch, "Prudent Touch", Some(state));
 }
 
 #[test]
