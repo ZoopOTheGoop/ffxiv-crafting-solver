@@ -296,58 +296,12 @@ pub trait Action: Sized + ActionComponents {
         C: Condition,
         M: QualityMap,
     {
-        let mut delta = StateDelta::inherit_buffs(state.buffs);
+        // This used to be a parallel implementation, but it's not worth it.
 
-        delta.added_cp = -self.cp_cost(state);
-
-        #[cfg(debug_assertions)]
-        let can_act = self.can_execute(state);
-
-        #[cfg(debug_assertions)]
-        match(state.curr_cp + delta.added_cp < 0, can_act) {
-            (true, true) => panic!("Attempted to use action with not enough CP and \
-            in a state where that action is impossible, to prospectively execute use `prospective_act`"),
-            (true, false) => panic!("Attempted to use action with not enough CP, \
-            to prospectively execute use `prospective_act`"),
-            (false, true) => panic!("Attempted to use action in an invalid state, \
-            to prospectively execute use `prospective_act`"),
-            _ => {},
-        };
-
-        delta.added_progress = self.progress(state);
-        let appraised = state.buffs.progress.final_appraisal.handle_progress(
-            state,
-            delta.added_progress,
-            &mut delta.new_buffs,
-        );
-
-        if appraised < delta.added_progress {
-            delta.final_appraisal_triggered = true;
-        }
-        delta.added_progress = appraised;
-
-        delta.added_quality = self.quality(state);
-        delta.action_durability = self.durability(&state.buffs, &state.condition);
-
-        delta.buff_repair = state.buffs.durability.repair();
-
-        self.deactivate_buff(state, &mut delta.new_buffs);
-
-        delta.time_passed = self.time_passed(state);
-        if delta.time_passed {
-            delta.new_buffs.decay();
-        } else {
-            // Combo actions still fail to trigger after using
-            // time-agnostic actions
-            delta.new_buffs.combo.decay();
-
-            // Repair isn't applied during a "time stop" so it's in the else rather
-            // than after.
-            delta.buff_repair = state.buffs.durability.repair();
-        }
-        self.buff(state, &mut delta.new_buffs);
-
-        ActionOutcome::from_delta_state(delta, state)
+        self.prospective_act(state).expect(
+            "Attempted to execute action and failed; if you want to \
+        speculatively execute an action, use `prospective_act`",
+        )
     }
 
     /// Takes into account a [`RandomAction`]'s chance to fail, and does
