@@ -197,14 +197,6 @@ impl QualityAction for ByregotsBlessing {
 }
 
 impl BuffAction for ByregotsBlessing {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
-    where
-        C: Condition,
-        M: QualityMap,
-    {
-        so_far.quality.inner_quiet.deactivate_in_place();
-    }
-
     fn deactivate_buff<C, M>(
         &self,
         _state: &CraftingState<C, M>,
@@ -216,6 +208,8 @@ impl BuffAction for ByregotsBlessing {
         if so_far.quality.great_strides.is_active() {
             so_far.quality.great_strides.deactivate_in_place();
         }
+
+        so_far.quality.inner_quiet.deactivate_in_place();
     }
 }
 

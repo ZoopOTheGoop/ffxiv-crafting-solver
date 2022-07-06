@@ -166,11 +166,13 @@ where
         let control = self.problem_def.character.control as f64;
 
         let quality = (control * 10.) / (self.problem_def.recipe.quality_divider as f64) + 35.;
+
         if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl().0 {
             quality * self.problem_def.recipe.quality_modifier as f64 * 0.01
         } else {
             quality
         }
+        .floor()
     }
 
     /// The base progress that any action operating on `progress` will modify with its `efficiency`.

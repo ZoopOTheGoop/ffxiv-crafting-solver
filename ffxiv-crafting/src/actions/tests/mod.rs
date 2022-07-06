@@ -22,8 +22,8 @@ use super::{ActionOutcome, StateDelta};
 /// My character's stats with melded Pactmaker under Cunning Craftsman's Syrup and Tsai you Vounou in 6.1
 const TEST_STATS: CharacterStats = CharacterStats {
     craftsmanship: 3691,
-    control: 3664,
-    max_cp: 564,
+    control: 3740,
+    max_cp: 658,
     char_level: 90,
 };
 
@@ -230,10 +230,15 @@ impl<'a, A: Action + Copy> ActionTester<'a, A> {
         let result = self.state + self.delta;
 
         assert_eq!(
-            quality, result.curr_quality,
+            quality,
+            result.curr_quality - self.state.curr_quality,
             "Applying {} does not cause quality \
-            to be increased by {};\n\tstate:{:?}, result: {:?}, delta: {:?}",
-            self.name, quality, self.state, result, self.delta
+            to be increased by {};\n\tstate:{:?},\n\tresult: {:?},\n\tdelta: {:?}",
+            self.name,
+            quality,
+            self.state,
+            result,
+            self.delta
         );
 
         self

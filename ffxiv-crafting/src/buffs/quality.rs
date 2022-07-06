@@ -32,6 +32,7 @@ impl QualityBuffs {
     pub fn efficiency_mod(&self) -> u32 {
         self.inner_quiet.efficiency_bonus()
             * (100 + self.great_strides.efficiency_mod() + self.innovation.efficiency_mod())
+            / 100
     }
 }
 
@@ -95,7 +96,7 @@ impl InnerQuiet {
             MAX_IQ
         );
 
-        (self.stacks() as u32) * 100
+        100 + (self.stacks() as u32) * 10
     }
 }
 
@@ -103,7 +104,7 @@ impl Add<u8> for InnerQuiet {
     type Output = Self;
 
     fn add(self, rhs: u8) -> Self::Output {
-        Self((self.0 + rhs).max(10))
+        Self((self.0 + rhs).min(10))
     }
 }
 
