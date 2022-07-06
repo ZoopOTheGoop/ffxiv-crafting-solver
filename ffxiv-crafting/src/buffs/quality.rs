@@ -2,7 +2,7 @@
 
 use std::{
     fmt::Debug,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign},
+    ops::{Add, AddAssign},
 };
 
 use crate::buffs::{Buff, ConsumableBuff, DurationalBuff};
@@ -103,45 +103,13 @@ impl Add<u8> for InnerQuiet {
     type Output = Self;
 
     fn add(self, rhs: u8) -> Self::Output {
-        debug_assert!(
-            rhs == 1 || rhs == 2,
-            "Should only add 1 or 2 to Inner Quiet"
-        );
-        Self(self.0 + rhs)
+        Self((self.0 + rhs).max(10))
     }
 }
 
 impl AddAssign<u8> for InnerQuiet {
     fn add_assign(&mut self, rhs: u8) {
         *self = self.add(rhs)
-    }
-}
-
-impl Mul<u8> for InnerQuiet {
-    type Output = Self;
-
-    fn mul(self, rhs: u8) -> Self::Output {
-        Self(self.0 * rhs)
-    }
-}
-
-impl MulAssign<u8> for InnerQuiet {
-    fn mul_assign(&mut self, rhs: u8) {
-        *self = self.mul(rhs)
-    }
-}
-
-impl Div<u8> for InnerQuiet {
-    type Output = Self;
-
-    fn div(self, rhs: u8) -> Self::Output {
-        Self(self.0 / rhs)
-    }
-}
-
-impl DivAssign<u8> for InnerQuiet {
-    fn div_assign(&mut self, rhs: u8) {
-        *self = self.div(rhs)
     }
 }
 
