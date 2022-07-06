@@ -200,7 +200,7 @@ pub fn quality_action(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::quality::QualityAction for #ident #type_generic #(#where_clause)* {
-            #(const EFFICIENCY: u16 = #val;)*
+            #(const EFFICIENCY: u32 = #val;)*
         }
     )
     .into()

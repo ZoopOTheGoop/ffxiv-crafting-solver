@@ -29,7 +29,7 @@ impl QualityBuffs {
     }
 
     /// Calculates the efficiency bonuses granted by these buffs.
-    pub fn efficiency_mod(&self) -> u16 {
+    pub fn efficiency_mod(&self) -> u32 {
         self.inner_quiet.efficiency_bonus()
             * (100 + self.great_strides.efficiency_mod() + self.innovation.efficiency_mod())
     }
@@ -40,10 +40,10 @@ impl QualityBuffs {
 pub trait QualityEfficiencyMod: DurationalBuff {
     /// The quality modifier, as internally defined. This is a percentage
     /// represented as an integer (i.e. 100 = 100% = 2x bonus).
-    const MODIFIER: u16;
+    const MODIFIER: u32;
 
     /// Returns the efficiency modifier if the buff is currently active.
-    fn efficiency_mod(&self) -> u16 {
+    fn efficiency_mod(&self) -> u32 {
         if self.is_active() {
             Self::MODIFIER
         } else {
@@ -87,7 +87,7 @@ impl InnerQuiet {
     }
 
     /// Returns the additive bonus to efficiency granted by inner quiet
-    pub fn efficiency_bonus(&self) -> u16 {
+    pub fn efficiency_bonus(&self) -> u32 {
         debug_assert!(
             self.0 <= MAX_IQ,
             "IQ stacks somehow exceeded max; {} > {}",
@@ -95,7 +95,7 @@ impl InnerQuiet {
             MAX_IQ
         );
 
-        (self.stacks() as u16) * 100
+        (self.stacks() as u32) * 100
     }
 }
 
@@ -170,7 +170,7 @@ impl DivAssign<u8> for InnerQuiet {
 pub struct GreatStrides(pub(super) u8);
 
 impl QualityEfficiencyMod for GreatStrides {
-    const MODIFIER: u16 = 100;
+    const MODIFIER: u32 = 100;
 }
 
 /// The buff associated with the action [`Innovation`],
@@ -197,5 +197,5 @@ impl QualityEfficiencyMod for GreatStrides {
 pub struct Innovation(pub(super) u8);
 
 impl QualityEfficiencyMod for Innovation {
-    const MODIFIER: u16 = 50;
+    const MODIFIER: u32 = 50;
 }

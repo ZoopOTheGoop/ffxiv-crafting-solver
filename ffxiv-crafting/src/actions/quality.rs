@@ -16,7 +16,7 @@ pub trait QualityAction {
     /// skip all calculations becuase the action doesn't affect this property.
     ///
     /// [`efficiency`]: QualityAction::efficiency
-    const EFFICIENCY: u16 = 0;
+    const EFFICIENCY: u32 = 0;
 
     /// Calculates the efficiency of the current action on the crafting state. By default this is simply the efficiency bonus granted buffs,
     /// multiplied by the action's efficiency.
@@ -179,25 +179,20 @@ impl CanExecute for ByregotsBlessing {
 }
 
 impl QualityAction for ByregotsBlessing {
-    const EFFICIENCY: u16 = 100;
+    const EFFICIENCY: u32 = 100;
 
     fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
     where
         C: Condition,
         M: QualityMap,
     {
-        let efficiency_mod = 100. + state.buffs.quality.efficiency_mod() as f64 / 100.;
         // This is technically stacks * 30 if you do the math but it's clearer both bonuses are being applied this way
         //
         // Further note: the patch notes note that efficiency bonus is limited to 300 but that seems natural.
-        // 200 from the Byregot-specific mechanic, and 100 from normal IQ. Need to verify if perhaps this limit
-        // is enforced somewhere else (e.g. if it applies after applying the mod below, or if this number maxes at
-        // 300 instead of 400).
-        let efficiency = 100.
-            + state.buffs.quality.inner_quiet.stacks() as f64 * 20.
-            + state.buffs.quality.inner_quiet.efficiency_bonus() as f64;
+        // 200 from the Byregot-specific mechanic, and 100 from base efficiency.
+        let efficiency = Self::EFFICIENCY + (state.buffs.quality.inner_quiet.stacks() as u32 * 20);
 
-        efficiency_mod * efficiency
+        (efficiency * state.buffs.quality.efficiency_mod()) as f64 / 100.
     }
 }
 
@@ -207,7 +202,7 @@ impl BuffAction for ByregotsBlessing {
         C: Condition,
         M: QualityMap,
     {
-        so_far.quality.inner_quiet.deactivate();
+        so_far.quality.inner_quiet.deactivate_in_place();
     }
 
     fn deactivate_buff<C, M>(
