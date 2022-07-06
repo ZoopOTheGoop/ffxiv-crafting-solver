@@ -263,7 +263,7 @@ where
             curr_durability: problem_def.recipe.max_durability,
             curr_cp: problem_def.character.max_cp,
             buffs: BuffState::default(),
-            first_step: false,
+            first_step: true,
         }
     }
 }

@@ -110,3 +110,31 @@ fn prudent_touch() {
         .changed_durability(-5)
         .added_quality(252);
 }
+
+#[test]
+fn focused_touch() {
+    ActionTester::make(FocusedTouch, "Focused Touch", None)
+        .had_effect()
+        .modified_cp(-18)
+        .passed_time(true)
+        // Should consume IQ
+        .triggered_buff(buffs::quality::InnerQuiet::default() + 1, |buffs| {
+            buffs.quality.inner_quiet
+        })
+        .changed_durability(-10)
+        .added_quality(378);
+}
+
+#[test]
+fn reflect() {
+    ActionTester::make(Reflect, "Reflect", None)
+        .had_effect()
+        .modified_cp(-6)
+        .passed_time(true)
+        // Should consume IQ
+        .triggered_buff(buffs::quality::InnerQuiet::default() + 2, |buffs| {
+            buffs.quality.inner_quiet
+        })
+        .changed_durability(-10)
+        .added_quality(252);
+}
