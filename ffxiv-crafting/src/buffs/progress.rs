@@ -25,12 +25,7 @@ impl ProgressBuffs {
 
     /// Calculates the efficiency bonuses granted by these buffs.
     pub fn efficiency_mod(&self) -> u16 {
-        self.veneration.efficiency_mod()
-    }
-
-    /// Calculates the efficiency added on to the next action, if any.
-    pub fn bonus_efficiency(&self) -> u16 {
-        self.muscle_memory.bonus_efficiency()
+        100 + self.muscle_memory.efficiency_mod() + self.veneration.efficiency_mod()
     }
 }
 
@@ -106,20 +101,8 @@ impl ProgressEfficiencyMod for Veneration {
 #[ffxiv(duration = 5)]
 pub struct MuscleMemory(pub(super) u8);
 
-impl MuscleMemory {
-    /// The bonus efficiency added onto the next synthesis action, when
-    /// active.
-    pub const BONUS: u16 = 100;
-
-    /// Returns the bonus efficiency to be added on to the next
-    /// synthesis action. 100 if active and 0 otherwise.
-    fn bonus_efficiency(&self) -> u16 {
-        if self.is_active() {
-            Self::BONUS
-        } else {
-            0
-        }
-    }
+impl ProgressEfficiencyMod for MuscleMemory {
+    const MODIFIER: u16 = 100;
 }
 
 /// The buff state corresponding to the action [`FinalAppraisal`],

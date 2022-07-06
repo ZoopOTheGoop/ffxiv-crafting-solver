@@ -44,10 +44,9 @@ pub trait ProgressAction {
             return 0.;
         }
 
-        let efficiency = self.base_efficiency(state) + state.buffs.progress.bonus_efficiency();
-        let efficiency_mod = (100. + state.buffs.progress.efficiency_mod() as f64) / 100.;
+        let efficiency_mod = state.buffs.progress.efficiency_mod() as f64 / 100.;
 
-        (efficiency_mod * efficiency as f64) / 100.
+        (efficiency_mod * self.base_efficiency(state) as f64) / 100.
     }
 
     /// Returns the amount of progress that will be added by executing the given `action` in the current `state`.
