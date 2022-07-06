@@ -86,7 +86,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             ),
         };
         quote!(
-            so_far.#parts.deactivate();
+            so_far.#parts.deactivate_in_place();
         )
     });
 
@@ -108,7 +108,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             )
         });
 
-    let clause = clause.chain(val
+    let deactivate_clause = deactivate_clause.chain(val
         .get(MM)
         .into_iter()
         .map(|v| {

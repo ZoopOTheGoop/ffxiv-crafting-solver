@@ -140,7 +140,7 @@ impl ProgressAction for RapidSynthesis {
 #[ffxiv_progress(efficiency = 300)]
 #[ffxiv_act_lvl(level = 54)]
 #[ffxiv_can_exe(class = "first_step")]
-#[ffxiv_buff_act(synthesis, activate = "progress.muscle_memory")]
+#[ffxiv_buff_act(activate = "progress.muscle_memory")]
 pub struct MuscleMemory;
 
 /// An action that's only minorly more powerful than [`BasicSynthesis`], but
@@ -252,7 +252,9 @@ impl BuffAction for IntensiveSynthesis {
         C: crate::conditions::Condition,
         M: crate::quality_map::QualityMap,
     {
-        if !(state.condition.is_excellent() || state.condition.is_good()) {
+        if !(state.condition.is_excellent() || state.condition.is_good())
+            && so_far.heart_and_soul.is_active()
+        {
             so_far.heart_and_soul.deactivate_in_place();
         }
 
@@ -267,7 +269,7 @@ impl BuffAction for IntensiveSynthesis {
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
 #[derive(BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
-#[ffxiv_quality(efficiency = 180)]
+#[ffxiv_progress(efficiency = 180)]
 #[ffxiv_act_lvl(level = 88)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_buff_act(synthesis)]
