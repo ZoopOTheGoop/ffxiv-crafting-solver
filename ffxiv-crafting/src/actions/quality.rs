@@ -16,7 +16,7 @@ pub trait QualityAction {
     /// skip all calculations becuase the action doesn't affect this property.
     ///
     /// [`efficiency`]: QualityAction::efficiency
-    const EFFICIENCY: u16 = 0;
+    const EFFICIENCY: u32 = 0;
 
     /// Calculates the efficiency of the current action on the crafting state. By default this is simply the efficiency bonus granted buffs,
     /// multiplied by the action's efficiency.
@@ -26,13 +26,10 @@ pub trait QualityAction {
         M: QualityMap,
     {
         if Self::EFFICIENCY == 0 {
-            return 0.;
+            0.
+        } else {
+            (Self::EFFICIENCY * state.buffs.quality.efficiency_mod()) as f64 / 100.
         }
-
-        let efficiency_mod = (100. + state.buffs.quality.efficiency_mod() as f64) / 100.;
-
-        efficiency_mod
-            * (Self::EFFICIENCY + state.buffs.quality.inner_quiet.efficiency_bonus()) as f64
     }
 
     /// Returns the amount of quality that will be added by executing the given `action` in the current `state`.
@@ -53,11 +50,13 @@ pub trait QualityAction {
         let condition_mod = state.condition.to_quality_modifier() as u64 as f64 / 100.;
         let efficiency = self.efficiency(state);
 
-        ((quality * condition_mod).floor() * efficiency) as u32
+        ((quality * condition_mod * efficiency) / 100.) as u32
     }
 }
 
 use ffxiv_crafting_derive::*;
+
+use super::{failure::NullFailure, RandomAction};
 
 /// The most basic quality increasing action. Combos with [`StandardTouch`].
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
@@ -74,8 +73,21 @@ impl BuffAction for BasicTouch {
         C: Condition,
         M: QualityMap,
     {
-        so_far.combo.basic_touch.activate(0);
+        so_far.combo.basic_touch.activate_in_place(0);
         so_far.quality.inner_quiet += 1;
+    }
+
+    fn deactivate_buff<C, M>(
+        &self,
+        _state: &CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: Condition,
+        M: QualityMap,
+    {
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        }
     }
 }
 
@@ -122,14 +134,27 @@ impl CpCost for StandardTouch {
 }
 
 impl BuffAction for StandardTouch {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
+    fn buff<C, M>(&self, state: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
     where
         C: Condition,
         M: QualityMap,
     {
         so_far.quality.inner_quiet += 1;
-        if matches!(so_far.combo.basic_touch, BasicTouchCombo::BasicTouch) {
+        if matches!(state.buffs.combo.basic_touch, BasicTouchCombo::BasicTouch) {
             so_far.combo.basic_touch = BasicTouchCombo::StandardTouch;
+        }
+    }
+
+    fn deactivate_buff<C, M>(
+        &self,
+        _state: &CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
+        C: Condition,
+        M: QualityMap,
+    {
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
         }
     }
 }
@@ -156,35 +181,37 @@ impl CanExecute for ByregotsBlessing {
 }
 
 impl QualityAction for ByregotsBlessing {
-    const EFFICIENCY: u16 = 100;
+    const EFFICIENCY: u32 = 100;
 
     fn efficiency<C, M>(&self, state: &CraftingState<C, M>) -> f64
     where
         C: Condition,
         M: QualityMap,
     {
-        let efficiency_mod = 100. + state.buffs.quality.efficiency_mod() as f64 / 100.;
         // This is technically stacks * 30 if you do the math but it's clearer both bonuses are being applied this way
         //
         // Further note: the patch notes note that efficiency bonus is limited to 300 but that seems natural.
-        // 200 from the Byregot-specific mechanic, and 100 from normal IQ. Need to verify if perhaps this limit
-        // is enforced somewhere else (e.g. if it applies after applying the mod below, or if this number maxes at
-        // 300 instead of 400).
-        let efficiency = 100.
-            + state.buffs.quality.inner_quiet.stacks() as f64 * 20.
-            + state.buffs.quality.inner_quiet.efficiency_bonus() as f64;
+        // 200 from the Byregot-specific mechanic, and 100 from base efficiency.
+        let efficiency = Self::EFFICIENCY + (state.buffs.quality.inner_quiet.stacks() as u32 * 20);
 
-        efficiency_mod * efficiency
+        (efficiency * state.buffs.quality.efficiency_mod()) as f64 / 100.
     }
 }
 
 impl BuffAction for ByregotsBlessing {
-    fn buff<C, M>(&self, _: &CraftingState<C, M>, so_far: &mut crate::buffs::BuffState)
-    where
+    fn deactivate_buff<C, M>(
+        &self,
+        _state: &CraftingState<C, M>,
+        so_far: &mut crate::buffs::BuffState,
+    ) where
         C: Condition,
         M: QualityMap,
     {
-        so_far.quality.inner_quiet.deactivate();
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        }
+
+        so_far.quality.inner_quiet.deactivate_in_place();
     }
 }
 
@@ -215,8 +242,14 @@ impl BuffAction for PreciseTouch {
         C: crate::conditions::Condition,
         M: crate::quality_map::QualityMap,
     {
-        if !(state.condition.is_excellent() || state.condition.is_good()) {
+        if !(state.condition.is_excellent() || state.condition.is_good())
+            && so_far.heart_and_soul.is_active()
+        {
             so_far.heart_and_soul.deactivate_in_place();
+        }
+
+        if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
         }
     }
 
@@ -259,13 +292,30 @@ impl CanExecute for PrudentTouch {
 /// [`Observe`]: crate::actions::misc::Observe
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 #[derive(ProgressAction, QualityAction, DurabilityFactor, CpCost)]
-#[derive(CanExecute, BuffAction, ActionLevel, RandomAction, TimePassing, Action)]
+#[derive(CanExecute, BuffAction, ActionLevel, TimePassing, Action)]
 #[ffxiv_quality(efficiency = 150)]
 #[ffxiv_act_lvl(level = 68)]
 #[ffxiv_cp(cost = 18)]
 #[ffxiv_buff_act(touch)]
-#[ffxiv_rand_act(chance = 50, class = "combo_observe")]
 pub struct FocusedTouch;
+
+impl RandomAction for FocusedTouch {
+    const FAIL_RATE: u8 = 50;
+
+    type FailAction = NullFailure<Self>;
+
+    fn fail_rate<C: Condition, M: QualityMap>(&self, state: &CraftingState<C, M>) -> u8 {
+        if !state.buffs.combo.observation.is_active() {
+            Self::FAIL_RATE
+        } else {
+            0
+        }
+    }
+
+    fn fail_action(&self) -> Self::FailAction {
+        NullFailure(*self)
+    }
+}
 
 /// A starter action that can only be used on the first turn. It raises quality as much as a
 /// [`BasicTouch`], for a little extra CP. However, it starts your [`InnerQuiet`] stacks off
@@ -349,7 +399,7 @@ impl CanExecute for TrainedEye {
 pub struct AdvancedTouch;
 
 impl CpCost for AdvancedTouch {
-    const CP_COST: i16 = 32;
+    const CP_COST: i16 = 46;
 
     fn cp_cost<C, M>(&self, state: &CraftingState<C, M>) -> i16
     where
@@ -382,6 +432,7 @@ impl CpCost for AdvancedTouch {
 #[ffxiv_cp(cost = 32)]
 #[ffxiv_quality(efficiency = 100)]
 #[ffxiv_act_lvl(level = 90)]
+#[ffxiv_durability(cost = 0)]
 pub struct TrainedFinesse;
 
 impl CanExecute for TrainedFinesse {

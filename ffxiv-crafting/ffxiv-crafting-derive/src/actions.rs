@@ -86,7 +86,9 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             ),
         };
         quote!(
-            so_far.#parts.deactivate();
+            if so_far.#parts.is_active() {
+                so_far.#parts.deactivate_in_place();
+            }
         )
     });
 
@@ -101,14 +103,10 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
             };
             quote!(
                 so_far.quality.inner_quiet += #magnitude;
-                
-                if so_far.quality.great_strides.is_active(){
-                    so_far.quality.great_strides.deactivate_in_place();
-                }
             )
         });
 
-    let clause = clause.chain(val
+    let deactivate_clause = deactivate_clause.chain(val
         .get(MM)
         .into_iter()
         .map(|v| {
@@ -123,6 +121,17 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
                 }
             )
         }));
+
+    let deactivate_clause = deactivate_clause.chain(val.get(IQ).into_iter().map(|v| {
+        match v {
+            FfxivAttr::Found | FfxivAttr::Constant(_) => {}
+            _ => panic!("Invalid format for touch on BuffAction derive."),
+        }
+
+        quote!(if so_far.quality.great_strides.is_active() {
+            so_far.quality.great_strides.deactivate_in_place();
+        })
+    }));
 
     let clause = clause.chain(val.get(ACTIVATE).into_iter().map(|v| {
         let parts: ExprField = match v {
@@ -200,7 +209,7 @@ pub fn quality_action(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::quality::QualityAction for #ident #type_generic #(#where_clause)* {
-            #(const EFFICIENCY: u16 = #val;)*
+            #(const EFFICIENCY: u32 = #val;)*
         }
     )
     .into()
@@ -314,7 +323,7 @@ pub fn durability(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         #[allow(unused_qualifications)]
         impl #impl_generic crate::actions::DurabilityFactor for #ident #type_generic #(#where_clause)* {
-            #(const DURABILITY_USAGE: i8 = -#val;)*
+            #(const DURABILITY_USAGE: i8 = #val;)*
         }
     )
     .into()
@@ -407,41 +416,15 @@ pub fn random_action(input: TokenStream) -> TokenStream {
 
     const TAG: &str = "ffxiv_rand_act";
 
-    let attrs = [
-        (
-            CHANCE,
-            Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
-        ),
-        (
-            CLASS,
-            Box::new(attr_literal(CLASS)) as Box<FfxivAttrMatcher>,
-        ),
-    ]
+    let attrs = [(
+        CHANCE,
+        Box::new(attr_literal(CHANCE)) as Box<FfxivAttrMatcher>,
+    )]
     .into_iter()
     .collect();
 
     let attrs = find_attributes(&ast, TAG, attrs);
     let chance = attrs.get(CHANCE).into_iter().map(|v| v.to_lit_int());
-
-    let fail_rate_class = attrs
-        .get(CLASS)
-        .into_iter()
-        .map(|v| v.to_lit_str())
-        .filter(|v| &*v.value() == "combo_observe")
-        .map(|_| {
-            quote!(
-                fn fail_rate<C: Condition, M: QualityMap>(
-                    &self,
-                    state: &CraftingState<C, M>,
-                ) -> u8 {
-                    if !state.buffs.combo.observation.is_active() {
-                        Self::FAIL_RATE
-                    } else {
-                        0
-                    }
-                }
-            )
-        });
 
     quote!(
         #[automatically_derived]
@@ -450,7 +433,6 @@ pub fn random_action(input: TokenStream) -> TokenStream {
             #(const FAIL_RATE: u8 = #chance;)*
             type FailAction = crate::actions::failure::NullFailure<Self>;
 
-            #(#fail_rate_class)*
 
             fn fail_action(&self) -> Self::FailAction {
                 if Self::FAIL_RATE == 0 {
@@ -477,13 +459,13 @@ pub fn time_passed(input: TokenStream) -> TokenStream {
         .iter()
         .filter_map(|v| v.parse_meta().ok())
         .filter_map(|v| {
-            if let Meta::List(list) = v {
-                Some(list)
+            if let Meta::Path(path) = v {
+                Some(path)
             } else {
                 None
             }
         })
-        .any(|v| v.path.is_ident(TAG));
+        .any(|v| v.is_ident(TAG));
 
     quote!(
         #[automatically_derived]
@@ -553,7 +535,7 @@ fn find_attributes(
                         }
                     }
 
-                    criteria.retain(|k, _| removed.contains(k));
+                    criteria.retain(|k, _| !removed.contains(k));
                     removed.clear();
 
                     if criteria.is_empty() {

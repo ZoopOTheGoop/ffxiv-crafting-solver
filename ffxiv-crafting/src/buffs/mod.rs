@@ -1,7 +1,5 @@
 //! Contains general trait definitions for crafting buffs used across the simulator.
 
-use std::ops::{Sub, SubAssign};
-
 use self::{
     combo::ComboTriggers,
     durability::DurabilityBuffs,
@@ -15,6 +13,9 @@ pub mod durability;
 pub mod misc;
 pub mod progress;
 pub mod quality;
+
+#[cfg(test)]
+mod tests;
 
 /// The basic form of a crafting buff. Since buffs can be a lot of different forms, the only
 /// thing they really have in common is the fact that they can be inactive or active.
@@ -35,10 +36,7 @@ pub trait Buff: Copy + Sized {
     }
 }
 
-/// A [`Buff`] which is only active for a fixed amount of time after activation. This should
-/// implement [`Sub`], and expect that it will only ever decay by 1 (i.e. a turn), and panic otherwise.
-/// This can be revisited if things such as actions or expert conditions that more quickly decay buffs
-/// are added later.
+/// A [`Buff`] which is only active for a fixed amount of time after activation.
 ///
 /// When a buff is [`activate`](DurationalBuff::activate)d, it should set its duration to the value of
 /// [`BASE_DURATION`](DurationalBuff::BASE_DURATION), plus any bonuses it receives (e.g. from the
@@ -50,7 +48,7 @@ pub trait Buff: Copy + Sized {
 ///
 /// [`GreatStrides`]: crate::buffs::quality::GreatStrides
 /// [`Primed`]: crate::conditions::RestoExpertConditions::Primed
-pub trait DurationalBuff: Sub<u8, Output = Self> + SubAssign<u8> + Buff {
+pub trait DurationalBuff: Buff {
     /// The length that this buff will be active for when triggered by an action,
     /// before any condition or other modifiers.
     const BASE_DURATION: u8;
@@ -71,14 +69,18 @@ pub trait DurationalBuff: Sub<u8, Output = Self> + SubAssign<u8> + Buff {
     }
 
     /// A semantic wrapper over `self - 1`.
-    fn decay(self) -> Self {
-        self - 1
-    }
+    fn decay(self) -> Self;
 
     /// A semantic wrapper over `self -= 1`.
     fn decay_in_place(&mut self) {
         *self = self.decay()
     }
+
+    /// Returns the remaining duration of the buff. If the buff is inactive this will be `None`.
+    /// Currently there are not any buffs where a value of `Some(1)` can be returned, but it's there
+    /// if this even becomes necessary (e.g. a buff where right when it decays to zero checks if it
+    /// can refresh itself under certain conditions).
+    fn remaining_duration(&self) -> Option<u8>;
 }
 
 /// A buff that can be "consumed" by an action, such as [`InnerQuiet`] and [`ByregotsBlessing`],

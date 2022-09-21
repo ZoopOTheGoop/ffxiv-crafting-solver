@@ -167,7 +167,7 @@ impl<C: Condition> Recipe<C> {
 
         let durability_mod = self.max_durability_mod as f32 / 100.;
         let quality_mod = self.max_quality_mod as f32 / 100.;
-        let progress_mod = self.max_progress as f32 / 100.;
+        let progress_mod = self.max_progress_mod as f32 / 100.;
 
         self.max_quality = (self.rlvl.base_quality() as f32 * quality_mod).round() as u32;
         self.max_durability = (self.rlvl.base_durability() as f32 * durability_mod).round() as i8;

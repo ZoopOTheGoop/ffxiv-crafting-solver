@@ -2,22 +2,20 @@
 
 use std::ops::{Sub, SubAssign};
 
-use derivative::Derivative;
-
 use super::{Buff, ConsumableBuff};
 
 /// Denotes the number of crafters' delineations the character has left, if any, or
 /// if they're not a specialist. This is solely useful for the [`CarefulObservation`]
-/// action.
+/// and [`HeartAndSoul`] actions.
 ///
 /// This implements [`Sub`] for subtracting delineations one at a time.
 ///
 /// [`CarefulObservation`]: crate::actions::misc::CarefulObservation
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Derivative)]
-#[derivative(Default)]
+/// [`HeartAndSoul`]: crate::actions::buffs::HeartAndSoul
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash, Debug, Default)]
 pub enum SpecialistActions {
     /// The crafter is not a specialist.
-    #[derivative(Default)]
+    #[default]
     NotSpecialist,
     /// The crafter is a specialist, but has no delineations (or
     /// has used all 3 allowed charges already).
@@ -34,12 +32,27 @@ pub enum SpecialistActions {
 impl SpecialistActions {
     /// Returns if specialist actions can be used (i.e. there are enough delineations).
     pub fn actions_available(&self) -> bool {
+        self.verify_state();
         matches!(self, Self::Availalble(_))
     }
 
     /// Returns if specialist actions cannot be used (i.e. no delineations or not a specialist).
     pub fn actions_unavailable(&self) -> bool {
+        self.verify_state();
         matches!(self, Self::Unavailable | Self::NotSpecialist)
+    }
+
+    #[inline(always)]
+    fn verify_state(&self) {
+        debug_assert!(
+            !matches!(self, Self::Availalble(4..)),
+            "Too many delineations {:?}; should have at most 3",
+            self
+        );
+        debug_assert!(
+            !matches!(self, Self::Availalble(0)),
+            "Shouldn't be marked as available with 0 delineations",
+        );
     }
 }
 
@@ -49,25 +62,14 @@ impl Sub<u8> for SpecialistActions {
     fn sub(self, rhs: u8) -> Self::Output {
         debug_assert_eq!(rhs, 1, "Action should only use one delineation at a time");
 
-        #[cfg(debug_assertions)]
-        match self {
-            Self::Availalble(0) => {
-                panic!("Specialist Actions shouldn't be listed as available with 0 delineations")
-            }
-            Self::Availalble(4..=u8::MAX) => {
-                panic!("Too many crafters delineations - we're constrained to 3 per craft.")
-            }
-            Self::Availalble(val @ 1..=3) => Self::Availalble(val - 1),
-            Self::NotSpecialist => Self::NotSpecialist,
-            Self::Unavailable => Self::Unavailable,
-        }
+        self.verify_state();
 
-        #[cfg(not(debug_assertions))]
         match self {
-            Self::Availalble(0..=1) => Self::Unavailable,
-            Self::Availalble(val) => Self::Availalble(val - 1),
+            Self::Availalble(1) => Self::Unavailable,
+            Self::Availalble(val @ 2..=3) => Self::Availalble(val - 1),
             Self::NotSpecialist => Self::NotSpecialist,
             Self::Unavailable => Self::Unavailable,
+            _ => unreachable!(),
         }
     }
 }
@@ -85,11 +87,10 @@ impl SubAssign<u8> for SpecialistActions {
 /// [`quality`]: crate::actions::quality
 /// [`HeartAndSoul`]: crate::actions::buffs::HeartAndSoul
 /// [`TricksOfTheTrade`]: crate::actions::misc::TricksOfTheTrade
-#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, Hash, Debug, Eq, PartialEq, PartialOrd, Ord, Default)]
 pub enum HeartAndSoul {
     /// This buff is currently not active and gives no benefit.
-    #[derivative(Default)]
+    #[default]
     Inactive,
     /// This buff is active and will apply its modifier to its
     /// associated actions.
@@ -122,6 +123,11 @@ impl Buff for HeartAndSoul {
 
 impl ConsumableBuff for HeartAndSoul {
     fn deactivate(self) -> (Self, u8) {
-        (Self::Inactive, 0)
+        debug_assert_eq!(
+            self,
+            HeartAndSoul::Active,
+            "Attempted to deactivate deactivated HeartAndSoul"
+        );
+        (Self::Inactive, u8::MAX)
     }
 }

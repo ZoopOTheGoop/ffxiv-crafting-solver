@@ -166,11 +166,13 @@ where
         let control = self.problem_def.character.control as f64;
 
         let quality = (control * 10.) / (self.problem_def.recipe.quality_divider as f64) + 35.;
+
         if self.problem_def.character.clvl() <= self.problem_def.recipe.rlvl().0 {
             quality * self.problem_def.recipe.quality_modifier as f64 * 0.01
         } else {
             quality
         }
+        .floor()
     }
 
     /// The base progress that any action operating on `progress` will modify with its `efficiency`.
@@ -184,6 +186,7 @@ where
         } else {
             progress
         }
+        .floor()
     }
 
     /// Generates the next state from the given delta, including sampling the new condition.
@@ -232,6 +235,36 @@ where
                 state: self.gen_succ(delta, condition_rng),
                 delta,
             },
+        }
+    }
+
+    /// Clamps durability, quality, and progress into their possible ranges, and returns a variant of the state
+    /// with the clamped values.
+    pub fn clamp_maxes(mut self) -> Self {
+        self.curr_quality = self.curr_quality.min(self.problem_def.recipe.max_quality);
+        self.curr_durability = self.curr_durability.max(0);
+        self.curr_progress = self.curr_progress.min(self.problem_def.recipe.max_progress);
+
+        self
+    }
+}
+
+impl<'a, C, M> CraftingState<'a, C, M>
+where
+    C: Condition + Default,
+    M: QualityMap,
+{
+    /// Creates a new default crafting attempt for the recipe and character defined by `problem_def`.
+    pub fn new_simulation(problem_def: &'a CraftingSimulator<C, M>) -> Self {
+        CraftingState {
+            problem_def,
+            condition: C::default(),
+            curr_quality: 0,
+            curr_progress: 0,
+            curr_durability: problem_def.recipe.max_durability,
+            curr_cp: problem_def.character.max_cp,
+            buffs: BuffState::default(),
+            first_step: true,
         }
     }
 }

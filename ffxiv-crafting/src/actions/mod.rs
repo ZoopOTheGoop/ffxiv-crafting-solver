@@ -3,7 +3,6 @@
 
 use std::ops::{Add, AddAssign};
 
-use derivative::Derivative;
 use rand::Rng;
 
 use crate::{buffs::BuffState, conditions::Condition, quality_map::QualityMap, CraftingState};
@@ -15,6 +14,9 @@ pub mod failure;
 pub mod misc;
 pub mod progress;
 pub mod quality;
+
+#[cfg(test)]
+mod tests;
 
 use self::{
     buffs::BuffAction,
@@ -38,8 +40,7 @@ mod prelude {
 ///
 /// This does not check if the state it's being added to matches the state it was generated from,
 /// so it's up to the user to keep these values together.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct StateDelta {
     added_quality: u32,
     added_progress: u32,
@@ -49,7 +50,6 @@ pub struct StateDelta {
     added_cp: i16,
 
     /// Whether the step count increased/we should redo conditions/decay buffs
-    #[derivative(Default(value = "true"))]
     pub time_passed: bool,
 
     final_appraisal_triggered: bool,
@@ -247,7 +247,7 @@ pub trait Action: Sized + ActionComponents {
         let mut delta = StateDelta::inherit_buffs(state.buffs);
 
         // Don't check CP or viability yet, prospectively execute
-        delta.added_cp = self.cp_cost(state);
+        delta.added_cp = -self.cp_cost(state);
 
         delta.added_progress = self.progress(state);
         let appraised = state.buffs.progress.final_appraisal.handle_progress(
@@ -266,16 +266,17 @@ pub trait Action: Sized + ActionComponents {
 
         self.deactivate_buff(state, &mut delta.new_buffs);
 
-        if self.time_passed(state) {
+        delta.time_passed = self.time_passed(state);
+        if delta.time_passed {
             delta.new_buffs.decay();
+
+            // Repair isn't applied during a "time stop" so it's in the branch rather
+            // than after.
+            delta.buff_repair = state.buffs.durability.repair();
         } else {
             // Combo actions still fail to trigger after using
             // time-agnostic actions
             delta.new_buffs.combo.decay();
-
-            // Repair isn't applied during a "time stop" so it's in the else rather
-            // than after.
-            delta.buff_repair = state.buffs.durability.repair();
         }
         self.buff(state, &mut delta.new_buffs);
 
@@ -295,57 +296,12 @@ pub trait Action: Sized + ActionComponents {
         C: Condition,
         M: QualityMap,
     {
-        let mut delta = StateDelta::inherit_buffs(state.buffs);
+        // This used to be a parallel implementation, but it's not worth it.
 
-        delta.added_cp = self.cp_cost(state);
-
-        #[cfg(debug_assertions)]
-        let can_act = self.can_execute(state);
-
-        #[cfg(debug_assertions)]
-        match(state.curr_cp + delta.added_cp < 0, can_act) {
-            (true, true) => panic!("Attempted to use action with not enough CP and \
-            in a state where that action is impossible, to prospectively execute use `prospective_act`"),
-            (true, false) => panic!("Attempted to use action with not enough CP, \
-            to prospectively execute use `prospective_act`"),
-            (false, true) => panic!("Attempted to use action in an invalid state, \
-            to prospectively execute use `prospective_act`"),
-            _ => {},
-        };
-
-        delta.added_progress = self.progress(state);
-        let appraised = state.buffs.progress.final_appraisal.handle_progress(
-            state,
-            delta.added_progress,
-            &mut delta.new_buffs,
-        );
-
-        if appraised < delta.added_progress {
-            delta.final_appraisal_triggered = true;
-        }
-        delta.added_progress = appraised;
-
-        delta.added_quality = self.quality(state);
-        delta.action_durability = self.durability(&state.buffs, &state.condition);
-
-        delta.buff_repair = state.buffs.durability.repair();
-
-        self.deactivate_buff(state, &mut delta.new_buffs);
-
-        if self.time_passed(state) {
-            delta.new_buffs.decay();
-        } else {
-            // Combo actions still fail to trigger after using
-            // time-agnostic actions
-            delta.new_buffs.combo.decay();
-
-            // Repair isn't applied during a "time stop" so it's in the else rather
-            // than after.
-            delta.buff_repair = state.buffs.durability.repair();
-        }
-        self.buff(state, &mut delta.new_buffs);
-
-        ActionOutcome::from_delta_state(delta, state)
+        self.prospective_act(state).expect(
+            "Attempted to execute action and failed; if you want to \
+        speculatively execute an action, use `prospective_act`",
+        )
     }
 
     /// Takes into account a [`RandomAction`]'s chance to fail, and does
@@ -510,7 +466,8 @@ pub trait CpCost {
             return 0;
         }
 
-        if Self::CP_COST > 0 {
+        // This is here for Tricks of the Trade, the only CP-giving action, and will compile out otherwise.
+        if Self::CP_COST < 0 {
             return if state.condition.is_good() || state.condition.is_excellent() {
                 Self::CP_COST
             } else {

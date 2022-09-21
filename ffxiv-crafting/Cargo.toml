@@ -9,3 +9,6 @@ edition = "2021"
 derivative = "2.2.0"
 rand = "0.8"
 ffxiv-crafting-derive = { path = "./ffxiv-crafting-derive" }
+
+[dev-dependencies]
+lazy_static = "1"

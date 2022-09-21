@@ -146,7 +146,7 @@ impl BuffAction for WasteNot2 {
         so_far
             .durability
             .waste_not
-            .activate(4 + state.condition.to_status_duration_modifier() as u8);
+            .activate_in_place(4 + state.condition.to_status_duration_modifier() as u8);
     }
 }
 

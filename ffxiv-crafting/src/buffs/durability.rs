@@ -1,10 +1,9 @@
 //! Contains buffs that modify the effects of actions on the `durability` attribute of the crafting state, such as [`WasteNot`].
 
-use std::ops::{Sub, SubAssign};
+use std::num::NonZeroU8;
 
-use derivative::Derivative;
-
-use super::{Buff, DurationalBuff};
+use super::{Buff, ConsumableBuff, DurationalBuff};
+use ffxiv_crafting_derive::{Buff, ConsumableBuff, DurationalBuff};
 
 /// A simple collection of all the durability buffs, for cleaner fields on simulation
 /// structs.
@@ -40,21 +39,23 @@ impl DurabilityBuffs {
 /// (except for time-stopping ones),  as long as the item hasn't been broken or completed.
 ///
 /// [`Manipulation`]: crate::actions::buffs::Manipulation
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
-pub enum Manipulation {
-    /// This buff is currently not active and gives no benefit.
-    #[derivative(Default)]
-    Inactive,
-    /// This buff is active and will repair the item every time step
-    Active(
-        /// The number of turns remaining on this buff, once it hits
-        /// 0 this will become [`Inactive`].
-        ///
-        /// [`Inactive`]: Manipulation::Inactive
-        u8,
-    ),
-}
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Hash,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Default,
+    Buff,
+    DurationalBuff,
+    // Not really normally one, but we use this functionality to prevent recasting manipulation from restoring durability
+    ConsumableBuff
+)]
+#[ffxiv(duration = 8)]
+pub struct Manipulation(pub(super) u8);
 
 impl Manipulation {
     /// The amount of durability this repairs at the end of the turn
@@ -64,43 +65,11 @@ impl Manipulation {
     ///
     /// [`Active`]: Manipulation::Active
     pub fn repair(self) -> i8 {
-        match self {
-            Self::Active(_) => Self::REPAIR_VALUE,
-            Self::Inactive => 0,
+        if self.0 > 0 {
+            Self::REPAIR_VALUE
+        } else {
+            0
         }
-    }
-}
-
-impl Buff for Manipulation {
-    fn is_active(&self) -> bool {
-        matches!(self, Self::Active(_))
-    }
-}
-
-impl DurationalBuff for Manipulation {
-    const BASE_DURATION: u8 = 3;
-
-    fn activate(self, bonus: u8) -> Self {
-        Self::Active(Self::BASE_DURATION + bonus)
-    }
-}
-
-impl Sub<u8> for Manipulation {
-    type Output = Self;
-
-    fn sub(self, rhs: u8) -> Self {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
-
-        match self {
-            Self::Active(val) => Self::Active(val - rhs),
-            Self::Inactive => Self::Inactive,
-        }
-    }
-}
-
-impl SubAssign<u8> for Manipulation {
-    fn sub_assign(&mut self, rhs: u8) {
-        *self = self.sub(rhs)
     }
 }
 
@@ -114,11 +83,10 @@ impl SubAssign<u8> for Manipulation {
 ///
 /// [`WasteNot`]: crate::actions::buffs::WasteNot
 /// [`WasteNot2`]: crate::actions::buffs::WasteNot2
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Derivative)]
-#[derivative(Default)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum WasteNot {
     /// This buff is currently not active and gives no benefit.
-    #[derivative(Default)]
+    #[default]
     Inactive,
     /// This buff was activated by the action [`WasteNot`] and is giving
     /// its benefit.
@@ -126,10 +94,10 @@ pub enum WasteNot {
     /// [`WasteNot`]: crate::actions::buffs::WasteNot
     WasteNot(
         /// The number of turns remaining on this buff, once it hits
-        /// 0 this will become [`Inactive`].
+        /// 0 this will become [`Inactive`] instead.
         ///
         /// [`Inactive`]: WasteNot::Inactive
-        u8,
+        NonZeroU8,
     ),
 
     /// This buff was activated by the action [`WasteNot2`] and is giving
@@ -138,10 +106,10 @@ pub enum WasteNot {
     /// [`WasteNot2`]: crate::actions::buffs::WasteNot2
     WasteNot2(
         /// The number of turns remaining on this buff, once it hits
-        /// 0 this will become [`Inactive`].
+        /// 0 this will become [`Inactive`] instead.
         ///
         /// [`Inactive`]: WasteNot::Inactive
-        u8,
+        NonZeroU8,
     ),
 }
 
@@ -171,43 +139,37 @@ impl DurationalBuff for WasteNot {
     const BASE_DURATION: u8 = 4;
 
     fn activate(self, bonus: u8) -> Self {
+        let duration = unsafe { NonZeroU8::new_unchecked(Self::BASE_DURATION + bonus) };
+
         // 0+2 is meant to be descriptive of "base Waste Not + Primed"
         #[allow(clippy::identity_op)]
         if bonus == 0 || bonus == 0 + 2 {
-            Self::WasteNot(Self::BASE_DURATION + bonus)
+            Self::WasteNot(duration)
         } else if bonus == 4 || bonus == 4 + 2 {
-            Self::WasteNot2(Self::BASE_DURATION + bonus)
+            Self::WasteNot2(duration)
         } else {
             panic!("Bonus duration must be 0, or any combination of `Primed` (+2) and `WasteNot2` (+4)")
         }
     }
-}
 
-impl Sub<u8> for WasteNot {
-    type Output = Self;
-
-    fn sub(mut self, rhs: u8) -> Self::Output {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
-
+    fn decay(mut self) -> Self {
         match self {
-            Self::WasteNot(ref mut val) | Self::WasteNot2(ref mut val) => {
-                *val -= 1;
-                self
-            }
             Self::Inactive => Self::Inactive,
+            Self::WasteNot(ref mut val) | Self::WasteNot2(ref mut val) => match val.get() {
+                0 => unreachable!(),
+                1 => Self::Inactive,
+                inner @ 2..=u8::MAX => {
+                    *val = unsafe { NonZeroU8::new_unchecked(inner - 1) };
+                    self
+                }
+            },
         }
     }
-}
 
-impl SubAssign<u8> for WasteNot {
-    fn sub_assign(&mut self, rhs: u8) {
-        debug_assert_eq!(rhs, 1, "Buffs should only decrease their duration by 1");
-
-        match self {
-            Self::WasteNot(ref mut val) | Self::WasteNot2(ref mut val) => {
-                *val -= 1;
-            }
-            _ => {}
+    fn remaining_duration(&self) -> Option<u8> {
+        match *self {
+            Self::Inactive => None,
+            Self::WasteNot(val) | Self::WasteNot2(val) => Some(val.get()),
         }
     }
 }
