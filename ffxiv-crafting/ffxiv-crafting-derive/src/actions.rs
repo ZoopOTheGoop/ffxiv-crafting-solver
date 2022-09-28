@@ -76,7 +76,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
         let parts: ExprField = match v {
             FfxivAttr::Kind(lit) => {
                 let val = lit.value();
-                syn::parse_str(&*val).expect(
+                syn::parse_str(val.as_ref()).expect(
                     "Invalid format for consume, \
                             it must be a string describing struct field access",
                 )
@@ -137,7 +137,7 @@ pub fn buff_action(input: TokenStream) -> TokenStream {
         let parts: ExprField = match v {
             FfxivAttr::Kind(lit) => {
                 let val = lit.value();
-                syn::parse_str(&*val).expect(
+                syn::parse_str(val.as_ref()).expect(
                     "Invalid format for activate, \
                         it must be a string describing struct field access",
                 )
